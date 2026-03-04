@@ -1,0 +1,3 @@
+depchain\App.class
+depchain\net\NetworkMessage.class
+depchain\node\Node.class

@@ -2,7 +2,6 @@ package depchain.net;
 
 import java.io.*;
 import java.net.*;
-import java.util.UUID;
 
 public class UdpTransport {
 
@@ -37,6 +36,7 @@ public class UdpTransport {
             );
             recvThread.setDaemon(true);
             recvThread.start();
+            System.out.println("[UdpTransport] Started on port " + bindPort);
         } catch (SocketException e) {
             running = false;
             throw new RuntimeException(
@@ -46,43 +46,74 @@ public class UdpTransport {
         }
     }
 
+    public void stop() {
+        running = false;
+        if (socket != null && !socket.isClosed()) {
+            socket.close();
+        }
+        if (recvThread != null) {
+            recvThread.interrupt();
+        }
+    }
+
+    public void send(byte[] data, InetAddress address, int port) {
+        if (socket == null || socket.isClosed()) {
+            throw new IllegalStateException("Socket not started");
+        }
+        try {
+            DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
+            socket.send(packet);
+        } catch (IOException e) {
+            System.err.println("[UdpTransport] Send failed: " + e.getMessage());
+        }
+    }
+
+    public void send(byte[] data, String host, int port) {
+        try {
+            send(data, InetAddress.getByName(host), port);
+        } catch (UnknownHostException e) {
+            System.err.println("[UdpTransport] Unknown host: " + host);
+        }
+    }
+
     private void receiveLoop() {
         byte[] buf = new byte[this.maxPacketBytes];
         while (this.running) {
             try {
                 DatagramPacket packet = new DatagramPacket(buf, buf.length);
                 socket.receive(packet);
-                handler.handle(packet);
-            } catch (IOException e) {
-                if (this.running) {
-                    e.printStackTrace();
-                }
-                break;
+                // Create a copy of the data for the handler
+                byte[] receivedData = new byte[packet.getLength()];
+                System.arraycopy(packet.getData(), packet.getOffset(), receivedData, 0, packet.getLength());
+                DatagramPacket copy = new DatagramPacket(
+                    receivedData, receivedData.length,
+                    packet.getAddress(), packet.getPort()
+                );
+                handler.handle(copy);
             } catch (SocketException e) {
                 if (this.running) {
-                    e.printStackTrace();
+                    System.err.println("[UdpTransport] Socket error: " + e.getMessage());
                 }
                 break;
-            } catch (Exception e) {
+            } catch (IOException e) {
                 if (this.running) {
-                    e.printStackTrace();
+                    System.err.println("[UdpTransport] IO error: " + e.getMessage());
                 }
                 break;
             }
         }
     }
 
+    public boolean isRunning() {
+        return running;
+    }
+
+    public int getPort() {
+        return bindPort;
+    }
+
     @Override
     public String toString() {
-        return (
-            "UdpTransport{" +
-            "bindPort=" +
-            bindPort +
-            ", maxPacketBytes=" +
-            maxPacketBytes +
-            ", handler=" +
-            handler +
-            '}'
-        );
+        return "UdpTransport{port=" + bindPort + ", running=" + running + "}";
     }
 }

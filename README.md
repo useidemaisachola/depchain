@@ -10,7 +10,7 @@ Sistema de blockchain com elevadas garantias de confiabilidade usando o algoritm
 A comunicação entre nós usa uma stack de camadas sobre UDP:
 
 ```
-HotStuff (consenso) - a implementar
+HotStuff Basic (consenso)
       ↓
     APL  (Authenticated Perfect Links - assinaturas digitais)
       ↓
@@ -29,6 +29,11 @@ HotStuff (consenso) - a implementar
 - **SL (Stubborn Links)**: Retransmite mensagens periodicamente até serem confirmadas
 - **PL (Perfect Links)**: Elimina duplicados usando ACKs e tracking de mensagens
 - **APL (Authenticated Perfect Links)**: Adiciona assinaturas digitais RSA
+- **HotStuff Basic**: PREPARE → PRE_COMMIT → COMMIT → DECIDE com QCs (2f+1 votos)
+- **View Change**: timeout + `NEW_VIEW` com rotação de líder (`leader = view % n`)
+- **Fault Injector (intrusive tests)**: regras de DROP / DELAY / DUPLICATE / CORRUPT no FL
+- **Byzantine Modes**: `SILENT`, `EQUIVOCATE_LEADER`, `INVALID_VOTE_SIGNATURE`
+- **Persistência de Estado**: view + cadeia + requests decididos persistidos em disco
 
 ## Configuração da Rede
 
@@ -45,13 +50,37 @@ HotStuff (consenso) - a implementar
 mvn clean compile
 ```
 
-### 2. Testar comunicação (todos os nós no mesmo processo)
+### 2. Demo local (todos os nós no mesmo processo)
 
 ```bash
 mvn exec:java -Dexec.args="test"
 ```
 
-### 3. Executar nós em terminais separados
+### 2.1 Demo de fault injection
+
+```bash
+mvn exec:java -Dexec.args="demo_faults"
+```
+
+### 2.2 Demo de líder bizantino (equivocation)
+
+```bash
+mvn exec:java -Dexec.args="demo_byz"
+```
+
+### 2.3 Demo de persistência/restart
+
+```bash
+mvn exec:java -Dexec.args="demo_persist"
+```
+
+### 3. Testes automáticos
+
+```bash
+mvn test
+```
+
+### 4. Executar nós em terminais separados
 
 Primeiro, gerar as chaves criptográficas:
 ```bash
@@ -61,16 +90,22 @@ mvn exec:java -Dexec.args="genkeys"
 Depois, em 4 terminais diferentes:
 ```bash
 # Terminal 1
-mvn exec:java -Dexec.args="node 0"
+mvn exec:java -Dexec.args="node 0 HONEST"
 
 # Terminal 2
-mvn exec:java -Dexec.args="node 1"
+mvn exec:java -Dexec.args="node 1 HONEST"
 
 # Terminal 3
-mvn exec:java -Dexec.args="node 2"
+mvn exec:java -Dexec.args="node 2 HONEST"
 
 # Terminal 4
-mvn exec:java -Dexec.args="node 3"
+mvn exec:java -Dexec.args="node 3 HONEST"
+```
+
+Exemplo de nó bizantino:
+
+```bash
+mvn exec:java -Dexec.args="node 0 EQUIVOCATE_LEADER"
 ```
 
 ### Comandos interativos (quando um nó está a correr)
@@ -82,7 +117,7 @@ blockchain                - Mostrar blockchain local
 quit                      - Parar o nó
 ```
 
-### 4. Ver configuração
+### 5. Ver configuração
 
 ```bash
 mvn exec:java -Dexec.args="config"
@@ -110,11 +145,22 @@ src/main/java/depchain/
     └── Node.java               # Nó da blockchain
 ```
 
-## Próximos Passos (Stage 1)
+Relatório Stage 1 (draft LNCS content):
+- `REPORT_STAGE1_LNCS.md`
 
-- [ ] Implementar HotStuff Basic (Prepare → Pre-commit → Commit → Decide)
-- [ ] Implementar rotação de líder
-- [ ] Implementar NEW-VIEW para mudança de líder
-- [ ] Implementar Quorum Certificates (QC)
-- [ ] Implementar cliente para submeter requests
-- [ ] Testes com nós Byzantine
+## Estado Atual
+
+- [x] HotStuff Basic com fases PREPARE/PRE_COMMIT/COMMIT/DECIDE
+- [x] Quorum Certificates (QC) com 2f+1 assinaturas
+- [x] Biblioteca cliente com requests assinados e replies de confirmação
+- [x] Timeout-based failure detector e `NEW_VIEW`
+- [x] Testes automáticos (consenso, failover, assinatura inválida)
+- [x] Testes intrusivos com fault injection (drop/delay/duplicate/corrupt)
+- [x] Testes Byzantine (equivocation e assinatura inválida)
+- [x] Persistência/recovery de estado com teste de restart
+
+## Próximos Passos (Stage 2)
+
+- [ ] Camada transacional completa sobre o consenso
+- [ ] Camada transacional/execução de Stage 2
+- [ ] Métricas/benchmarking de latência e throughput

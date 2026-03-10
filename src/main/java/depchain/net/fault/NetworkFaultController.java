@@ -10,15 +10,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * Intrusive fault injection controller for tests/demos.
- *
- * Rules are evaluated on send. A matching rule can:
- * - drop the message
- * - delay delivery
- * - duplicate delivery
- * - corrupt the serialized bytes
- */
 public final class NetworkFaultController {
 
     public enum Action {
@@ -103,7 +94,7 @@ public final class NetworkFaultController {
             while (true) {
                 int current = remainingUses.get();
                 if (current < 0) {
-                    return true; // infinite uses
+                    return true;
                 }
                 if (current == 0) {
                     return false;

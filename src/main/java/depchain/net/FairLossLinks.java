@@ -11,16 +11,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Fair Loss Links (FL)
- *
- * This is the bottom layer, directly above UDP.
- * Properties:
- * - FL1 (Fair Loss): If a message is sent infinitely often, it will eventually be delivered
- * - FL2 (Finite Duplication): A message is delivered at most a finite number of times
- * - FL3 (No Creation): Only messages that were sent can be delivered
- *
- */
 public class FairLossLinks {
 
     public interface Listener {
@@ -70,7 +60,7 @@ public class FairLossLinks {
     public void start() {
         transport.start();
         System.out.println(
-            "[FL] Node " + nodeId + " started on port " + transport.getPort()
+            "[FL] Node " + nodeId + " up on port " + transport.getPort()
         );
     }
 
@@ -79,11 +69,10 @@ public class FairLossLinks {
         faultScheduler.shutdownNow();
     }
 
-    /* FL-Send: Send a message to a destination node. The message may or may not arrive (fair loss property) */
     public void send(int destNodeId, Message message) {
         NodeAddress dest = nodeAddresses.get(destNodeId);
         if (dest == null) {
-            System.err.println("[FL] Unknown destination node: " + destNodeId);
+            System.err.println("[FL] dont know dest node: " + destNodeId);
             return;
         }
 
@@ -92,7 +81,7 @@ public class FairLossLinks {
             NetworkFaultController.evaluateSend(nodeId, destNodeId, message);
         if (plan.isDrop()) {
             System.out.println(
-                "[FL] Fault injector dropped message from " +
+                "[FL] fault thing dropped msg from " +
                     nodeId +
                     " to " +
                     destNodeId +
@@ -117,7 +106,6 @@ public class FairLossLinks {
         }
     }
 
-    /* FL-Send to a specific address (for replies) */
     public void send(InetAddress address, int port, Message message) {
         byte[] data = message.serialize();
         transport.send(data, address, port);
@@ -145,7 +133,6 @@ public class FairLossLinks {
 
             Message message = Message.deserialize(messageData);
 
-            // FL-Deliver
             listener.onFLDeliver(
                 message.getSenderId(),
                 message,
@@ -153,9 +140,7 @@ public class FairLossLinks {
                 packet.getPort()
             );
         } catch (Exception e) {
-            System.err.println(
-                "[FL] Failed to process packet: " + e.getMessage()
-            );
+            System.err.println("[FL] packet parse went bad: " + e.getMessage());
         }
     }
 

@@ -2,21 +2,12 @@ package depchain.client;
 
 import java.io.*;
 
-/**
- * Represents an encrypted payload using hybrid encryption (RSA + AES).
- * 
- * Structure:
- * - encryptedKey: AES key encrypted with RSA (recipient's public key)
- * - iv: Initialization vector for AES-CBC
- * - encryptedData: Actual data encrypted with AES
- */
-
 public class EncryptedPayload implements Serializable {
     private static final long serialVersionUID = 1L;
-    
-    private final byte[] encryptedKey;   // RSA-encrypted AES key
-    private final byte[] iv;             // AES IV
-    private final byte[] encryptedData;  // AES-encrypted data
+
+    private final byte[] encryptedKey;
+    private final byte[] iv;
+    private final byte[] encryptedData;
 
     public EncryptedPayload(byte[] encryptedKey, byte[] iv, byte[] encryptedData) {
         this.encryptedKey = encryptedKey;

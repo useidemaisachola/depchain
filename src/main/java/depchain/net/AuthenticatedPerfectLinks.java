@@ -5,19 +5,6 @@ import depchain.net.Message;
 import depchain.net.MessageType;
 import java.util.Map;
 
-/**
- * Authenticated Perfect Links (APL)
- *
- * Built on top of Perfect Links.
- * Properties (all PL properties plus):
- * - APL1 (Authenticity): If a correct process delivers a message m from sender s,
- *   then s previously sent m
- *
- * Implementation:
- * - Signs all outgoing messages with the sender's private key
- * - Verifies signatures on all incoming messages using the sender's public key
- * - Rejects messages with invalid signatures
- */
 public class AuthenticatedPerfectLinks implements PerfectLinks.Listener {
 
     public interface Listener {
@@ -44,16 +31,13 @@ public class AuthenticatedPerfectLinks implements PerfectLinks.Listener {
 
     public void start() {
         perfectLinks.start();
-        System.out.println(
-            "[APL] Node " + nodeId + " started with authentication"
-        );
+        System.out.println("[APL] Node " + nodeId + " up w/ auth stuff");
     }
 
     public void stop() {
         perfectLinks.stop();
     }
 
-    /* APL-Send: Send an authenticated message. The message will be signed with this node's private key */
     public void send(int destNodeId, MessageType type, byte[] payload) {
         long msgId = perfectLinks.nextMessageId();
         Message message = new Message(nodeId, destNodeId, msgId, type, payload);
@@ -62,12 +46,10 @@ public class AuthenticatedPerfectLinks implements PerfectLinks.Listener {
         perfectLinks.sendMessage(message);
     }
 
-    /* APL-Send with string payload */
     public void send(int destNodeId, MessageType type, String payload) {
         send(destNodeId, type, payload.getBytes());
     }
 
-    /* Send authenticated message (full control) */
     public void sendMessage(int destNodeId, Message message) {
         Message toSend = message;
         if (message.getMessageId() <= 0) {
@@ -85,7 +67,6 @@ public class AuthenticatedPerfectLinks implements PerfectLinks.Listener {
         perfectLinks.sendMessage(toSend);
     }
 
-    /* Broadcast authenticated message to all nodes */
     public void broadcast(MessageType type, byte[] payload, int[] nodeIds) {
         for (int destId : nodeIds) {
             if (destId != nodeId) {
@@ -101,9 +82,7 @@ public class AuthenticatedPerfectLinks implements PerfectLinks.Listener {
         if (senderIsNode) {
             if (message.getSignature() == null) {
                 System.err.println(
-                    "[APL] Missing signature from node " +
-                        senderId +
-                        ", dropping message"
+                    "[APL] Node " + senderId + " sent no sig, dropping it"
                 );
                 return;
             }
@@ -115,22 +94,19 @@ public class AuthenticatedPerfectLinks implements PerfectLinks.Listener {
             );
             if (!valid) {
                 System.err.println(
-                    "[APL] Invalid signature from node " +
-                        senderId +
-                        ", dropping message"
+                    "[APL] Node " + senderId + " sig looks bad, dropping it"
                 );
                 return;
             }
         } else {
-            // Non-member senders are only expected for client traffic.
             if (
                 message.getType() != MessageType.CLIENT_REQUEST &&
                 message.getType() != MessageType.CLIENT_REPLY
             ) {
                 System.err.println(
-                    "[APL] Unknown sender " +
+                    "[APL] Dont know sender " +
                         senderId +
-                        " with invalid type " +
+                        " with weird type " +
                         message.getType()
                 );
                 return;

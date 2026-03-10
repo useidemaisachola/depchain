@@ -5,20 +5,12 @@ import java.nio.file.*;
 import java.security.*;
 import java.security.spec.*;
 
-/**
- * Cryptographic utilities for DepChain
- *
- * Uses:
- * - RSA for digital signatures (2048-bit keys)
- * - SHA256withRSA for signing
- */
 public class CryptoUtils {
 
     private static final String ALGORITHM = "RSA";
     private static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
     private static final int KEY_SIZE = 2048;
 
-    /* Generate a new RSA key pair */
     public static KeyPair generateKeyPair() {
         try {
             KeyPairGenerator keyGen = KeyPairGenerator.getInstance(ALGORITHM);
@@ -29,7 +21,6 @@ public class CryptoUtils {
         }
     }
 
-    /* Sign data with a private key */
     public static byte[] sign(byte[] data, PrivateKey privateKey) {
         try {
             Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM);
@@ -41,7 +32,6 @@ public class CryptoUtils {
         }
     }
 
-    /* Verify a signature with a public key */
     public static boolean verify(
         byte[] data,
         byte[] signatureBytes,
@@ -53,26 +43,20 @@ public class CryptoUtils {
             signature.update(data);
             return signature.verify(signatureBytes);
         } catch (Exception e) {
-            System.err.println(
-                "Signature verification failed: " + e.getMessage()
-            );
+            System.err.println("sig check blew up: " + e.getMessage());
             return false;
         }
     }
 
-    /* Save a key pair to files */
     public static void saveKeyPair(KeyPair keyPair, String basePath)
         throws IOException {
-        // Save private key
         Path privateKeyPath = Paths.get(basePath + ".key");
         Files.write(privateKeyPath, keyPair.getPrivate().getEncoded());
 
-        // Save public key
         Path publicKeyPath = Paths.get(basePath + ".pub");
         Files.write(publicKeyPath, keyPair.getPublic().getEncoded());
     }
 
-    /* Load a private key from file */
     public static PrivateKey loadPrivateKey(String path) throws Exception {
         byte[] keyBytes = Files.readAllBytes(Paths.get(path));
         PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
@@ -80,7 +64,6 @@ public class CryptoUtils {
         return kf.generatePrivate(spec);
     }
 
-    /* Load a public key from file */
     public static PublicKey loadPublicKey(String path) throws Exception {
         byte[] keyBytes = Files.readAllBytes(Paths.get(path));
         return decodePublicKey(keyBytes);
@@ -92,7 +75,6 @@ public class CryptoUtils {
         return kf.generatePublic(spec);
     }
 
-    /* Hash data using SHA-256 */
     public static byte[] hash(byte[] data) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -102,7 +84,6 @@ public class CryptoUtils {
         }
     }
 
-    /* Convert bytes to hex string (for display) */
     public static String bytesToHex(byte[] bytes) {
         StringBuilder sb = new StringBuilder();
         for (byte b : bytes) {
@@ -111,7 +92,6 @@ public class CryptoUtils {
         return sb.toString();
     }
 
-    /* Decrypt data using hybrid decryption (RSA + AES) */
     public static byte[] decryptHybrid(
         byte[] encryptedKey,
         byte[] iv,

@@ -11,9 +11,6 @@ import java.util.concurrent.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
 
-/*Client library for interacting with the DepChain blockchain.
- Sends encrypted requests to blockchain nodes and waits for confirmation.*/
-
 public class BlockchainClient {
 
     private final int clientId;
@@ -46,7 +43,7 @@ public class BlockchainClient {
         System.out.println(
             "[Client " +
                 clientId +
-                "] Loaded public keys for " +
+                "] loaded pub keys for " +
                 nodePublicKeys.size() +
                 " nodes"
         );
@@ -65,9 +62,7 @@ public class BlockchainClient {
         );
         receiveThread.setDaemon(true);
         receiveThread.start();
-        System.out.println(
-            "[Client " + clientId + "] Started on port " + localPort
-        );
+        System.out.println("[Client " + clientId + "] up on port " + localPort);
     }
 
     public void stop() {
@@ -76,10 +71,9 @@ public class BlockchainClient {
         if (receiveThread != null) {
             receiveThread.interrupt();
         }
-        System.out.println("[Client " + clientId + "] Stopped");
+        System.out.println("[Client " + clientId + "] stopped");
     }
 
-    /* Submit request to the leader node */
     public boolean submitRequest(String data) throws Exception {
         ClientRequest request = buildSignedRequest(data);
         for (int nodeId = 0; nodeId < NetworkConfig.NUM_NODES; nodeId++) {
@@ -88,7 +82,6 @@ public class BlockchainClient {
         return waitForReply(request.getRequestId());
     }
 
-    /* Submit request to a specific node */
     public boolean submitRequestToNode(int nodeId, String data)
         throws Exception {
         ClientRequest request = buildSignedRequest(data);
@@ -119,7 +112,9 @@ public class BlockchainClient {
         throws Exception {
         PublicKey nodePublicKey = nodePublicKeys.get(nodeId);
         if (nodePublicKey == null) {
-            throw new IllegalStateException("No public key for node " + nodeId);
+            throw new IllegalStateException(
+                "No publicc key for node " + nodeId
+            );
         }
 
         byte[] requestBytes = request.serialize();
@@ -137,9 +132,9 @@ public class BlockchainClient {
         System.out.println(
             "[Client " +
                 clientId +
-                "] Sent request " +
+                "] sent req " +
                 request.getRequestId() +
-                " to Node " +
+                " to node " +
                 nodeId
         );
     }
@@ -168,7 +163,7 @@ public class BlockchainClient {
                 System.out.println(
                     "[Client " +
                         clientId +
-                        "] Reply from node " +
+                        "] got reply frm node " +
                         reply.getResponderNodeId() +
                         " (view " +
                         reply.getView() +
@@ -180,16 +175,14 @@ public class BlockchainClient {
                 Thread.currentThread().interrupt();
                 return false;
             } catch (Exception ignored) {
-                // Ignore malformed or unexpected replies.
             }
         }
         System.out.println(
-            "[Client " + clientId + "] Request " + requestId + " timed out"
+            "[Client " + clientId + "] req " + requestId + " timed out, maybe"
         );
         return false;
     }
 
-    /* Hybrid encryption: RSA encrypts AES key, AES encrypts data */
     private EncryptedPayload encryptHybrid(byte[] data, PublicKey nodePublicKey)
         throws Exception {
         KeyGenerator keyGen = KeyGenerator.getInstance("AES");
@@ -247,7 +240,7 @@ public class BlockchainClient {
                     System.err.println(
                         "[Client " +
                             clientId +
-                            "] Receive error: " +
+                            "] recv got weird: " +
                             e.getMessage()
                     );
                 }

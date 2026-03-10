@@ -1,15 +1,13 @@
 package depchain.net;
 
 public enum MessageType {
-    // Link layer messages
-    DATA,           // Regular data message
-    ACK,            // Acknowledgment for Perfect Links
-    
-    // Client messages
-    CLIENT_REQUEST, // Client sends append request
-    CLIENT_REPLY,   // Node replies to client
-    
-    // HotStuff consensus messages (for later)
+
+    DATA,
+    ACK,
+
+    CLIENT_REQUEST,
+    CLIENT_REPLY,
+
     PREPARE,
     PREPARE_VOTE,
     PRE_COMMIT,

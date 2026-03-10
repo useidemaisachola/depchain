@@ -103,7 +103,7 @@ class DepChainStage1Test {
         Map<Integer, KeyManager> keyManagers = KeyManager.generateInMemory(
             NetworkConfig.NUM_NODES
         );
-        // Node 0 is the initial leader for view 0. Keep it down.
+
         startNodes(List.of(1, 2, 3), keyManagers);
 
         BlockchainClient client = createClient(201, 6201, keyManagers);
@@ -143,7 +143,7 @@ class DepChainStage1Test {
 
                 @Override
                 public void onBlockAppended(String data) {
-                    // No-op for this test.
+
                 }
             }
         );

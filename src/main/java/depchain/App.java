@@ -16,15 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-/**
- * Main application for DepChain.
- *
- * Usage:
- *   mvn exec:java -Dexec.args="genkeys"           - Generate keys for all nodes
- *   mvn exec:java -Dexec.args="node <nodeId>"     - Start a node
- *   mvn exec:java -Dexec.args="client <clientId>" - Start a client
- *   mvn exec:java -Dexec.args="test"              - Run a simple test with all nodes
- */
 public class App {
 
     public static void main(String[] args) {
@@ -42,7 +33,7 @@ public class App {
                     break;
                 case "node":
                     if (args.length < 2) {
-                        System.err.println("Error: Node ID required");
+                        System.err.println("need a node id here");
                         printUsage();
                         return;
                     }
@@ -57,7 +48,7 @@ public class App {
                     break;
                 case "client":
                     if (args.length < 2) {
-                        System.err.println("Error: Client ID required");
+                        System.err.println("need a client id here");
                         printUsage();
                         return;
                     }
@@ -80,42 +71,42 @@ public class App {
                     NetworkConfig.printConfig();
                     break;
                 default:
-                    System.err.println("Unknown command: " + command);
+                    System.err.println("dont know this cmd: " + command);
                     printUsage();
             }
         } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
+            System.err.println("something broke a bit: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
     private static void printUsage() {
-        System.out.println("DepChain - Dependable Blockchain System");
+        System.out.println("DepChain thing");
         System.out.println();
-        System.out.println("Usage:");
+        System.out.println("try one of these:");
         System.out.println(
-            "  mvn exec:java -Dexec.args=\"genkeys\"         - Generate keys for all nodes"
+            "  mvn exec:java -Dexec.args=\"genkeys\"         - make keys for all nodes"
         );
         System.out.println(
-            "  mvn exec:java -Dexec.args=\"node <id> [behavior]\" - Start node (behavior: HONEST|SILENT|EQUIVOCATE_LEADER|INVALID_VOTE_SIGNATURE)"
+            "  mvn exec:java -Dexec.args=\"node <id> [behavior]\" - start a node (HONEST|SILENT|EQUIVOCATE_LEADER|INVALID_VOTE_SIGNATURE)"
         );
         System.out.println(
-            "  mvn exec:java -Dexec.args=\"client <id>\"     - Start client (id: 100+)"
+            "  mvn exec:java -Dexec.args=\"client <id>\"     - start a client (id: 100+)"
         );
         System.out.println(
-            "  mvn exec:java -Dexec.args=\"test\"            - Run test with all nodes"
+            "  mvn exec:java -Dexec.args=\"test\"            - run the basic all-in-one demo"
         );
         System.out.println(
-            "  mvn exec:java -Dexec.args=\"demo_faults\"     - Run fault-injection demo"
+            "  mvn exec:java -Dexec.args=\"demo_faults\"     - run the fault demo"
         );
         System.out.println(
-            "  mvn exec:java -Dexec.args=\"demo_byz\"        - Run byzantine-leader demo"
+            "  mvn exec:java -Dexec.args=\"demo_byz\"        - run the weird leader demo"
         );
         System.out.println(
-            "  mvn exec:java -Dexec.args=\"demo_persist\"    - Run persistence/restart demo"
+            "  mvn exec:java -Dexec.args=\"demo_persist\"    - run the restart demo"
         );
         System.out.println(
-            "  mvn exec:java -Dexec.args=\"config\"          - Show network configuration"
+            "  mvn exec:java -Dexec.args=\"config\"          - show net config"
         );
         System.out.println();
         NetworkConfig.printConfig();
@@ -123,14 +114,14 @@ public class App {
 
     private static void generateKeys() throws Exception {
         System.out.println(
-            "Generating keys for " + NetworkConfig.NUM_NODES + " nodes..."
+            "making keys for " + NetworkConfig.NUM_NODES + " nodes..."
         );
         KeyManager.generateAllKeys(
             NetworkConfig.NUM_NODES,
             NetworkConfig.KEYS_DIRECTORY
         );
         System.out.println(
-            "Keys saved to: " + NetworkConfig.KEYS_DIRECTORY + "/"
+            "keys went to: " + NetworkConfig.KEYS_DIRECTORY + "/"
         );
     }
 
@@ -138,16 +129,16 @@ public class App {
         throws Exception {
         if (nodeId < 0 || nodeId >= NetworkConfig.NUM_NODES) {
             System.err.println(
-                "Invalid node ID: " +
+                "bad node id: " +
                     nodeId +
-                    " (must be 0-" +
+                    " (need 0-" +
                     (NetworkConfig.NUM_NODES - 1) +
                     ")"
             );
             return;
         }
 
-        System.out.println("Starting Node " + nodeId + "...");
+        System.out.println("starting node " + nodeId + "...");
 
         KeyManager keyManager = KeyManager.loadForNode(
             nodeId,
@@ -159,17 +150,13 @@ public class App {
         node.start();
 
         System.out.println();
-        System.out.println("Node " + nodeId + " is running. Commands:");
+        System.out.println("node " + nodeId + " is up. cmds:");
         System.out.println(
-            "  send <destId> <message>  - Send message to another node"
+            "  send <destId> <message>  - send msg to another node"
         );
-        System.out.println(
-            "  broadcast <message>      - Broadcast to all nodes"
-        );
-        System.out.println(
-            "  blockchain               - Show local blockchain"
-        );
-        System.out.println("  quit                     - Stop the node");
+        System.out.println("  broadcast <message>      - send to all nodes");
+        System.out.println("  blockchain               - show local chain");
+        System.out.println("  quit                     - stop the node");
         System.out.println();
 
         Scanner scanner = new Scanner(System.in);
@@ -186,51 +173,49 @@ public class App {
                 switch (cmd) {
                     case "send":
                         if (parts.length < 3) {
-                            System.out.println(
-                                "Usage: send <destId> <message>"
-                            );
+                            System.out.println("use: send <destId> <message>");
                         } else {
                             int dest = Integer.parseInt(parts[1]);
                             String msg = parts[2];
                             node.send(dest, MessageType.DATA, msg);
                             System.out.println(
-                                "Sent to node " + dest + ": " + msg
+                                "sent to node " + dest + ": " + msg
                             );
                         }
                         break;
                     case "broadcast":
                         if (parts.length < 2) {
-                            System.out.println("Usage: broadcast <message>");
+                            System.out.println("use: broadcast <message>");
                         } else {
                             String msg =
                                 parts.length > 2
                                     ? parts[1] + " " + parts[2]
                                     : parts[1];
                             node.broadcast(MessageType.DATA, msg);
-                            System.out.println("Broadcasted: " + msg);
+                            System.out.println("sent to all: " + msg);
                         }
                         break;
                     case "blockchain":
                         System.out.println(
-                            "Blockchain: " + node.getBlockchain()
+                            "chain now: " + node.getBlockchain()
                         );
                         break;
                     case "quit":
                     case "exit":
                         node.stop();
-                        System.out.println("Node stopped.");
+                        System.out.println("node stopped");
                         return;
                     default:
-                        System.out.println("Unknown command: " + cmd);
+                        System.out.println("dont know this cmd: " + cmd);
                 }
             } catch (Exception e) {
-                System.err.println("Error: " + e.getMessage());
+                System.err.println("something broke a bit: " + e.getMessage());
             }
         }
     }
 
     private static void startClient(int clientId) throws Exception {
-        System.out.println("Starting Client " + clientId + "...");
+        System.out.println("starting client " + clientId + "...");
 
         int clientPort = 6000 + clientId;
         BlockchainClient client = new BlockchainClient(clientId, clientPort);
@@ -239,14 +224,12 @@ public class App {
         client.start();
 
         System.out.println();
-        System.out.println("Client " + clientId + " is running. Commands:");
+        System.out.println("client " + clientId + " is up. cmds:");
         System.out.println(
-            "  append <data>        - Submit request to append data to blockchain"
+            "  append <data>        - send a req to append data"
         );
-        System.out.println(
-            "  send <nodeId> <data> - Send request to specific node"
-        );
-        System.out.println("  quit                 - Stop the client");
+        System.out.println("  send <nodeId> <data> - send a req to one node");
+        System.out.println("  quit                 - stop the client");
         System.out.println();
 
         Scanner scanner = new Scanner(System.in);
@@ -263,31 +246,29 @@ public class App {
                 switch (cmd) {
                     case "append":
                         if (parts.length < 2) {
-                            System.out.println("Usage: append <data>");
+                            System.out.println("use: append <data>");
                         } else {
                             String data =
                                 parts.length > 2
                                     ? parts[1] + " " + parts[2]
                                     : parts[1];
-                            System.out.println(
-                                "Submitting request (encrypted)..."
-                            );
+                            System.out.println("sending req (encrypted)...");
                             boolean success = client.submitRequest(data);
                             System.out.println(
                                 success
-                                    ? "Request confirmed!"
-                                    : "Request failed/timed out"
+                                    ? "req went thru"
+                                    : "req failed or timed out"
                             );
                         }
                         break;
                     case "send":
                         if (parts.length < 3) {
-                            System.out.println("Usage: send <nodeId> <data>");
+                            System.out.println("use: send <nodeId> <data>");
                         } else {
                             int nodeId = Integer.parseInt(parts[1]);
                             String data = parts[2];
                             System.out.println(
-                                "Sending encrypted request to node " +
+                                "sending encrypted req to node " +
                                     nodeId +
                                     "..."
                             );
@@ -297,28 +278,28 @@ public class App {
                             );
                             System.out.println(
                                 success
-                                    ? "Request confirmed!"
-                                    : "Request failed/timed out"
+                                    ? "req went thru"
+                                    : "req failed or timed out"
                             );
                         }
                         break;
                     case "quit":
                     case "exit":
                         client.stop();
-                        System.out.println("Client stopped.");
+                        System.out.println("client stopped");
                         return;
                     default:
-                        System.out.println("Unknown command: " + cmd);
+                        System.out.println("dont know this cmd: " + cmd);
                 }
             } catch (Exception e) {
-                System.err.println("Error: " + e.getMessage());
+                System.err.println("something broke a bit: " + e.getMessage());
             }
         }
     }
 
     private static void runDemoTest() throws Exception {
         System.out.println(
-            "Starting in-process demo test with " +
+            "starting basic in-proc demo with " +
                 NetworkConfig.NUM_NODES +
                 " nodes..."
         );
@@ -355,7 +336,7 @@ public class App {
 
             boolean r1 = client.submitRequest("demo-tx-1");
             boolean r2 = client.submitRequest("demo-tx-2");
-            System.out.println("Request results: " + r1 + ", " + r2);
+            System.out.println("req results kinda: " + r1 + ", " + r2);
 
             Thread.sleep(2500);
 
@@ -380,7 +361,7 @@ public class App {
     }
 
     private static void runFaultInjectionDemo() throws Exception {
-        System.out.println("Starting fault-injection demo...");
+        System.out.println("starting fault demo...");
         NetworkFaultController.clearRules();
         NetworkFaultController.addDropRule(0, 1, MessageType.PREPARE, 8);
         NetworkFaultController.addDelayRule(
@@ -397,14 +378,14 @@ public class App {
     }
 
     private static void runByzantineDemo() throws Exception {
-        System.out.println("Starting byzantine demo (equivocating leader)...");
+        System.out.println("starting byz demo (leader goes weird)...");
         Map<Integer, ByzantineBehavior> behaviorById = new HashMap<>();
         behaviorById.put(0, ByzantineBehavior.EQUIVOCATE_LEADER);
         runScenario(behaviorById, "demo-byz-tx-1");
     }
 
     private static void runPersistenceDemo() throws Exception {
-        System.out.println("Starting persistence demo...");
+        System.out.println("starting restart demo...");
         Path stateDir = Files.createTempDirectory("depchain-demo-state-");
 
         Map<Integer, KeyManager> keyManagers = KeyManager.generateInMemory(
@@ -435,7 +416,7 @@ public class App {
             client.start();
 
             boolean first = client.submitRequest("demo-persist-tx-1");
-            System.out.println("First request committed: " + first);
+            System.out.println("first req commited: " + first);
 
             Node node3 = nodes.get(3);
             node3.stop();
@@ -451,12 +432,11 @@ public class App {
             restarted.start();
             nodes.add(restarted);
             System.out.println(
-                "Restarted node 3 chain after load: " +
-                    restarted.getBlockchain()
+                "node 3 came back, chain: " + restarted.getBlockchain()
             );
 
             boolean second = client.submitRequest("demo-persist-tx-2");
-            System.out.println("Second request committed: " + second);
+            System.out.println("second req commited: " + second);
 
             Thread.sleep(1500);
             for (Node node : nodes) {
@@ -516,7 +496,7 @@ public class App {
             client.start();
 
             boolean ok = client.submitRequest(requestData);
-            System.out.println("Request committed: " + ok);
+            System.out.println("req commited: " + ok);
 
             Thread.sleep(2000);
             for (Node node : nodes) {

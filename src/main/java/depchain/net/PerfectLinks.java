@@ -9,20 +9,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * Perfect Links (PL)
- *
- * Built on top of Stubborn Links.
- * Properties:
- * - PL1 (Reliable Delivery): If a correct process sends a message to a correct process,
- *   the message will eventually be delivered
- * - PL2 (No Duplication): A message is delivered at most once
- * - PL3 (No Creation): Only messages that were sent can be delivered
- *
- * Implementation:
- * - Uses ACKs to stop retransmission
- * - Keeps track of delivered messages to filter duplicates
- */
 public class PerfectLinks implements StubbornLinks.Listener {
 
     public interface Listener {
@@ -33,11 +19,8 @@ public class PerfectLinks implements StubbornLinks.Listener {
     private final Listener listener;
     private final int nodeId;
 
-    // Track delivered messages to avoid duplicates
-    // Key: senderId + "-" + messageId
     private final Set<String> delivered;
 
-    // Message ID counter for this node
     private final AtomicLong messageIdCounter;
     private final Set<Integer> knownNodeIds;
 
@@ -62,7 +45,7 @@ public class PerfectLinks implements StubbornLinks.Listener {
 
     public void start() {
         stubbornLinks.start();
-        System.out.println("[PL] Node " + nodeId + " started");
+        System.out.println("[PL] Node " + nodeId + " up");
     }
 
     public void stop() {
@@ -70,14 +53,12 @@ public class PerfectLinks implements StubbornLinks.Listener {
         delivered.clear();
     }
 
-    /* PL-Send: Send a message reliably (exactly once delivery) */
     public void send(int destNodeId, MessageType type, byte[] payload) {
         long msgId = nextMessageId();
         Message message = new Message(nodeId, destNodeId, msgId, type, payload);
         stubbornLinks.send(destNodeId, message);
     }
 
-    /* PL-Send with string payload */
     public void send(int destNodeId, MessageType type, String payload) {
         send(destNodeId, type, payload.getBytes());
     }
@@ -98,7 +79,6 @@ public class PerfectLinks implements StubbornLinks.Listener {
         return messageIdCounter.incrementAndGet();
     }
 
-    /* Broadcast to all known nodes */
     public void broadcast(MessageType type, byte[] payload) {
         for (int destination : knownNodeIds) {
             if (destination == nodeId) {
@@ -117,10 +97,7 @@ public class PerfectLinks implements StubbornLinks.Listener {
     ) {
         String messageKey = senderId + "-" + message.getMessageId();
 
-        // Handle ACK messages
         if (message.getType() == MessageType.ACK) {
-            // Stop retransmitting the original message
-            // The ACK payload contains: originalSenderId + "-" + originalMessageId
             String ackPayload = message.getPayloadAsString();
             String[] parts = ackPayload.split("-");
             if (parts.length >= 2) {
@@ -134,16 +111,14 @@ public class PerfectLinks implements StubbornLinks.Listener {
                     );
                 } catch (NumberFormatException e) {
                     System.err.println(
-                        "[PL] Invalid ACK payload: " + ackPayload
+                        "[PL] ack payload looked weird: " + ackPayload
                     );
                 }
             }
             return;
         }
 
-        // Check for duplicates
         if (delivered.contains(messageKey)) {
-            // Already delivered, send ACK again but don't deliver
             sendAck(
                 senderAddress,
                 senderPort,
@@ -153,13 +128,10 @@ public class PerfectLinks implements StubbornLinks.Listener {
             return;
         }
 
-        // First time receiving this message
         delivered.add(messageKey);
 
-        // Send ACK
         sendAck(senderAddress, senderPort, senderId, message.getMessageId());
 
-        // PL-Deliver
         listener.onPLDeliver(senderId, message);
     }
 
@@ -179,7 +151,6 @@ public class PerfectLinks implements StubbornLinks.Listener {
             ackPayload
         );
 
-        // Send ACK directly via FL (no retransmission needed for ACKs)
         stubbornLinks.sendOnce(address, port, ack);
     }
 

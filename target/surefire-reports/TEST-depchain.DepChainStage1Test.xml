@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="depchain.DepChainStage1Test" time="19.193" tests="7" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="depchain.DepChainStage1Test" time="18.784" tests="7" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="25"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -9,14 +9,14 @@
     <property name="sun.arch.data.model" value="64"/>
     <property name="user.variant" value=""/>
     <property name="java.vendor.url" value="https://java.oracle.com/"/>
-    <property name="mvnd.terminalWidth" value="209"/>
+    <property name="mvnd.terminalWidth" value="120"/>
     <property name="user.timezone" value="Europe/Lisbon"/>
     <property name="os.name" value="Windows 11"/>
     <property name="java.vm.specification.version" value="25"/>
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="US"/>
     <property name="sun.boot.library.path" value="C:\Users\User\.jdks\openjdk-25\bin"/>
-    <property name="sun.java.command" value="C:\Users\User\AppData\Local\Temp\surefire3996975217864127292\surefirebooter-20260308170001087_3.jar C:\Users\User\AppData\Local\Temp\surefire3996975217864127292 2026-03-08T17-00-01_010-jvmRun1 surefire-20260308170001087_1tmp surefire_0-20260308170001087_2tmp"/>
+    <property name="sun.java.command" value="C:\Users\User\AppData\Local\Temp\surefire5763610196107144962\surefirebooter-20260310190909061_3.jar C:\Users\User\AppData\Local\Temp\surefire5763610196107144962 2026-03-10T19-09-08_988-jvmRun1 surefire-20260310190909061_1tmp surefire_0-20260310190909061_2tmp"/>
     <property name="jdk.debug" value="release"/>
     <property name="surefire.test.class.path" value="C:\Users\User\Documents\Projects\depchain\target\test-classes;C:\Users\User\Documents\Projects\depchain\target\classes;C:\Users\User\.m2\repository\org\junit\jupiter\junit-jupiter\5.10.2\junit-jupiter-5.10.2.jar;C:\Users\User\.m2\repository\org\junit\jupiter\junit-jupiter-api\5.10.2\junit-jupiter-api-5.10.2.jar;C:\Users\User\.m2\repository\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;C:\Users\User\.m2\repository\org\junit\platform\junit-platform-commons\1.10.2\junit-platform-commons-1.10.2.jar;C:\Users\User\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;C:\Users\User\.m2\repository\org\junit\jupiter\junit-jupiter-params\5.10.2\junit-jupiter-params-5.10.2.jar;C:\Users\User\.m2\repository\org\junit\jupiter\junit-jupiter-engine\5.10.2\junit-jupiter-engine-5.10.2.jar;C:\Users\User\.m2\repository\org\junit\platform\junit-platform-engine\1.10.2\junit-platform-engine-1.10.2.jar;"/>
     <property name="sun.cpu.endian" value="little"/>
@@ -27,12 +27,12 @@
     <property name="java.home" value="C:\Users\User\.jdks\openjdk-25"/>
     <property name="file.separator" value="\"/>
     <property name="basedir" value="C:\Users\User\Documents\Projects\depchain"/>
-    <property name="style.color" value="always"/>
+    <property name="style.color" value="never"/>
     <property name="java.vm.compressedOopsMode" value="Zero based"/>
     <property name="line.separator" value="&#10;"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
-    <property name="surefire.real.class.path" value="C:\Users\User\AppData\Local\Temp\surefire3996975217864127292\surefirebooter-20260308170001087_3.jar"/>
+    <property name="surefire.real.class.path" value="C:\Users\User\AppData\Local\Temp\surefire5763610196107144962\surefirebooter-20260310190909061_3.jar"/>
     <property name="user.script" value=""/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="25+36-3489"/>
@@ -53,7 +53,7 @@
     <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
     <property name="sun.os.patch.level" value=""/>
     <property name="native.encoding" value="Cp1252"/>
-    <property name="java.library.path" value="C:\Users\User\.jdks\openjdk-25\bin;C:\WINDOWS\Sun\Java\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\Program Files\PowerShell\7;C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot\bin;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\nodejs\;C:\ProgramData\chocolatey\bin;C:\Python313\python.exe;C:\Program Files\dotnet\;C:\Program Files\PowerShell\7\;C:\Users\User\.jdks\openjdk-25\bin;C:\Program Files\Git\cmd;C:\Python313\Scripts\;C:\Python313\;C:\Users\User\AppData\Local\Programs\Python\Launcher\;C:\Users\User\AppData\Local\Programs\Python\Python313\Scripts\;C:\Users\User\AppData\Local\Programs\Python\Python313\;C:\Users\User\AppData\Local\Microsoft\WindowsApps;C:\Users\User\AppData\Roaming\npm;C:\Users\User\AppData\Local\Programs\Microsoft VS Code\bin;C:\Python313\python.exe;C:\Program Files\Sublime Text;C:\Users\User\.jdks\openjdk-25\bin;C:\Program Files\maven-mvnd-1.0.3-windows-amd64\maven-mvnd-1.0.3-windows-amd64\bin;C:\Users\User\AppData\Local\Programs\Windsurf\bin;C:\Users\User\AppData\Local\Programs\Ollama;C:\Users\User\.dotnet\tools;C:\Users\User\AppData\Local\Programs\Zed\bin;."/>
+    <property name="java.library.path" value="C:\Users\User\.jdks\openjdk-25\bin;C:\WINDOWS\Sun\Java\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\Program Files\PowerShell\7;C:\Users\User\.codex\tmp\arg0\codex-arg0mlH0yU;C:\Program Files\PowerShell\7;C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot\bin;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\nodejs\;C:\ProgramData\chocolatey\bin;C:\Python313\python.exe;C:\Program Files\dotnet\;C:\Program Files\PowerShell\7\;C:\Users\User\.jdks\openjdk-25\bin;C:\Program Files\Git\cmd;C:\Python313\Scripts\;C:\Python313\;C:\Users\User\AppData\Local\Programs\Python\Launcher\;C:\Users\User\AppData\Local\Programs\Python\Python313\Scripts\;C:\Users\User\AppData\Local\Programs\Python\Python313\;C:\Users\User\AppData\Local\Microsoft\WindowsApps;C:\Users\User\AppData\Roaming\npm;C:\Users\User\AppData\Local\Programs\Microsoft VS Code\bin;C:\Python313\python.exe;C:\Program Files\Sublime Text;C:\Users\User\.jdks\openjdk-25\bin;C:\Program Files\maven-mvnd-1.0.3-windows-amd64\maven-mvnd-1.0.3-windows-amd64\bin;C:\Users\User\AppData\Local\Programs\Windsurf\bin;C:\Users\User\AppData\Local\Programs\Ollama;C:\Users\User\.dotnet\tools;C:\Users\User\AppData\Local\Programs\Zed\bin;."/>
     <property name="java.vm.info" value="mixed mode, sharing"/>
     <property name="stderr.encoding" value="Cp1252"/>
     <property name="java.vendor" value="Oracle Corporation"/>
@@ -62,331 +62,331 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="69.0"/>
   </properties>
-  <testcase name="byzantineEquivocatingLeaderStillMakesProgress" classname="depchain.DepChainStage1Test" time="5.631">
-    <system-out><![CDATA[[UdpTransport] Started on port 5000
-[FL] Node 0 started on port 5000
-[SL] Node 0 started
-[PL] Node 0 started
-[APL] Node 0 started with authentication
-[Node 0] Started on port 5000 (leader for view 0 is 0, behavior=EQUIVOCATE_LEADER)
-[UdpTransport] Started on port 5001
-[FL] Node 1 started on port 5001
-[SL] Node 1 started
-[PL] Node 1 started
-[APL] Node 1 started with authentication
-[Node 1] Started on port 5001 (leader for view 0 is 0, behavior=HONEST)
-[UdpTransport] Started on port 5002
-[FL] Node 2 started on port 5002
-[SL] Node 2 started
-[PL] Node 2 started
-[APL] Node 2 started with authentication
-[Node 2] Started on port 5002 (leader for view 0 is 0, behavior=HONEST)
-[UdpTransport] Started on port 5003
-[FL] Node 3 started on port 5003
-[SL] Node 3 started
-[PL] Node 3 started
-[APL] Node 3 started with authentication
-[Node 3] Started on port 5003 (leader for view 0 is 0, behavior=HONEST)
-[Client 203] Started on port 6203
-[Client 203] Sent request b62149af-56c5-49ba-8399-f72afdf4df37 to Node 0
-[Client 203] Sent request b62149af-56c5-49ba-8399-f72afdf4df37 to Node 1
-[Client 203] Sent request b62149af-56c5-49ba-8399-f72afdf4df37 to Node 2
-[Client 203] Sent request b62149af-56c5-49ba-8399-f72afdf4df37 to Node 3
-[Node 1] Moved to view 1 (timeout)
-[Node 2] Moved to view 1 (timeout)
-[Node 0] Moved to view 1 (timeout)
-[Node 3] Moved to view 1 (timeout)
-[Node 0] Appended to blockchain: test-byz-equiv-1
-[Node 2] Appended to blockchain: test-byz-equiv-1
-[Node 0] Moved to view 2 (block decided)
-[Node 2] Moved to view 2 (block decided)
-[Node 1] Appended to blockchain: test-byz-equiv-1
-[Node 1] Moved to view 2 (block decided)
-[Node 3] Appended to blockchain: test-byz-equiv-1
-[Node 3] Moved to view 2 (block decided)
-[Client 203] Reply from node 0 (view 1): Committed in view 1
-[Client 203] Stopped
-[Node 0] Stopped
-[Node 1] Stopped
-[Node 2] Stopped
-[Node 3] Stopped
+  <testcase name="byzantineEquivocatingLeaderStillMakesProgress" classname="depchain.DepChainStage1Test" time="5.512">
+    <system-out><![CDATA[[UdpTransport] listening on port 5000
+[FL] Node 0 up on port 5000
+[SL] Node 0 up
+[PL] Node 0 up
+[APL] Node 0 up w/ auth stuff
+[Node 0] up on port 5000 (leader for view 0 is 0, behavior=EQUIVOCATE_LEADER)
+[UdpTransport] listening on port 5001
+[FL] Node 1 up on port 5001
+[SL] Node 1 up
+[PL] Node 1 up
+[APL] Node 1 up w/ auth stuff
+[Node 1] up on port 5001 (leader for view 0 is 0, behavior=HONEST)
+[UdpTransport] listening on port 5002
+[FL] Node 2 up on port 5002
+[SL] Node 2 up
+[PL] Node 2 up
+[APL] Node 2 up w/ auth stuff
+[Node 2] up on port 5002 (leader for view 0 is 0, behavior=HONEST)
+[UdpTransport] listening on port 5003
+[FL] Node 3 up on port 5003
+[SL] Node 3 up
+[PL] Node 3 up
+[APL] Node 3 up w/ auth stuff
+[Node 3] up on port 5003 (leader for view 0 is 0, behavior=HONEST)
+[Client 203] up on port 6203
+[Client 203] sent req 713eac98-a8ab-4a23-a629-fdfc165699de to node 0
+[Client 203] sent req 713eac98-a8ab-4a23-a629-fdfc165699de to node 1
+[Client 203] sent req 713eac98-a8ab-4a23-a629-fdfc165699de to node 2
+[Client 203] sent req 713eac98-a8ab-4a23-a629-fdfc165699de to node 3
+[Node 2] now on view 1 (timeout)
+[Node 0] now on view 1 (timeout)
+[Node 1] now on view 1 (timeout)
+[Node 3] now on view 1 (timeout)
+[Node 0] chain got: test-byz-equiv-1
+[Node 2] chain got: test-byz-equiv-1
+[Node 1] chain got: test-byz-equiv-1
+[Node 0] now on view 2 (block decided)
+[Node 2] now on view 2 (block decided)
+[Node 1] now on view 2 (block decided)
+[Node 3] chain got: test-byz-equiv-1
+[Node 3] now on view 2 (block decided)
+[Client 203] got reply frm node 2 (view 1): commited on view 1
+[Client 203] stopped
+[Node 0] stopped
+[Node 1] stopped
+[Node 2] stopped
+[Node 3] stopped
 ]]></system-out>
-    <system-err><![CDATA[[FL] Failed to process packet: Socket not started
+  </testcase>
+  <testcase name="invalidVoteSignatureByzantineNodeDoesNotBreakConsensus" classname="depchain.DepChainStage1Test" time="0.425">
+    <system-out><![CDATA[[UdpTransport] listening on port 5000
+[FL] Node 0 up on port 5000
+[SL] Node 0 up
+[PL] Node 0 up
+[APL] Node 0 up w/ auth stuff
+[Node 0] up on port 5000 (leader for view 0 is 0, behavior=HONEST)
+[UdpTransport] listening on port 5001
+[FL] Node 1 up on port 5001
+[SL] Node 1 up
+[PL] Node 1 up
+[APL] Node 1 up w/ auth stuff
+[Node 1] up on port 5001 (leader for view 0 is 0, behavior=HONEST)
+[UdpTransport] listening on port 5002
+[FL] Node 2 up on port 5002
+[SL] Node 2 up
+[PL] Node 2 up
+[APL] Node 2 up w/ auth stuff
+[Node 2] up on port 5002 (leader for view 0 is 0, behavior=HONEST)
+[UdpTransport] listening on port 5003
+[FL] Node 3 up on port 5003
+[SL] Node 3 up
+[PL] Node 3 up
+[APL] Node 3 up w/ auth stuff
+[Node 3] up on port 5003 (leader for view 0 is 0, behavior=INVALID_VOTE_SIGNATURE)
+[Client 204] up on port 6204
+[Client 204] sent req 38b63691-ef4f-4632-bf06-f60dc960ef88 to node 0
+[Client 204] sent req 38b63691-ef4f-4632-bf06-f60dc960ef88 to node 1
+[Client 204] sent req 38b63691-ef4f-4632-bf06-f60dc960ef88 to node 2
+[Client 204] sent req 38b63691-ef4f-4632-bf06-f60dc960ef88 to node 3
+[Node 1] chain got: test-invalid-vote-byz-1
+[Node 1] now on view 1 (block decided)
+[Client 204] got reply frm node 1 (view 0): commited on view 0
+[Node 2] chain got: test-invalid-vote-byz-1
+[Node 2] now on view 1 (block decided)
+[Node 0] chain got: test-invalid-vote-byz-1
+[Node 0] now on view 1 (block decided)
+[Node 3] chain got: test-invalid-vote-byz-1
+[Node 3] now on view 1 (block decided)
+[Client 204] stopped
+[Node 0] stopped
+[Node 1] stopped
+[Node 2] stopped
+[Node 3] stopped
+]]></system-out>
+  </testcase>
+  <testcase name="invalidNodeSignatureIsRejected" classname="depchain.DepChainStage1Test" time="2.715">
+    <system-out><![CDATA[[UdpTransport] listening on port 5002
+[FL] Node 2 up on port 5002
+[SL] Node 2 up
+[PL] Node 2 up
+[APL] Node 2 up w/ auth stuff
+[Node 2] up on port 5002 (leader for view 6 is 2, behavior=HONEST)
+[Node 2] stopped
+]]></system-out>
+    <system-err><![CDATA[sig check blew up: Bad signature length: got 6 but was expecting 256
+[APL] Node 1 sig looks bad, dropping it
 ]]></system-err>
   </testcase>
-  <testcase name="invalidVoteSignatureByzantineNodeDoesNotBreakConsensus" classname="depchain.DepChainStage1Test" time="0.535">
-    <system-out><![CDATA[[UdpTransport] Started on port 5000
-[FL] Node 0 started on port 5000
-[SL] Node 0 started
-[PL] Node 0 started
-[APL] Node 0 started with authentication
-[Node 0] Started on port 5000 (leader for view 0 is 0, behavior=HONEST)
-[UdpTransport] Started on port 5001
-[FL] Node 1 started on port 5001
-[SL] Node 1 started
-[PL] Node 1 started
-[APL] Node 1 started with authentication
-[Node 1] Started on port 5001 (leader for view 0 is 0, behavior=HONEST)
-[UdpTransport] Started on port 5002
-[FL] Node 2 started on port 5002
-[SL] Node 2 started
-[PL] Node 2 started
-[APL] Node 2 started with authentication
-[Node 2] Started on port 5002 (leader for view 0 is 0, behavior=HONEST)
-[UdpTransport] Started on port 5003
-[FL] Node 3 started on port 5003
-[SL] Node 3 started
-[PL] Node 3 started
-[APL] Node 3 started with authentication
-[Node 3] Started on port 5003 (leader for view 0 is 0, behavior=INVALID_VOTE_SIGNATURE)
-[Client 204] Started on port 6204
-[Client 204] Sent request e0328198-7b0e-4c26-a10b-d608138d0904 to Node 0
-[Client 204] Sent request e0328198-7b0e-4c26-a10b-d608138d0904 to Node 1
-[Client 204] Sent request e0328198-7b0e-4c26-a10b-d608138d0904 to Node 2
-[Client 204] Sent request e0328198-7b0e-4c26-a10b-d608138d0904 to Node 3
-[Node 1] Appended to blockchain: test-invalid-vote-byz-1
-[Node 1] Moved to view 1 (block decided)
-[Client 204] Reply from node 1 (view 0): Committed in view 0
-[Node 2] Appended to blockchain: test-invalid-vote-byz-1
-[Node 2] Moved to view 1 (block decided)
-[Node 0] Appended to blockchain: test-invalid-vote-byz-1
-[Node 0] Moved to view 1 (block decided)
-[Node 3] Appended to blockchain: test-invalid-vote-byz-1
-[Node 3] Moved to view 1 (block decided)
-[Client 204] Stopped
-[Node 0] Stopped
-[Node 1] Stopped
-[Node 2] Stopped
-[Node 3] Stopped
+  <testcase name="timeoutViewChangeSurvivesLeaderCrash" classname="depchain.DepChainStage1Test" time="5.31">
+    <system-out><![CDATA[[UdpTransport] listening on port 5001
+[FL] Node 1 up on port 5001
+[SL] Node 1 up
+[PL] Node 1 up
+[APL] Node 1 up w/ auth stuff
+[Node 1] up on port 5001 (leader for view 0 is 0, behavior=HONEST)
+[UdpTransport] listening on port 5002
+[FL] Node 2 up on port 5002
+[SL] Node 2 up
+[PL] Node 2 up
+[APL] Node 2 up w/ auth stuff
+[Node 2] up on port 5002 (leader for view 0 is 0, behavior=HONEST)
+[UdpTransport] listening on port 5003
+[FL] Node 3 up on port 5003
+[SL] Node 3 up
+[PL] Node 3 up
+[APL] Node 3 up w/ auth stuff
+[Node 3] up on port 5003 (leader for view 0 is 0, behavior=HONEST)
+[Client 201] up on port 6201
+[Client 201] sent req e7151505-884e-4a38-a7f3-8ad7063ce636 to node 0
+[Client 201] sent req e7151505-884e-4a38-a7f3-8ad7063ce636 to node 1
+[Client 201] sent req e7151505-884e-4a38-a7f3-8ad7063ce636 to node 2
+[Client 201] sent req e7151505-884e-4a38-a7f3-8ad7063ce636 to node 3
+[Node 1] now on view 1 (timeout)
+[Node 3] now on view 1 (timeout)
+[Node 2] now on view 1 (timeout)
+[Node 2] chain got: test-failover-1
+[Node 1] chain got: test-failover-1
+[Node 2] now on view 2 (block decided)
+[Client 201] got reply frm node 2 (view 1): commited on view 1
+[Node 1] now on view 2 (block decided)
+[Node 3] chain got: test-failover-1
+[Node 3] now on view 2 (block decided)
+[Client 201] stopped
+[Node 1] stopped
+[Node 2] stopped
+[Node 3] stopped
 ]]></system-out>
-  </testcase>
-  <testcase name="invalidNodeSignatureIsRejected" classname="depchain.DepChainStage1Test" time="2.738">
-    <system-out><![CDATA[[UdpTransport] Started on port 5002
-[FL] Node 2 started on port 5002
-[SL] Node 2 started
-[PL] Node 2 started
-[APL] Node 2 started with authentication
-[Node 2] Started on port 5002 (leader for view 6 is 2, behavior=HONEST)
-[Node 2] Stopped
-]]></system-out>
-    <system-err><![CDATA[Signature verification failed: Bad signature length: got 6 but was expecting 256
-[APL] Invalid signature from node 1, dropping message
+    <system-err><![CDATA[[FL] packet parse went bad: socket isnt up
 ]]></system-err>
   </testcase>
-  <testcase name="timeoutViewChangeSurvivesLeaderCrash" classname="depchain.DepChainStage1Test" time="5.39">
-    <system-out><![CDATA[[UdpTransport] Started on port 5001
-[FL] Node 1 started on port 5001
-[SL] Node 1 started
-[PL] Node 1 started
-[APL] Node 1 started with authentication
-[Node 1] Started on port 5001 (leader for view 0 is 0, behavior=HONEST)
-[UdpTransport] Started on port 5002
-[FL] Node 2 started on port 5002
-[SL] Node 2 started
-[PL] Node 2 started
-[APL] Node 2 started with authentication
-[Node 2] Started on port 5002 (leader for view 0 is 0, behavior=HONEST)
-[UdpTransport] Started on port 5003
-[FL] Node 3 started on port 5003
-[SL] Node 3 started
-[PL] Node 3 started
-[APL] Node 3 started with authentication
-[Node 3] Started on port 5003 (leader for view 0 is 0, behavior=HONEST)
-[Client 201] Started on port 6201
-[Client 201] Sent request 4e65df95-477e-4ee4-aa5d-fa1fee292843 to Node 0
-[Client 201] Sent request 4e65df95-477e-4ee4-aa5d-fa1fee292843 to Node 1
-[Client 201] Sent request 4e65df95-477e-4ee4-aa5d-fa1fee292843 to Node 2
-[Client 201] Sent request 4e65df95-477e-4ee4-aa5d-fa1fee292843 to Node 3
-[Node 1] Moved to view 1 (timeout)
-[Node 2] Moved to view 1 (timeout)
-[Node 3] Moved to view 1 (timeout)
-[Node 2] Appended to blockchain: test-failover-1
-[Node 2] Moved to view 2 (block decided)
-[Client 201] Reply from node 2 (view 1): Committed in view 1
-[Node 1] Appended to blockchain: test-failover-1
-[Node 1] Moved to view 2 (block decided)
-[Node 3] Appended to blockchain: test-failover-1
-[Client 201] Stopped
-[Node 3] Moved to view 2 (block decided)
-[Node 1] Stopped
-[Node 2] Stopped
-[Node 3] Stopped
+  <testcase name="nodeStatePersistsAcrossRestart" classname="depchain.DepChainStage1Test" time="0.674">
+    <system-out><![CDATA[[UdpTransport] listening on port 5000
+[FL] Node 0 up on port 5000
+[SL] Node 0 up
+[PL] Node 0 up
+[APL] Node 0 up w/ auth stuff
+[Node 0] up on port 5000 (leader for view 0 is 0, behavior=HONEST)
+[UdpTransport] listening on port 5001
+[FL] Node 1 up on port 5001
+[SL] Node 1 up
+[PL] Node 1 up
+[APL] Node 1 up w/ auth stuff
+[Node 1] up on port 5001 (leader for view 0 is 0, behavior=HONEST)
+[UdpTransport] listening on port 5002
+[FL] Node 2 up on port 5002
+[SL] Node 2 up
+[PL] Node 2 up
+[APL] Node 2 up w/ auth stuff
+[Node 2] up on port 5002 (leader for view 0 is 0, behavior=HONEST)
+[UdpTransport] listening on port 5003
+[FL] Node 3 up on port 5003
+[SL] Node 3 up
+[PL] Node 3 up
+[APL] Node 3 up w/ auth stuff
+[Node 3] up on port 5003 (leader for view 0 is 0, behavior=HONEST)
+[Client 205] up on port 6205
+[Client 205] sent req e8788db8-86db-4aaa-a874-30f0d608cecb to node 0
+[Client 205] sent req e8788db8-86db-4aaa-a874-30f0d608cecb to node 1
+[Client 205] sent req e8788db8-86db-4aaa-a874-30f0d608cecb to node 2
+[Client 205] sent req e8788db8-86db-4aaa-a874-30f0d608cecb to node 3
+[Node 1] chain got: test-persist-1
+[Client 205] got reply frm node 1 (view 0): commited on view 0
+[Node 2] chain got: test-persist-1
+[Node 0] chain got: test-persist-1
+[Node 3] chain got: test-persist-1
+[Node 1] now on view 1 (block decided)
+[Node 2] now on view 1 (block decided)
+[Node 0] now on view 1 (block decided)
+[Node 3] now on view 1 (block decided)
+[Node 3] stopped
+[UdpTransport] listening on port 5003
+[FL] Node 3 up on port 5003
+[SL] Node 3 up
+[PL] Node 3 up
+[APL] Node 3 up w/ auth stuff
+[Node 3] up on port 5003 (leader for view 1 is 1, behavior=HONEST)
+[Client 205] sent req cab84010-30d8-4e84-9a0f-264fd2f3614b to node 0
+[Client 205] sent req cab84010-30d8-4e84-9a0f-264fd2f3614b to node 1
+[Client 205] sent req cab84010-30d8-4e84-9a0f-264fd2f3614b to node 2
+[Client 205] sent req cab84010-30d8-4e84-9a0f-264fd2f3614b to node 3
+[Node 0] chain got: test-persist-2
+[Client 205] got reply frm node 0 (view 1): commited on view 1
+[Node 2] chain got: test-persist-2
+[Node 1] chain got: test-persist-2
+[Node 3] chain got: test-persist-2
+[Node 0] now on view 2 (block decided)
+[Node 2] now on view 2 (block decided)
+[Node 1] now on view 2 (block decided)
+[Node 3] now on view 2 (block decided)
+[Client 205] stopped
+[Node 0] stopped
+[Node 1] stopped
+[Node 2] stopped
+[Node 3] stopped
 ]]></system-out>
   </testcase>
-  <testcase name="nodeStatePersistsAcrossRestart" classname="depchain.DepChainStage1Test" time="0.751">
-    <system-out><![CDATA[[UdpTransport] Started on port 5000
-[FL] Node 0 started on port 5000
-[SL] Node 0 started
-[PL] Node 0 started
-[APL] Node 0 started with authentication
-[Node 0] Started on port 5000 (leader for view 0 is 0, behavior=HONEST)
-[UdpTransport] Started on port 5001
-[FL] Node 1 started on port 5001
-[SL] Node 1 started
-[PL] Node 1 started
-[APL] Node 1 started with authentication
-[Node 1] Started on port 5001 (leader for view 0 is 0, behavior=HONEST)
-[UdpTransport] Started on port 5002
-[FL] Node 2 started on port 5002
-[SL] Node 2 started
-[PL] Node 2 started
-[APL] Node 2 started with authentication
-[Node 2] Started on port 5002 (leader for view 0 is 0, behavior=HONEST)
-[UdpTransport] Started on port 5003
-[FL] Node 3 started on port 5003
-[SL] Node 3 started
-[PL] Node 3 started
-[APL] Node 3 started with authentication
-[Node 3] Started on port 5003 (leader for view 0 is 0, behavior=HONEST)
-[Client 205] Started on port 6205
-[Client 205] Sent request 9b9c8f69-c503-44aa-87f3-7fb07f4009c5 to Node 0
-[Client 205] Sent request 9b9c8f69-c503-44aa-87f3-7fb07f4009c5 to Node 1
-[Client 205] Sent request 9b9c8f69-c503-44aa-87f3-7fb07f4009c5 to Node 2
-[Client 205] Sent request 9b9c8f69-c503-44aa-87f3-7fb07f4009c5 to Node 3
-[Node 1] Appended to blockchain: test-persist-1
-[Client 205] Reply from node 1 (view 0): Committed in view 0
-[Node 2] Appended to blockchain: test-persist-1
-[Node 0] Appended to blockchain: test-persist-1
-[Node 3] Appended to blockchain: test-persist-1
-[Node 1] Moved to view 1 (block decided)
-[Node 2] Moved to view 1 (block decided)
-[Node 0] Moved to view 1 (block decided)
-[Node 3] Moved to view 1 (block decided)
-[Node 3] Stopped
-[UdpTransport] Started on port 5003
-[FL] Node 3 started on port 5003
-[SL] Node 3 started
-[PL] Node 3 started
-[APL] Node 3 started with authentication
-[Node 3] Started on port 5003 (leader for view 1 is 1, behavior=HONEST)
-[Client 205] Sent request e09e2765-3d86-40be-bbc5-690d31c0632e to Node 0
-[Client 205] Sent request e09e2765-3d86-40be-bbc5-690d31c0632e to Node 1
-[Client 205] Sent request e09e2765-3d86-40be-bbc5-690d31c0632e to Node 2
-[Client 205] Sent request e09e2765-3d86-40be-bbc5-690d31c0632e to Node 3
-[Node 0] Appended to blockchain: test-persist-2
-[Client 205] Reply from node 0 (view 1): Committed in view 1
-[Node 2] Appended to blockchain: test-persist-2
-[Node 1] Appended to blockchain: test-persist-2
-[Node 0] Moved to view 2 (block decided)
-[Node 3] Appended to blockchain: test-persist-2
-[Node 2] Moved to view 2 (block decided)
-[Node 3] Moved to view 2 (block decided)
-[Node 1] Moved to view 2 (block decided)
-[Client 205] Stopped
-[Node 0] Stopped
-[Node 1] Stopped
-[Node 2] Stopped
-[Node 3] Stopped
+  <testcase name="faultInjectionDropDelayDuplicateCorruptStillCommits" classname="depchain.DepChainStage1Test" time="3.738">
+    <system-out><![CDATA[[UdpTransport] listening on port 5000
+[FL] Node 0 up on port 5000
+[SL] Node 0 up
+[PL] Node 0 up
+[APL] Node 0 up w/ auth stuff
+[Node 0] up on port 5000 (leader for view 0 is 0, behavior=HONEST)
+[UdpTransport] listening on port 5001
+[FL] Node 1 up on port 5001
+[SL] Node 1 up
+[PL] Node 1 up
+[APL] Node 1 up w/ auth stuff
+[Node 1] up on port 5001 (leader for view 0 is 0, behavior=HONEST)
+[UdpTransport] listening on port 5002
+[FL] Node 2 up on port 5002
+[SL] Node 2 up
+[PL] Node 2 up
+[APL] Node 2 up w/ auth stuff
+[Node 2] up on port 5002 (leader for view 0 is 0, behavior=HONEST)
+[UdpTransport] listening on port 5003
+[FL] Node 3 up on port 5003
+[SL] Node 3 up
+[PL] Node 3 up
+[APL] Node 3 up w/ auth stuff
+[Node 3] up on port 5003 (leader for view 0 is 0, behavior=HONEST)
+[Client 202] up on port 6202
+[Client 202] sent req 436d5d03-452a-4035-9860-f8385e5ccc8c to node 0
+[Client 202] sent req 436d5d03-452a-4035-9860-f8385e5ccc8c to node 1
+[Client 202] sent req 436d5d03-452a-4035-9860-f8385e5ccc8c to node 2
+[Client 202] sent req 436d5d03-452a-4035-9860-f8385e5ccc8c to node 3
+[FL] fault thing dropped msg from 0 to 1 type=PREPARE
+[FL] fault thing dropped msg from 0 to 1 type=PREPARE
+[FL] fault thing dropped msg from 0 to 1 type=PREPARE
+[FL] fault thing dropped msg from 0 to 1 type=PREPARE
+[FL] fault thing dropped msg from 0 to 1 type=PREPARE
+[FL] fault thing dropped msg from 0 to 1 type=PREPARE
+[FL] fault thing dropped msg from 0 to 1 type=PREPARE
+[Node 2] chain got: test-faults-1
+[Node 2] now on view 1 (block decided)
+[Client 202] got reply frm node 2 (view 0): commited on view 0
+[Node 0] chain got: test-faults-1
+[Node 0] now on view 1 (block decided)
+[Node 3] chain got: test-faults-1
+[Node 3] now on view 1 (block decided)
+[Node 1] now on view 1 (received NEW_VIEW)
+[Node 1] chain got: test-faults-1
+[Node 1] now on view 2 (block decided)
+[Node 0] now on view 2 (received NEW_VIEW)
+[Node 2] now on view 2 (received NEW_VIEW)
+[Node 3] now on view 2 (received NEW_VIEW)
+[Client 202] stopped
+[Node 0] stopped
+[Node 1] stopped
+[Node 2] stopped
+[Node 3] stopped
 ]]></system-out>
-  </testcase>
-  <testcase name="faultInjectionDropDelayDuplicateCorruptStillCommits" classname="depchain.DepChainStage1Test" time="3.709">
-    <system-out><![CDATA[[UdpTransport] Started on port 5000
-[FL] Node 0 started on port 5000
-[SL] Node 0 started
-[PL] Node 0 started
-[APL] Node 0 started with authentication
-[Node 0] Started on port 5000 (leader for view 0 is 0, behavior=HONEST)
-[UdpTransport] Started on port 5001
-[FL] Node 1 started on port 5001
-[SL] Node 1 started
-[PL] Node 1 started
-[APL] Node 1 started with authentication
-[Node 1] Started on port 5001 (leader for view 0 is 0, behavior=HONEST)
-[UdpTransport] Started on port 5002
-[FL] Node 2 started on port 5002
-[SL] Node 2 started
-[PL] Node 2 started
-[APL] Node 2 started with authentication
-[Node 2] Started on port 5002 (leader for view 0 is 0, behavior=HONEST)
-[UdpTransport] Started on port 5003
-[FL] Node 3 started on port 5003
-[SL] Node 3 started
-[PL] Node 3 started
-[APL] Node 3 started with authentication
-[Node 3] Started on port 5003 (leader for view 0 is 0, behavior=HONEST)
-[Client 202] Started on port 6202
-[Client 202] Sent request fb4b264f-a266-42db-b6e4-f00d749ca80d to Node 0
-[Client 202] Sent request fb4b264f-a266-42db-b6e4-f00d749ca80d to Node 1
-[Client 202] Sent request fb4b264f-a266-42db-b6e4-f00d749ca80d to Node 2
-[Client 202] Sent request fb4b264f-a266-42db-b6e4-f00d749ca80d to Node 3
-[FL] Fault injector dropped message from 0 to 1 type=PREPARE
-[FL] Fault injector dropped message from 0 to 1 type=PREPARE
-[FL] Fault injector dropped message from 0 to 1 type=PREPARE
-[FL] Fault injector dropped message from 0 to 1 type=PREPARE
-[FL] Fault injector dropped message from 0 to 1 type=PREPARE
-[FL] Fault injector dropped message from 0 to 1 type=PREPARE
-[FL] Fault injector dropped message from 0 to 1 type=PREPARE
-[Node 2] Appended to blockchain: test-faults-1
-[Node 2] Moved to view 1 (block decided)
-[Client 202] Reply from node 2 (view 0): Committed in view 0
-[Node 0] Appended to blockchain: test-faults-1
-[Node 0] Moved to view 1 (block decided)
-[Node 3] Appended to blockchain: test-faults-1
-[Node 3] Moved to view 1 (block decided)
-[Node 1] Moved to view 1 (received NEW_VIEW)
-[Node 1] Appended to blockchain: test-faults-1
-[Node 1] Moved to view 2 (block decided)
-[Node 0] Moved to view 2 (received NEW_VIEW)
-[Node 2] Moved to view 2 (received NEW_VIEW)
-[Node 3] Moved to view 2 (received NEW_VIEW)
-[Client 202] Stopped
-[Node 0] Stopped
-[Node 1] Stopped
-[Node 2] Stopped
-[Node 3] Stopped
-]]></system-out>
-    <system-err><![CDATA[[FL] Failed to process packet: Failed to deserialize message
-[FL] Failed to process packet: Failed to deserialize message
-[FL] Failed to process packet: Failed to deserialize message
-[FL] Failed to process packet: Failed to deserialize message
-[FL] Failed to process packet: Failed to deserialize message
-[FL] Failed to process packet: Failed to deserialize message
+    <system-err><![CDATA[[FL] packet parse went bad: Failed to deserialize message
+[FL] packet parse went bad: Failed to deserialize message
+[FL] packet parse went bad: Failed to deserialize message
+[FL] packet parse went bad: Failed to deserialize message
+[FL] packet parse went bad: Failed to deserialize message
+[FL] packet parse went bad: Failed to deserialize message
 ]]></system-err>
   </testcase>
-  <testcase name="consensusAppendsToAllNodes" classname="depchain.DepChainStage1Test" time="0.418">
-    <system-out><![CDATA[[UdpTransport] Started on port 5000
-[FL] Node 0 started on port 5000
-[SL] Node 0 started
-[PL] Node 0 started
-[APL] Node 0 started with authentication
-[Node 0] Started on port 5000 (leader for view 0 is 0, behavior=HONEST)
-[UdpTransport] Started on port 5001
-[FL] Node 1 started on port 5001
-[SL] Node 1 started
-[PL] Node 1 started
-[APL] Node 1 started with authentication
-[Node 1] Started on port 5001 (leader for view 0 is 0, behavior=HONEST)
-[UdpTransport] Started on port 5002
-[FL] Node 2 started on port 5002
-[SL] Node 2 started
-[PL] Node 2 started
-[APL] Node 2 started with authentication
-[Node 2] Started on port 5002 (leader for view 0 is 0, behavior=HONEST)
-[UdpTransport] Started on port 5003
-[FL] Node 3 started on port 5003
-[SL] Node 3 started
-[PL] Node 3 started
-[APL] Node 3 started with authentication
-[Node 3] Started on port 5003 (leader for view 0 is 0, behavior=HONEST)
-[Client 200] Started on port 6200
-[Client 200] Sent request 5074bc47-1800-4bed-950a-49c774c3f374 to Node 0
-[Client 200] Sent request 5074bc47-1800-4bed-950a-49c774c3f374 to Node 1
-[Client 200] Sent request 5074bc47-1800-4bed-950a-49c774c3f374 to Node 2
-[Client 200] Sent request 5074bc47-1800-4bed-950a-49c774c3f374 to Node 3
-[Node 1] Appended to blockchain: test-consensus-1
-[Node 1] Moved to view 1 (block decided)
-[Client 200] Reply from node 1 (view 0): Committed in view 0
-[Node 2] Appended to blockchain: test-consensus-1
-[Node 2] Moved to view 1 (block decided)
-[Node 0] Appended to blockchain: test-consensus-1
-[Node 0] Moved to view 1 (block decided)
-[Node 3] Appended to blockchain: test-consensus-1
-[Node 3] Moved to view 1 (block decided)
-[Client 200] Stopped
-[Node 0] Stopped
-[Node 1] Stopped
-[Node 2] Stopped
-[Node 3] Stopped
+  <testcase name="consensusAppendsToAllNodes" classname="depchain.DepChainStage1Test" time="0.39">
+    <system-out><![CDATA[[UdpTransport] listening on port 5000
+[FL] Node 0 up on port 5000
+[SL] Node 0 up
+[PL] Node 0 up
+[APL] Node 0 up w/ auth stuff
+[Node 0] up on port 5000 (leader for view 0 is 0, behavior=HONEST)
+[UdpTransport] listening on port 5001
+[FL] Node 1 up on port 5001
+[SL] Node 1 up
+[PL] Node 1 up
+[APL] Node 1 up w/ auth stuff
+[Node 1] up on port 5001 (leader for view 0 is 0, behavior=HONEST)
+[UdpTransport] listening on port 5002
+[FL] Node 2 up on port 5002
+[SL] Node 2 up
+[PL] Node 2 up
+[APL] Node 2 up w/ auth stuff
+[Node 2] up on port 5002 (leader for view 0 is 0, behavior=HONEST)
+[UdpTransport] listening on port 5003
+[FL] Node 3 up on port 5003
+[SL] Node 3 up
+[PL] Node 3 up
+[APL] Node 3 up w/ auth stuff
+[Node 3] up on port 5003 (leader for view 0 is 0, behavior=HONEST)
+[Client 200] up on port 6200
+[Client 200] sent req b588b1b7-ac05-45a3-9e09-f04385c092a3 to node 0
+[Client 200] sent req b588b1b7-ac05-45a3-9e09-f04385c092a3 to node 1
+[Client 200] sent req b588b1b7-ac05-45a3-9e09-f04385c092a3 to node 2
+[Client 200] sent req b588b1b7-ac05-45a3-9e09-f04385c092a3 to node 3
+[Node 1] chain got: test-consensus-1
+[Node 1] now on view 1 (block decided)
+[Client 200] got reply frm node 1 (view 0): commited on view 0
+[Node 2] chain got: test-consensus-1
+[Node 2] now on view 1 (block decided)
+[Node 0] chain got: test-consensus-1
+[Node 0] now on view 1 (block decided)
+[Node 3] chain got: test-consensus-1
+[Node 3] now on view 1 (block decided)
+[Client 200] stopped
+[Node 0] stopped
+[Node 1] stopped
+[Node 2] stopped
+[Node 3] stopped
 ]]></system-out>
   </testcase>
 </testsuite>

@@ -41,15 +41,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Represents a blockchain node in the DepChain network.
- *
- * The node integrates:
- * - Authenticated links (UDP -> FL -> SL -> PL -> APL)
- * - Basic HotStuff phases (prepare, pre-commit, commit, decide)
- * - Timeout-based leader/view change with NEW_VIEW
- * - Simple append-only blockchain state machine
- */
 public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
 
     private static final String GENESIS_HASH = "GENESIS";
@@ -197,7 +188,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         System.out.println(
             "[Node " +
                 nodeId +
-                "] Started on port " +
+                "] up on port " +
                 port +
                 " (leader for view " +
                 currentView +
@@ -220,7 +211,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         }
         scheduler.shutdownNow();
         apl.stop();
-        System.out.println("[Node " + nodeId + "] Stopped");
+        System.out.println("[Node " + nodeId + "] stopped");
     }
 
     @Override
@@ -242,9 +233,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
 
     public void appendToBlockchain(String data) {
         blockchain.add(data);
-        System.out.println(
-            "[Node " + nodeId + "] Appended to blockchain: " + data
-        );
+        System.out.println("[Node " + nodeId + "] chain got: " + data);
         if (listener != null) {
             listener.onBlockAppended(data);
         }
@@ -301,7 +290,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
                 System.out.println(
                     "[Node " +
                         nodeId +
-                        "] Ignored message type " +
+                        "] ignored msg type " +
                         message.getType() +
                         " from " +
                         senderId
@@ -317,7 +306,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         System.out.println(
             "[Node " +
                 nodeId +
-                "] Data from Node " +
+                "] got data from node " +
                 senderId +
                 ": " +
                 message.getPayloadAsString()
@@ -330,7 +319,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             System.err.println(
                 "[Node " +
                     nodeId +
-                    "] Failed to decode client request from sender " +
+                    "] couldnt read client req from sender " +
                     senderId
             );
             return;
@@ -339,7 +328,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             System.err.println(
                 "[Node " +
                     nodeId +
-                    "] Rejected invalid client request " +
+                    "] client req looks bad " +
                     request.getRequestId()
             );
             return;
@@ -347,7 +336,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
 
         synchronized (lock) {
             if (decidedRequestIds.contains(request.getRequestId())) {
-                sendClientReply(request, true, "Request already decided");
+                sendClientReply(request, true, "req was alrdy decided");
                 return;
             }
 
@@ -377,9 +366,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         if (isSystemNode(senderId)) {
             try {
                 return ClientRequest.deserialize(payload);
-            } catch (Exception ignored) {
-                // Fall through to encrypted decode path.
-            }
+            } catch (Exception ignored) {}
         }
 
         try {
@@ -391,9 +378,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
                 keyManager.getPrivateKey()
             );
             return ClientRequest.deserialize(decryptedBytes);
-        } catch (Exception ignored) {
-            // Try plain request format next.
-        }
+        } catch (Exception ignored) {}
 
         try {
             return ClientRequest.deserialize(payload);
@@ -730,7 +715,6 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
                 }
             }
 
-            // Echo once per view so the leader can gather quorum.
             sendNewViewLocked();
 
             if (
@@ -886,7 +870,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         appendToBlockchain(block.getData());
 
         if (repliedRequestIds.add(block.getRequestId())) {
-            sendClientReply(block, true, "Committed in view " + currentView);
+            sendClientReply(block, true, "commited on view " + currentView);
         }
 
         activeBlockHash = null;
@@ -1075,7 +1059,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         System.out.println(
             "[Node " +
                 nodeId +
-                "] Moved to view " +
+                "] now on view " +
                 currentView +
                 " (" +
                 reason +
@@ -1295,7 +1279,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             System.err.println(
                 "[Node " +
                     nodeId +
-                    "] Failed to send client reply: " +
+                    "] couldnt send client reply: " +
                     e.getMessage()
             );
         }

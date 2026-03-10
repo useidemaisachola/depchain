@@ -4,7 +4,6 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.Objects;
 
-/*Represents a client request to append data to the blockchain.*/
 public class ClientRequest implements Serializable {
 
     private static final long serialVersionUID = 1L;

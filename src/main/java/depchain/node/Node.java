@@ -87,6 +87,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
     private ClientRequest activeClientRequest;
     private ConsensusStep activeStep;
     private QuorumCertificate highQc;
+    private QuorumCertificate lockedQc;
 
     private NodeListener listener;
 
@@ -162,6 +163,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         this.activeClientRequest = null;
         this.activeStep = ConsensusStep.IDLE;
         this.highQc = null;
+        this.lockedQc = null;
 
         Map<Integer, NodeAddress> nodeAddresses =
             NetworkConfig.getAllNodeAddresses();
@@ -179,10 +181,12 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
     }
 
     public void start() {
-        running = true;
-        apl.start();
         synchronized (lock) {
             loadPersistentStateLocked();
+            running = true;
+        }
+        apl.start();
+        synchronized (lock) {
             scheduleViewTimeoutLocked();
         }
         System.out.println(
@@ -201,16 +205,18 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
     }
 
     public void stop() {
-        running = false;
         synchronized (lock) {
-            savePersistentStateLocked();
+            running = false;
             if (timeoutTask != null) {
                 timeoutTask.cancel(true);
                 timeoutTask = null;
             }
         }
-        scheduler.shutdownNow();
         apl.stop();
+        synchronized (lock) {
+            savePersistentStateLocked();
+        }
+        scheduler.shutdownNow();
         System.out.println("[Node " + nodeId + "] stopped");
     }
 
@@ -441,15 +447,31 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             if (senderId != expectedLeader) {
                 return;
             }
-            if (payload.getBlock().getView() != currentView) {
+            Block block = payload.getBlock();
+            if (
+                block.getView() != currentView ||
+                block.getProposerId() != senderId ||
+                !block.hasValidHash()
+            ) {
                 return;
             }
             QuorumCertificate justifyQc = payload.getJustifyQc();
-            if (justifyQc != null && !justifyQc.verify(keyManager)) {
+            if (justifyQc != null) {
+                if (
+                    justifyQc.getView() > currentView ||
+                    !justifyQc.verify(keyManager) ||
+                    !justifyQc.getBlockHash().equals(block.getParentHash())
+                ) {
+                    return;
+                }
+            }
+            if (!isSafeToVoteLocked(block, justifyQc)) {
                 return;
             }
 
-            Block block = payload.getBlock();
+            if (justifyQc != null && isHigherQc(justifyQc, highQc)) {
+                highQc = justifyQc;
+            }
             blocksByHash.putIfAbsent(block.getHash(), block);
             activeBlockHash = block.getHash();
             activeStep = ConsensusStep.PREPARE;
@@ -481,6 +503,9 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
 
         synchronized (lock) {
             if (!isLeaderForCurrentViewLocked()) {
+                return;
+            }
+            if (senderId != vote.getVoterId()) {
                 return;
             }
             if (!vote.verify(keyManager)) {
@@ -524,16 +549,19 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             QuorumCertificate qc = payload.getQuorumCertificate();
             if (
                 qc.getPhase() != ConsensusPhase.PREPARE ||
+                qc.getView() != payload.getView() ||
+                !qc.getBlockHash().equals(payload.getBlockHash()) ||
                 !qc.verify(keyManager)
             ) {
                 return;
             }
-            if (!blocksByHash.containsKey(payload.getBlockHash())) {
+            if (!ensureBlockPresentLocked(payload.getBlockHash(), payload.getBlock())) {
                 return;
             }
             activeBlockHash = payload.getBlockHash();
             activeStep = ConsensusStep.PRE_COMMIT;
             highQc = qc;
+            lockedQc = qc;
 
             ConsensusVote vote = createVote(
                 ConsensusPhase.PRE_COMMIT,
@@ -562,6 +590,9 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
 
         synchronized (lock) {
             if (!isLeaderForCurrentViewLocked()) {
+                return;
+            }
+            if (senderId != vote.getVoterId()) {
                 return;
             }
             if (!vote.verify(keyManager)) {
@@ -605,11 +636,13 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             QuorumCertificate qc = payload.getQuorumCertificate();
             if (
                 qc.getPhase() != ConsensusPhase.PRE_COMMIT ||
+                qc.getView() != payload.getView() ||
+                !qc.getBlockHash().equals(payload.getBlockHash()) ||
                 !qc.verify(keyManager)
             ) {
                 return;
             }
-            if (!blocksByHash.containsKey(payload.getBlockHash())) {
+            if (!ensureBlockPresentLocked(payload.getBlockHash(), payload.getBlock())) {
                 return;
             }
             activeBlockHash = payload.getBlockHash();
@@ -639,6 +672,9 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
 
         synchronized (lock) {
             if (!isLeaderForCurrentViewLocked()) {
+                return;
+            }
+            if (senderId != vote.getVoterId()) {
                 return;
             }
             if (!vote.verify(keyManager)) {
@@ -681,8 +717,14 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             }
             QuorumCertificate qc = payload.getCommitQc();
             if (
-                qc.getPhase() != ConsensusPhase.COMMIT || !qc.verify(keyManager)
+                qc.getPhase() != ConsensusPhase.COMMIT ||
+                qc.getView() != payload.getView() ||
+                !qc.getBlockHash().equals(payload.getBlockHash()) ||
+                !qc.verify(keyManager)
             ) {
+                return;
+            }
+            if (!ensureBlockPresentLocked(payload.getBlockHash(), payload.getBlock())) {
                 return;
             }
             commitBlockLocked(payload.getBlockHash(), qc);
@@ -748,9 +790,11 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
 
         highQc = qc;
         activeStep = ConsensusStep.PRE_COMMIT;
+        Block block = blocksByHash.get(vote.getBlockHash());
         PhasePayload payload = new PhasePayload(
             currentView,
             vote.getBlockHash(),
+            block,
             qc
         );
         broadcastToOtherNodesLocked(
@@ -792,9 +836,11 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
 
         highQc = qc;
         activeStep = ConsensusStep.COMMIT;
+        Block block = blocksByHash.get(vote.getBlockHash());
         PhasePayload payload = new PhasePayload(
             currentView,
             vote.getBlockHash(),
+            block,
             qc
         );
         broadcastToOtherNodesLocked(MessageType.COMMIT, payload.serialize());
@@ -828,9 +874,11 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         }
 
         highQc = qc;
+        Block block = blocksByHash.get(vote.getBlockHash());
         DecidePayload decidePayload = new DecidePayload(
             currentView,
             vote.getBlockHash(),
+            block,
             qc
         );
         broadcastToOtherNodesLocked(
@@ -866,6 +914,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         lastCommittedHash = blockHash;
         lastCommittedHeight = block.getHeight();
         highQc = commitQc;
+        lockedQc = commitQc;
 
         appendToBlockchain(block.getData());
 
@@ -924,9 +973,12 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         }
         activeClientRequest = nextRequest;
 
+        String parentHash = selectProposalParentHashLocked();
+        int parentHeight = resolveBlockHeightLocked(parentHash);
+
         Block block = Block.create(
-            lastCommittedHash,
-            lastCommittedHeight + 1,
+            parentHash,
+            parentHeight + 1,
             currentView,
             nodeId,
             nextRequest.getRequestId(),
@@ -946,8 +998,8 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
                     continue;
                 }
                 Block forkBlock = Block.create(
-                    lastCommittedHash,
-                    lastCommittedHeight + 1,
+                    parentHash,
+                    parentHeight + 1,
                     currentView,
                     nodeId,
                     nextRequest.getRequestId(),
@@ -1030,12 +1082,110 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             phase,
             view,
             blockHash,
+            nodeId,
+            keyManager,
             votes.values()
         );
     }
 
     private static String voteKey(int view, String blockHash) {
         return view + ":" + blockHash;
+    }
+
+    private boolean isSafeToVoteLocked(
+        Block block,
+        QuorumCertificate justifyQc
+    ) {
+        if (!isValidProposalParentLocked(block, justifyQc)) {
+            return false;
+        }
+        if (lockedQc == null) {
+            return true;
+        }
+        if (justifyQc != null && justifyQc.getView() > lockedQc.getView()) {
+            return true;
+        }
+        return isBlockExtensionOfLocked(block, lockedQc.getBlockHash());
+    }
+
+    private boolean isValidProposalParentLocked(
+        Block block,
+        QuorumCertificate justifyQc
+    ) {
+        if (justifyQc != null) {
+            return block.getParentHash().equals(justifyQc.getBlockHash());
+        }
+        return GENESIS_HASH.equals(block.getParentHash()) ||
+        lastCommittedHash.equals(block.getParentHash());
+    }
+
+    private boolean isBlockExtensionOfLocked(Block block, String ancestorHash) {
+        String currentHash = block.getParentHash();
+        Set<String> visited = new HashSet<>();
+        while (currentHash != null && visited.add(currentHash)) {
+            if (ancestorHash.equals(currentHash)) {
+                return true;
+            }
+            if (GENESIS_HASH.equals(currentHash)) {
+                return false;
+            }
+            Block parent = blocksByHash.get(currentHash);
+            if (parent == null) {
+                return false;
+            }
+            currentHash = parent.getParentHash();
+        }
+        return false;
+    }
+
+    private String selectProposalParentHashLocked() {
+        if (highQc != null) {
+            String candidate = highQc.getBlockHash();
+            if (
+                candidate.equals(lastCommittedHash) ||
+                blocksByHash.containsKey(candidate)
+            ) {
+                return candidate;
+            }
+        }
+        return lastCommittedHash;
+    }
+
+    private int resolveBlockHeightLocked(String blockHash) {
+        if (GENESIS_HASH.equals(blockHash)) {
+            return 0;
+        }
+        if (lastCommittedHash.equals(blockHash)) {
+            return lastCommittedHeight;
+        }
+        Block block = blocksByHash.get(blockHash);
+        return block == null ? lastCommittedHeight : block.getHeight();
+    }
+
+    private boolean ensureBlockPresentLocked(String blockHash, Block block) {
+        Block knownBlock = blocksByHash.get(blockHash);
+        if (knownBlock != null) {
+            return true;
+        }
+        if (
+            block == null ||
+            !blockHash.equals(block.getHash()) ||
+            !block.hasValidHash()
+        ) {
+            return false;
+        }
+        blocksByHash.put(blockHash, block);
+        return true;
+    }
+
+    private boolean isHigherQc(
+        QuorumCertificate candidate,
+        QuorumCertificate current
+    ) {
+        if (candidate == null) {
+            return false;
+        }
+        return current == null || candidate.getView() > current.getView();
     }
 
     private void moveToViewLocked(int newView, String reason) {
@@ -1161,6 +1311,10 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
     }
 
     private void loadPersistentStateLocked() {
+        apl.restoreCurrentMessageId(0);
+        apl.restoreReplayWindows(Collections.emptyMap());
+        highQc = null;
+        lockedQc = null;
         if (!persistenceEnabled) {
             return;
         }
@@ -1197,6 +1351,9 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             committedBlockHashes.add(lastCommittedHash);
         }
 
+        apl.restoreCurrentMessageId(state.getLastUsedNetworkMessageId());
+        apl.restoreReplayWindows(state.getAplReplayWindows());
+
         activeBlockHash = null;
         activeClientRequest = null;
         activeStep = ConsensusStep.IDLE;
@@ -1212,7 +1369,9 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             lastCommittedHeight,
             blockchain,
             decidedRequestIds,
-            repliedRequestIds
+            repliedRequestIds,
+            apl.getCurrentMessageId(),
+            apl.snapshotReplayWindows()
         );
         stateStore.save(state);
     }
@@ -1267,6 +1426,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
                 MessageType.CLIENT_REPLY,
                 reply.serialize()
             );
+            message.setSignature(keyManager.sign(message.getBytesToSign()));
             byte[] bytes = message.serialize();
             DatagramPacket packet = new DatagramPacket(
                 bytes,

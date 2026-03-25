@@ -1,7 +1,5 @@
 package depchain.net;
 
-import depchain.net.Message;
-import depchain.net.UdpTransport;
 import depchain.net.fault.NetworkFaultController;
 import java.net.DatagramPacket;
 import java.net.InetAddress;

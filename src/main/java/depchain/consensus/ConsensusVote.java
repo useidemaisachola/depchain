@@ -28,13 +28,13 @@ public class ConsensusVote implements Serializable {
 
     public static ConsensusVote create(ConsensusPhase phase, int view, String blockHash, int voterId, KeyManager keyManager) {
         byte[] toSign = bytesToSign(phase, view, blockHash);
-        byte[] signature = keyManager.sign(toSign);
+        byte[] signature = keyManager.signThresholdShare(toSign);
         return new ConsensusVote(phase, view, blockHash, voterId, signature);
     }
 
     public boolean verify(KeyManager keyManager) {
         byte[] toVerify = bytesToSign(phase, view, blockHash);
-        return keyManager.verify(voterId, toVerify, signature);
+        return keyManager.verifyThresholdShare(voterId, toVerify, signature);
     }
 
     public static byte[] bytesToSign(ConsensusPhase phase, int view, String blockHash) {

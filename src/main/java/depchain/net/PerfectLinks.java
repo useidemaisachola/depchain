@@ -1,7 +1,6 @@
 package depchain.net;
 
-import depchain.net.Message;
-import depchain.net.MessageType;
+import depchain.crypto.KeyManager;
 import java.net.InetAddress;
 import java.util.HashSet;
 import java.util.Map;
@@ -18,6 +17,7 @@ public class PerfectLinks implements StubbornLinks.Listener {
     private final StubbornLinks stubbornLinks;
     private final Listener listener;
     private final int nodeId;
+    private final KeyManager keyManager;
 
     private final Set<String> delivered;
 
@@ -28,10 +28,12 @@ public class PerfectLinks implements StubbornLinks.Listener {
         int nodeId,
         int port,
         Listener listener,
-        Map<Integer, FairLossLinks.NodeAddress> nodeAddresses
+        Map<Integer, FairLossLinks.NodeAddress> nodeAddresses,
+        KeyManager keyManager
     ) {
         this.nodeId = nodeId;
         this.listener = listener;
+        this.keyManager = keyManager;
         this.stubbornLinks = new StubbornLinks(
             nodeId,
             port,
@@ -98,6 +100,9 @@ public class PerfectLinks implements StubbornLinks.Listener {
         String messageKey = senderId + "-" + message.getMessageId();
 
         if (message.getType() == MessageType.ACK) {
+            if (!isValidAck(senderId, message)) {
+                return;
+            }
             String ackPayload = message.getPayloadAsString();
             String[] parts = ackPayload.split("-");
             if (parts.length >= 2) {
@@ -150,8 +155,31 @@ public class PerfectLinks implements StubbornLinks.Listener {
             MessageType.ACK,
             ackPayload
         );
+        ack.setSignature(keyManager.sign(ack.getBytesToSign()));
 
         stubbornLinks.sendOnce(address, port, ack);
+    }
+
+    private boolean isValidAck(int senderId, Message message) {
+        if (message.getSenderId() != senderId || message.getReceiverId() != nodeId) {
+            return false;
+        }
+        if (!keyManager.hasPublicKey(senderId)) {
+            return false;
+        }
+        byte[] signature = message.getSignature();
+        if (signature == null || signature.length == 0) {
+            return false;
+        }
+        return keyManager.verify(senderId, message.getBytesToSign(), signature);
+    }
+
+    public long getCurrentMessageId() {
+        return messageIdCounter.get();
+    }
+
+    public void restoreCurrentMessageId(long lastUsedMessageId) {
+        messageIdCounter.set(Math.max(0L, lastUsedMessageId));
     }
 
     public int getNodeId() {

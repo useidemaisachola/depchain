@@ -204,6 +204,8 @@ public class App {
                     case "exit":
                         node.stop();
                         System.out.println("node stopped");
+                        scanner.close();
+                        node.close();
                         return;
                     default:
                         System.out.println("dont know this cmd: " + cmd);
@@ -287,6 +289,7 @@ public class App {
                     case "exit":
                         client.stop();
                         System.out.println("client stopped");
+                        scanner.close();
                         return;
                     default:
                         System.out.println("dont know this cmd: " + cmd);

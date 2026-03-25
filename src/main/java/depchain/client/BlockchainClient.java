@@ -140,6 +140,9 @@ public class BlockchainClient {
     }
 
     private boolean waitForReply(String requestId) {
+        // Need f+1 matching successful replies to be safe against Byzantine nodes
+        int requiredReplies = NetworkConfig.MAX_FAULTS + 1;
+        Set<Integer> successfulResponders = new HashSet<>();
         long deadline = System.currentTimeMillis() + TIMEOUT_MS;
         while (System.currentTimeMillis() < deadline) {
             long remaining = deadline - System.currentTimeMillis();
@@ -151,6 +154,9 @@ public class BlockchainClient {
                 if (replyMessage == null) {
                     break;
                 }
+                if (!isValidSignedNodeMessage(replyMessage)) {
+                    continue;
+                }
                 if (replyMessage.getType() != MessageType.CLIENT_REPLY) {
                     continue;
                 }
@@ -158,6 +164,9 @@ public class BlockchainClient {
                     replyMessage.getPayload()
                 );
                 if (!requestId.equals(reply.getRequestId())) {
+                    continue;
+                }
+                if (replyMessage.getSenderId() != reply.getResponderNodeId()) {
                     continue;
                 }
                 System.out.println(
@@ -170,7 +179,14 @@ public class BlockchainClient {
                         "): " +
                         reply.getMessage()
                 );
-                return reply.isSuccess();
+                if (
+                    reply.isSuccess() &&
+                    successfulResponders.add(reply.getResponderNodeId())
+                ) {
+                    if (successfulResponders.size() >= requiredReplies) {
+                        return true;
+                    }
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return false;
@@ -178,7 +194,12 @@ public class BlockchainClient {
             }
         }
         System.out.println(
-            "[Client " + clientId + "] req " + requestId + " timed out, maybe"
+            "[Client " + clientId + "] req " + requestId + " timed out " +
+            "(got " +
+            successfulResponders.size() +
+            "/" +
+            requiredReplies +
+            " replies)"
         );
         return false;
     }
@@ -232,7 +253,10 @@ public class BlockchainClient {
                 );
 
                 Message message = Message.deserialize(data);
-                if (message.getType() == MessageType.CLIENT_REPLY) {
+                if (
+                    message.getType() == MessageType.CLIENT_REPLY &&
+                    isValidSignedNodeMessage(message)
+                ) {
                     replyQueue.offer(message);
                 }
             } catch (Exception e) {
@@ -246,6 +270,23 @@ public class BlockchainClient {
                 }
             }
         }
+    }
+
+    private boolean isValidSignedNodeMessage(Message message) {
+        int senderId = message.getSenderId();
+        PublicKey publicKey = nodePublicKeys.get(senderId);
+        if (publicKey == null) {
+            return false;
+        }
+        byte[] signature = message.getSignature();
+        if (signature == null || signature.length == 0) {
+            return false;
+        }
+        return CryptoUtils.verify(
+            message.getBytesToSign(),
+            signature,
+            publicKey
+        );
     }
 
     public int getClientId() {

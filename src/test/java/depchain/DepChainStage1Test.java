@@ -1,16 +1,23 @@
 package depchain;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import depchain.client.BlockchainClient;
+import depchain.client.ClientReply;
+import depchain.client.ClientRequest;
 import depchain.config.NetworkConfig;
+import depchain.consensus.ConsensusPhase;
+import depchain.consensus.ConsensusVote;
+import depchain.consensus.QuorumCertificate;
 import depchain.crypto.KeyManager;
 import depchain.net.Message;
 import depchain.net.MessageType;
 import depchain.net.fault.NetworkFaultController;
 import depchain.node.ByzantineBehavior;
 import depchain.node.Node;
+import java.lang.reflect.Method;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -23,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -130,7 +138,13 @@ class DepChainStage1Test {
         Map<Integer, KeyManager> keyManagers = KeyManager.generateInMemory(
             NetworkConfig.NUM_NODES
         );
-        Node node = new Node(2, keyManagers.get(2));
+        Node node = new Node(
+            2,
+            keyManagers.get(2),
+            ByzantineBehavior.HONEST,
+            stateDirectory.toString(),
+            true
+        );
         CountDownLatch delivered = new CountDownLatch(1);
         node.setListener(
             new Node.NodeListener() {
@@ -279,6 +293,142 @@ class DepChainStage1Test {
     }
 
     @Test
+    void tamperedQcSignatureIsRejected() {
+        Map<Integer, KeyManager> keyManagers = KeyManager.generateInMemory(
+            NetworkConfig.NUM_NODES
+        );
+        List<ConsensusVote> votes = List.of(
+            ConsensusVote.create(
+                ConsensusPhase.PREPARE,
+                4,
+                "qc-block-1",
+                0,
+                keyManagers.get(0)
+            ),
+            ConsensusVote.create(
+                ConsensusPhase.PREPARE,
+                4,
+                "qc-block-1",
+                1,
+                keyManagers.get(1)
+            ),
+            ConsensusVote.create(
+                ConsensusPhase.PREPARE,
+                4,
+                "qc-block-1",
+                2,
+                keyManagers.get(2)
+            )
+        );
+
+        QuorumCertificate qc = QuorumCertificate.fromVotes(
+            ConsensusPhase.PREPARE,
+            4,
+            "qc-block-1",
+            0,
+            keyManagers.get(0),
+            votes
+        );
+        assertTrue(qc.verify(keyManagers.get(3)), "Fresh QC should verify");
+
+        byte[] tamperedSignature = qc.getQcSignature();
+        tamperedSignature[0] = (byte) (tamperedSignature[0] ^ 0x5A);
+
+        QuorumCertificate tamperedQc = new QuorumCertificate(
+            qc.getPhase(),
+            qc.getView(),
+            qc.getBlockHash(),
+            qc.getCreatorId(),
+            qc.getSignatures(),
+            tamperedSignature
+        );
+
+        assertFalse(
+            tamperedQc.verify(keyManagers.get(3)),
+            "Nodes should reject a QC with a bad leader signature"
+        );
+    }
+
+    @Test
+    void clientRequiresDistinctSignedReplies() throws Exception {
+        Map<Integer, KeyManager> keyManagers = KeyManager.generateInMemory(
+            NetworkConfig.NUM_NODES
+        );
+        BlockchainClient client = createClient(206, 6206, keyManagers);
+
+        Method buildSignedRequest = BlockchainClient.class.getDeclaredMethod(
+            "buildSignedRequest",
+            String.class
+        );
+        buildSignedRequest.setAccessible(true);
+        ClientRequest request = (ClientRequest) buildSignedRequest.invoke(
+            client,
+            "reply-quorum-test"
+        );
+
+        Method waitForReply = BlockchainClient.class.getDeclaredMethod(
+            "waitForReply",
+            String.class
+        );
+        waitForReply.setAccessible(true);
+
+        Thread senderThread = new Thread(() -> {
+            try {
+                Thread.sleep(150);
+                sendSignedClientReply(
+                    keyManagers.get(0),
+                    0,
+                    client.getClientId(),
+                    6206,
+                    request.getRequestId(),
+                    1L,
+                    true,
+                    "ok-from-0",
+                    7
+                );
+                Thread.sleep(150);
+                sendSignedClientReply(
+                    keyManagers.get(0),
+                    0,
+                    client.getClientId(),
+                    6206,
+                    request.getRequestId(),
+                    2L,
+                    true,
+                    "duplicate-from-0",
+                    7
+                );
+                Thread.sleep(700);
+                sendSignedClientReply(
+                    keyManagers.get(1),
+                    1,
+                    client.getClientId(),
+                    6206,
+                    request.getRequestId(),
+                    3L,
+                    true,
+                    "ok-from-1",
+                    7
+                );
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }, "client-reply-sender");
+        senderThread.setDaemon(true);
+        senderThread.start();
+
+        long startedAt = System.currentTimeMillis();
+        boolean ok = (boolean) waitForReply.invoke(client, request.getRequestId());
+        long elapsedMs = System.currentTimeMillis() - startedAt;
+
+        assertTrue(ok, "Client should accept two distinct signed replies");
+        assertTrue(
+            elapsedMs >= 800,
+            "Client should not count duplicate replies from the same node"
+        );
+    }
+
+    @Test
     void nodeStatePersistsAcrossRestart() throws Exception {
         Map<Integer, KeyManager> keyManagers = KeyManager.generateInMemory(
             NetworkConfig.NUM_NODES
@@ -323,6 +473,10 @@ class DepChainStage1Test {
             5000
         );
         assertTrue(restored, "Restarted node should reload persisted chain");
+        assertTrue(
+            restarted.getAPL().getCurrentMessageId() > 0,
+            "Restarted node should restore its outgoing sequence number"
+        );
 
         boolean second = client.submitRequest("test-persist-2");
         assertTrue(second, "Second request should still commit after restart");
@@ -340,6 +494,262 @@ class DepChainStage1Test {
             secondReplicated,
             "All nodes should replicate post-restart value"
         );
+    }
+
+    @Test
+    void replayWatermarkPersistsAcrossRestart() throws Exception {
+        Map<Integer, KeyManager> keyManagers = KeyManager.generateInMemory(
+            NetworkConfig.NUM_NODES
+        );
+        AtomicInteger totalDelivered = new AtomicInteger(0);
+
+        Node node = new Node(
+            1,
+            keyManagers.get(1),
+            ByzantineBehavior.HONEST,
+            stateDirectory.toString(),
+            true
+        );
+        node.setListener(
+            new Node.NodeListener() {
+                @Override
+                public void onMessageReceived(int senderId, Message message) {
+                    if (message.getType() == MessageType.DATA) {
+                        totalDelivered.incrementAndGet();
+                    }
+                }
+
+                @Override
+                public void onBlockAppended(String data) {}
+            }
+        );
+        node.start();
+        nodesToStop.add(node);
+        Thread.sleep(500);
+
+        Message first = new Message(0, 1, 100L, MessageType.DATA, "first");
+        first.setSignature(keyManagers.get(0).sign(first.getBytesToSign()));
+        sendRawUdp(first.serialize(), NetworkConfig.getNodePort(1));
+        assertTrue(
+            waitUntil(() -> totalDelivered.get() == 1, 3000),
+            "Initial signed message should be delivered"
+        );
+
+        node.stop();
+        nodesToStop.remove(node);
+
+        Node restarted = new Node(
+            1,
+            keyManagers.get(1),
+            ByzantineBehavior.HONEST,
+            stateDirectory.toString(),
+            true
+        );
+        restarted.setListener(
+            new Node.NodeListener() {
+                @Override
+                public void onMessageReceived(int senderId, Message message) {
+                    if (message.getType() == MessageType.DATA) {
+                        totalDelivered.incrementAndGet();
+                    }
+                }
+
+                @Override
+                public void onBlockAppended(String data) {}
+            }
+        );
+        restarted.start();
+        nodesToStop.add(restarted);
+        Thread.sleep(500);
+
+        Message replay = new Message(0, 1, 100L, MessageType.DATA, "replay");
+        replay.setSignature(keyManagers.get(0).sign(replay.getBytesToSign()));
+        sendRawUdp(replay.serialize(), NetworkConfig.getNodePort(1));
+
+        Thread.sleep(1500);
+        assertEquals(
+            1,
+            totalDelivered.get(),
+            "Restarted node should keep replay watermarks and reject old messages"
+        );
+    }
+
+    @Test
+    void replayAttackIsRejected() throws Exception {
+        Map<Integer, KeyManager> keyManagers = KeyManager.generateInMemory(
+            NetworkConfig.NUM_NODES
+        );
+        Node node = new Node(
+            2,
+            keyManagers.get(2),
+            ByzantineBehavior.HONEST,
+            stateDirectory.toString(),
+            true
+        );
+        CountDownLatch firstDelivered = new CountDownLatch(1);
+        AtomicInteger totalDelivered = new AtomicInteger(0);
+
+        node.setListener(
+            new Node.NodeListener() {
+                @Override
+                public void onMessageReceived(int senderId, Message message) {
+                    if (message.getType() == MessageType.DATA) {
+                        totalDelivered.incrementAndGet();
+                        firstDelivered.countDown();
+                    }
+                }
+
+                @Override
+                public void onBlockAppended(String data) {}
+            }
+        );
+        node.start();
+        nodesToStop.add(node);
+        Thread.sleep(500);
+
+        KeyManager senderKeys = keyManagers.get(1);
+
+        // Send a valid signed message with a high sequence number
+        long highMsgId = 10000L;
+        Message firstMsg = new Message(1, 2, highMsgId, MessageType.DATA, "first");
+        firstMsg.setSignature(senderKeys.sign(firstMsg.getBytesToSign()));
+        sendRawUdp(firstMsg.serialize(), NetworkConfig.getNodePort(2));
+
+        assertTrue(
+            firstDelivered.await(3, TimeUnit.SECONDS),
+            "First message should be delivered"
+        );
+        assertEquals(1, totalDelivered.get(), "Exactly one message should be delivered");
+
+        // Send a valid signed message with an older sequence number (replay scenario)
+        long oldMsgId = 1L;
+        Message replayMsg = new Message(1, 2, oldMsgId, MessageType.DATA, "replay");
+        replayMsg.setSignature(senderKeys.sign(replayMsg.getBytesToSign()));
+        sendRawUdp(replayMsg.serialize(), NetworkConfig.getNodePort(2));
+
+        Thread.sleep(1500);
+        assertEquals(
+            1,
+            totalDelivered.get(),
+            "APL should reject message with old sequence number (replay attack)"
+        );
+    }
+
+    @Test
+    void invalidAckSignatureDoesNotStopRetransmission() throws Exception {
+        Map<Integer, KeyManager> keyManagers = KeyManager.generateInMemory(
+            NetworkConfig.NUM_NODES
+        );
+        Node node = new Node(
+            0,
+            keyManagers.get(0),
+            ByzantineBehavior.HONEST,
+            stateDirectory.toString(),
+            true
+        );
+        node.start();
+        nodesToStop.add(node);
+        Thread.sleep(500);
+
+        node.send(1, MessageType.DATA, "needs-ack");
+        assertTrue(
+            waitUntil(
+                () ->
+                    node
+                        .getAPL()
+                        .getPerfectLinks()
+                        .getStubbornLinks()
+                        .getPendingMessageCount() == 1,
+                2000
+            ),
+            "Message should stay pending while no valid ACK arrives"
+        );
+
+        long originalMessageId = node.getAPL().getCurrentMessageId();
+        Message invalidAck = new Message(
+            1,
+            0,
+            9000L,
+            MessageType.ACK,
+            "0-" + originalMessageId
+        );
+        invalidAck.setSignature(new byte[] { 1, 2, 3 });
+        sendRawUdp(invalidAck.serialize(), NetworkConfig.getNodePort(0));
+
+        Thread.sleep(800);
+        assertEquals(
+            1,
+            node
+                .getAPL()
+                .getPerfectLinks()
+                .getStubbornLinks()
+                .getPendingMessageCount(),
+            "Bad ACK signature must not stop retransmission"
+        );
+
+        Message validAck = new Message(
+            1,
+            0,
+            9001L,
+            MessageType.ACK,
+            "0-" + originalMessageId
+        );
+        validAck.setSignature(keyManagers.get(1).sign(validAck.getBytesToSign()));
+        sendRawUdp(validAck.serialize(), NetworkConfig.getNodePort(0));
+
+        assertTrue(
+            waitUntil(
+                () ->
+                    node
+                        .getAPL()
+                        .getPerfectLinks()
+                        .getStubbornLinks()
+                        .getPendingMessageCount() == 0,
+                3000
+            ),
+            "Valid signed ACK should stop retransmission"
+        );
+    }
+
+    private void sendRawUdp(byte[] data, int port) throws Exception {
+        try (DatagramSocket socket = new DatagramSocket()) {
+            DatagramPacket packet = new DatagramPacket(
+                data,
+                data.length,
+                InetAddress.getByName("localhost"),
+                port
+            );
+            socket.send(packet);
+        }
+    }
+
+    private void sendSignedClientReply(
+        KeyManager keyManager,
+        int senderNodeId,
+        int clientId,
+        int clientPort,
+        String requestId,
+        long messageId,
+        boolean success,
+        String status,
+        int view
+    ) throws Exception {
+        ClientReply reply = new ClientReply(
+            requestId,
+            success,
+            status,
+            senderNodeId,
+            view
+        );
+        Message message = new Message(
+            senderNodeId,
+            clientId,
+            messageId,
+            MessageType.CLIENT_REPLY,
+            reply.serialize()
+        );
+        message.setSignature(keyManager.sign(message.getBytesToSign()));
+        sendRawUdp(message.serialize(), clientPort);
     }
 
     private void startNodes(

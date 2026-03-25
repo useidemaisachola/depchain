@@ -117,6 +117,23 @@ public class Block implements Serializable {
         return hash;
     }
 
+    public boolean hasValidHash() {
+        return hash.equals(
+            computeHash(
+                parentHash,
+                height,
+                view,
+                proposerId,
+                requestId,
+                clientId,
+                clientHost,
+                clientPort,
+                data,
+                timestamp
+            )
+        );
+    }
+
     public String getParentHash() {
         return parentHash;
     }

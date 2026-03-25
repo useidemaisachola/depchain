@@ -1,6 +1,5 @@
 package depchain.net;
 
-import depchain.net.Message;
 import java.net.InetAddress;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -135,5 +134,9 @@ public class StubbornLinks implements FairLossLinks.Listener {
 
     public int getNodeId() {
         return nodeId;
+    }
+
+    public int getPendingMessageCount() {
+        return pendingMessages.size();
     }
 }

@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyPair;
+import java.security.MessageDigest;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Collection;
@@ -30,13 +31,20 @@ public class KeyManager {
     private final GroupKey thresholdGroupKey;
     private final KeyShare thresholdKeyShare;
     private final Object thresholdShareLock;
+    // Pairwise HMAC keys derived from RSA private keys.
+    // outgoingMacKeys[j] = key used to MAC messages I send to node j.
+    // incomingMacKeys[j] = key used to verify MACs on messages I receive from node j.
+    private final Map<Integer, byte[]> outgoingMacKeys;
+    private final Map<Integer, byte[]> incomingMacKeys;
 
     public KeyManager(
         int nodeId,
         PrivateKey privateKey,
         Map<Integer, PublicKey> publicKeys,
         GroupKey thresholdGroupKey,
-        KeyShare thresholdKeyShare
+        KeyShare thresholdKeyShare,
+        Map<Integer, byte[]> outgoingMacKeys,
+        Map<Integer, byte[]> incomingMacKeys
     ) {
         this.nodeId = nodeId;
         this.privateKey = privateKey;
@@ -44,6 +52,8 @@ public class KeyManager {
         this.thresholdGroupKey = thresholdGroupKey;
         this.thresholdKeyShare = thresholdKeyShare;
         this.thresholdShareLock = new Object();
+        this.outgoingMacKeys = new HashMap<>(outgoingMacKeys);
+        this.incomingMacKeys = new HashMap<>(incomingMacKeys);
     }
 
     public PrivateKey getPrivateKey() {
@@ -73,6 +83,23 @@ public class KeyManager {
             return false;
         }
         return CryptoUtils.verify(data, signature, pk);
+    }
+
+    public byte[] computeMac(int destNodeId, byte[] data) {
+        byte[] key = outgoingMacKeys.get(destNodeId);
+        if (key == null) {
+            throw new IllegalStateException("No outgoing MAC key for node " + destNodeId);
+        }
+        return CryptoUtils.hmac(key, data);
+    }
+
+    public boolean verifyMac(int senderId, byte[] data, byte[] mac) {
+        byte[] key = incomingMacKeys.get(senderId);
+        if (key == null || mac == null || mac.length == 0) {
+            return false;
+        }
+        byte[] expected = CryptoUtils.hmac(key, data);
+        return MessageDigest.isEqual(expected, mac);
     }
 
     public byte[] signThresholdShare(byte[] data) {
@@ -125,12 +152,28 @@ public class KeyManager {
         Path keysDir = Paths.get(keysDirectory);
         Files.createDirectories(keysDir);
 
+        Map<Integer, KeyPair> keyPairs = new HashMap<>();
         for (int i = 0; i < numNodes; i++) {
             KeyPair kp = CryptoUtils.generateKeyPair();
+            keyPairs.put(i, kp);
             String basePath = keysDir.resolve("node" + i).toString();
             CryptoUtils.saveKeyPair(kp, basePath);
             System.out.println("made keys for node " + i);
         }
+
+        // Derive and save pairwise HMAC keys: hmac_i_j.key is the key node i
+        // uses to MAC messages sent to node j (and node j uses to verify them).
+        for (int i = 0; i < numNodes; i++) {
+            for (int j = 0; j < numNodes; j++) {
+                if (i != j) {
+                    byte[] macKey = CryptoUtils.deriveHmacKey(
+                        keyPairs.get(i).getPrivate(), j
+                    );
+                    Files.write(keysDir.resolve("hmac_" + i + "_" + j + ".key"), macKey);
+                }
+            }
+        }
+        System.out.println("derived pairwise HMAC keys");
 
         writeThresholdMaterial(keysDir, buildThresholdMaterial(numNodes));
         System.out.println("made threshold QC key material");
@@ -166,12 +209,27 @@ public class KeyManager {
             groupKey
         );
 
+        // Outgoing MAC keys: derived from own private key (deterministic).
+        // Incoming MAC keys: read from pre-generated files (derived from other nodes' private keys).
+        Map<Integer, byte[]> outgoingMacKeys = new HashMap<>();
+        Map<Integer, byte[]> incomingMacKeys = new HashMap<>();
+        for (int j = 0; j < numNodes; j++) {
+            if (j != nodeId) {
+                outgoingMacKeys.put(j, CryptoUtils.deriveHmacKey(privateKey, j));
+                incomingMacKeys.put(j, Files.readAllBytes(
+                    keysDir.resolve("hmac_" + j + "_" + nodeId + ".key")
+                ));
+            }
+        }
+
         return new KeyManager(
             nodeId,
             privateKey,
             publicKeys,
             groupKey,
-            thresholdShare
+            thresholdShare,
+            outgoingMacKeys,
+            incomingMacKeys
         );
     }
 
@@ -192,6 +250,14 @@ public class KeyManager {
                 material.serializedShares.get(i),
                 material.groupKey
             );
+            Map<Integer, byte[]> outgoingMacKeys = new HashMap<>();
+            Map<Integer, byte[]> incomingMacKeys = new HashMap<>();
+            for (int j = 0; j < numNodes; j++) {
+                if (j != i) {
+                    outgoingMacKeys.put(j, CryptoUtils.deriveHmacKey(keyPairs.get(i).getPrivate(), j));
+                    incomingMacKeys.put(j, CryptoUtils.deriveHmacKey(keyPairs.get(j).getPrivate(), i));
+                }
+            }
             managers.put(
                 i,
                 new KeyManager(
@@ -199,7 +265,9 @@ public class KeyManager {
                     keyPairs.get(i).getPrivate(),
                     publicKeys,
                     material.groupKey,
-                    thresholdShare
+                    thresholdShare,
+                    outgoingMacKeys,
+                    incomingMacKeys
                 )
             );
         }

@@ -94,8 +94,7 @@ public class AuthenticatedPerfectLinks implements PerfectLinks.Listener {
     public void send(int destNodeId, MessageType type, byte[] payload) {
         long msgId = perfectLinks.nextMessageId();
         Message message = new Message(nodeId, destNodeId, msgId, type, payload);
-        byte[] signature = keyManager.sign(message.getBytesToSign());
-        message.setSignature(signature);
+        message.setSignature(keyManager.computeMac(destNodeId, message.getBytesToSign()));
         perfectLinks.sendMessage(message);
     }
 
@@ -115,8 +114,7 @@ public class AuthenticatedPerfectLinks implements PerfectLinks.Listener {
                 message.getPayload()
             );
         }
-        byte[] signature = keyManager.sign(toSend.getBytesToSign());
-        toSend.setSignature(signature);
+        toSend.setSignature(keyManager.computeMac(destNodeId, toSend.getBytesToSign()));
         perfectLinks.sendMessage(toSend);
     }
 
@@ -135,19 +133,18 @@ public class AuthenticatedPerfectLinks implements PerfectLinks.Listener {
         if (senderIsNode) {
             if (message.getSignature() == null) {
                 System.err.println(
-                    "[APL] Node " + senderId + " sent no sig, dropping it"
+                    "[APL] Node " + senderId + " sent no MAC, dropping it"
                 );
                 return;
             }
-            byte[] dataToVerify = message.getBytesToSign();
-            boolean valid = keyManager.verify(
+            boolean valid = keyManager.verifyMac(
                 senderId,
-                dataToVerify,
+                message.getBytesToSign(),
                 message.getSignature()
             );
             if (!valid) {
                 System.err.println(
-                    "[APL] Node " + senderId + " sig looks bad, dropping it"
+                    "[APL] Node " + senderId + " MAC invalid, dropping it"
                 );
                 return;
             }

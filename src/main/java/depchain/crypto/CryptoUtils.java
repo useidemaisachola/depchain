@@ -1,8 +1,11 @@
 package depchain.crypto;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.*;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.security.spec.*;
 
 public class CryptoUtils {
@@ -82,6 +85,28 @@ public class CryptoUtils {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("SHA-256 not available", e);
         }
+    }
+
+    public static byte[] hmac(byte[] key, byte[] data) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(key, "HmacSHA256"));
+            return mac.doFinal(data);
+        } catch (Exception e) {
+            throw new RuntimeException("HMAC failed", e);
+        }
+    }
+
+    /**
+     * Derives a 32-byte pairwise MAC key for messages sent from this node to
+     * {@code recipientId}. Uses the node's RSA private key as the seed so the
+     * key is deterministic and tied to the node's identity.
+     */
+    public static byte[] deriveHmacKey(PrivateKey privateKey, int recipientId) {
+        byte[] toSign = ("hmac-key-to-node-" + recipientId)
+            .getBytes(StandardCharsets.UTF_8);
+        byte[] sig = sign(toSign, privateKey);
+        return hash(sig); // 32-byte SHA-256 of the RSA signature
     }
 
     public static String bytesToHex(byte[] bytes) {

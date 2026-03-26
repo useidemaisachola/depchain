@@ -35,7 +35,7 @@ public final class ThresholdSignatures {
             writeBigInteger(dos, groupKey.getModulus());
             return bos.toByteArray();
         } catch (IOException e) {
-            throw new ThresholdSigException("Failed to serialize threshold group key", e);
+            throw new ThresholdSigException("Failed to serialize threshold group key");
         }
     }
 
@@ -48,9 +48,9 @@ public final class ThresholdSignatures {
             int l = dis.readInt();
             BigInteger exponent = readBigInteger(dis);
             BigInteger modulus = readBigInteger(dis);
-            return new GroupKey(k, l, exponent, modulus);
+            return new GroupKey(k, l, 0, BigInteger.ZERO, exponent, modulus);
         } catch (IOException e) {
-            throw new ThresholdSigException("Failed to deserialize threshold group key", e);
+            throw new ThresholdSigException("Failed to deserialize threshold group key");
         }
     }
 
@@ -65,7 +65,7 @@ public final class ThresholdSignatures {
             writeBigInteger(dos, keyShare.getGroupVerifier());
             return bos.toByteArray();
         } catch (IOException e) {
-            throw new ThresholdSigException("Failed to serialize threshold key share", e);
+            throw new ThresholdSigException("Failed to serialize threshold key share");
         }
     }
 
@@ -88,7 +88,7 @@ public final class ThresholdSignatures {
             share.setVerifiers(verifier, groupVerifier);
             return share;
         } catch (IOException e) {
-            throw new ThresholdSigException("Failed to deserialize threshold key share", e);
+            throw new ThresholdSigException("Failed to deserialize threshold key share");
         }
     }
 
@@ -151,7 +151,7 @@ public final class ThresholdSignatures {
                 combined
                     .multiply(
                         share
-                            .getSignature()
+                            .getSig()
                             .modPow(lagrange(share.getId(), shareArray, delta), modulus)
                     )
                     .mod(modulus);
@@ -213,13 +213,13 @@ public final class ThresholdSignatures {
         BigInteger xTilde =
             representative.modPow(ThreshUtil.FOUR.multiply(delta), modulus);
 
-        Verifier verifier = share.getVerifier();
+        Verifier verifier = share.getSigVerifier();
         MessageDigest digest = sha1();
         digest.update(verifier.getGroupVerifier().toByteArray());
         digest.update(xTilde.toByteArray());
         digest.update(verifier.getShareVerifier().toByteArray());
         digest.update(
-            share.getSignature().modPow(ThreshUtil.TWO, modulus).toByteArray()
+            share.getSig().modPow(ThreshUtil.TWO, modulus).toByteArray()
         );
 
         BigInteger vTerm = verifier.getGroupVerifier().modPow(verifier.getZ(), modulus);
@@ -233,7 +233,7 @@ public final class ThresholdSignatures {
         BigInteger xTildeTerm = xTilde.modPow(verifier.getZ(), modulus);
         BigInteger sigInverse =
             share
-                .getSignature()
+                .getSig()
                 .modPow(verifier.getC(), modulus)
                 .modInverse(modulus);
         digest.update(xTildeTerm.multiply(sigInverse).mod(modulus).toByteArray());
@@ -252,14 +252,14 @@ public final class ThresholdSignatures {
             DataOutputStream dos = new DataOutputStream(bos)
         ) {
             dos.writeInt(sigShare.getId());
-            writeBigInteger(dos, sigShare.getSignature());
-            writeBigInteger(dos, sigShare.getVerifier().getZ());
-            writeBigInteger(dos, sigShare.getVerifier().getC());
-            writeBigInteger(dos, sigShare.getVerifier().getShareVerifier());
-            writeBigInteger(dos, sigShare.getVerifier().getGroupVerifier());
+            writeBigInteger(dos, sigShare.getSig());
+            writeBigInteger(dos, sigShare.getSigVerifier().getZ());
+            writeBigInteger(dos, sigShare.getSigVerifier().getC());
+            writeBigInteger(dos, sigShare.getSigVerifier().getShareVerifier());
+            writeBigInteger(dos, sigShare.getSigVerifier().getGroupVerifier());
             return bos.toByteArray();
         } catch (IOException e) {
-            throw new ThresholdSigException("Failed to serialize threshold share", e);
+            throw new ThresholdSigException("Failed to serialize threshold share");
         }
     }
 
@@ -280,7 +280,7 @@ public final class ThresholdSignatures {
                 new Verifier(z, c, shareVerifier, groupVerifier)
             );
         } catch (IOException e) {
-            throw new ThresholdSigException("Failed to deserialize threshold share", e);
+            throw new ThresholdSigException("Failed to deserialize threshold share");
         }
     }
 
@@ -289,7 +289,7 @@ public final class ThresholdSignatures {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             return digest.digest(data);
         } catch (NoSuchAlgorithmException e) {
-            throw new ThresholdSigException("SHA-256 digest is not available", e);
+            throw new ThresholdSigException("SHA-256 digest is not available");
         }
     }
 
@@ -297,7 +297,7 @@ public final class ThresholdSignatures {
         try {
             return MessageDigest.getInstance("SHA");
         } catch (NoSuchAlgorithmException e) {
-            throw new ThresholdSigException("SHA digest is not available", e);
+            throw new ThresholdSigException("SHA digest is not available");
         }
     }
 

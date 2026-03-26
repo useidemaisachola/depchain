@@ -2,118 +2,157 @@ package threshsig;
 
 import java.math.BigInteger;
 
-public final class Dealer {
-    private final int keySizeBits;
+/**
+ * A Key Dealer for an RSA based (k,l) Threshold Signature Scheme<BR>
+ *
+ * Reference: "Practical Threshold Signatures",<br>
+ * Victor Shoup (sho@zurich.ibm.com), IBM Research Paper RZ3121, 4/30/99<BR>
+ *
+ * @author Steve Weis <sweis@mit.edu>
+ */
+public class Dealer {
 
-    private GroupKey groupKey;
-    private KeyShare[] shares;
+  private int keysize;
+  private KeyShare[] shares = null;
+  private BigInteger vk = null;
+  private GroupKey gk;
+  private boolean keyInit;
+  private Poly poly;
 
-    public Dealer(int keySizeBits) {
-        if (keySizeBits < 256) {
-            throw new IllegalArgumentException("keySizeBits must be >= 256");
-        }
-        this.keySizeBits = keySizeBits;
+  public Dealer(final int keysize) {
+    if (DEBUG) {
+      debug("Testing " + keysize + " bit Keys...");
+    }
+    this.keysize = keysize;
+    keyInit = false;
+  }
+
+  public void generateKeys(final int k, final int l) {
+    BigInteger pr, qr, p, q, d, e, m, n;
+    BigInteger groupSize;
+    n = m = pr = qr = null;
+
+    if (DEBUG) {
+      debug("Attempting to generate group keypair..");
     }
 
-    public void generateKeys(int threshold, int participants) {
-        if (threshold < 1 || threshold > participants) {
-            throw new IllegalArgumentException("Invalid threshold parameters");
-        }
+    p = SafePrimeGen.generateStrongPrime(keysize, ThreshUtil.getRandom());
+    q = SafePrimeGen.generateStrongPrime(keysize, ThreshUtil.getRandom());
 
-        BigInteger p = generateSafePrime(keySizeBits);
-        BigInteger q;
-        do {
-            q = generateSafePrime(keySizeBits);
-        } while (p.equals(q));
+    pr = (p.subtract(ThreshUtil.ONE)).divide(ThreshUtil.TWO);
+    qr = (q.subtract(ThreshUtil.ONE)).divide(ThreshUtil.TWO);
 
-        BigInteger pPrime = p.subtract(ThreshUtil.ONE).divide(ThreshUtil.TWO);
-        BigInteger qPrime = q.subtract(ThreshUtil.ONE).divide(ThreshUtil.TWO);
-        BigInteger modulus = p.multiply(q);
-        BigInteger m = pPrime.multiply(qPrime);
+    m = pr.multiply(qr);
+    n = p.multiply(q);
 
-        BigInteger exponent = choosePublicExponent(participants, m);
-        BigInteger secretExponent = exponent.modInverse(m);
+    groupSize = BigInteger.valueOf(l);
 
-        Poly polynomial = new Poly(secretExponent, threshold - 1, m);
-        BigInteger delta = ThresholdSignatures.factorial(participants);
-        int randomBits = Math.max(64, modulus.bitLength() + ThreshUtil.L1 - m.bitLength());
-
-        shares = new KeyShare[participants];
-        for (int i = 0; i < participants; i++) {
-            BigInteger secret = polynomial.eval(i + 1);
-            BigInteger blinding =
-                new BigInteger(randomBits, ThreshUtil.getRandom()).multiply(m);
-            KeyShare share = new KeyShare(i + 1, secret.add(blinding), modulus, delta);
-            shares[i] = share;
-        }
-
-        BigInteger groupVerifier = pickQuadraticResidue(modulus);
-        for (KeyShare share : shares) {
-            share.setVerifiers(
-                groupVerifier.modPow(share.getSecret(), modulus),
-                groupVerifier
-            );
-        }
-
-        groupKey = new GroupKey(threshold, participants, exponent, modulus);
+    if (groupSize.compareTo(ThreshUtil.F4) < 0) {
+      e = ThreshUtil.F4;
+    } else {
+      e = new BigInteger(groupSize.bitLength() + 1, 80, ThreshUtil.getRandom());
     }
 
-    public GroupKey getGroupKey() {
-        if (groupKey == null) {
-            throw new ThresholdSigException("Group key has not been generated yet");
-        }
-        return groupKey;
+    d = e.modInverse(m);
+
+    shares = generateKeyShares(d, m, k, l, n);
+
+    vk = generateVerifiers(n, shares);
+
+    gk = new GroupKey(k, l, keysize, vk, e, n);
+    keyInit = true;
+  }
+
+  public GroupKey getGroupKey() throws ThresholdSigException {
+    checkKeyInit();
+    return gk;
+  }
+
+  public KeyShare[] getShares() throws ThresholdSigException {
+    checkKeyInit();
+    return shares;
+  }
+
+  private void checkKeyInit() throws ThresholdSigException {
+    if (keyInit == false) {
+      if (DEBUG) {
+        debug("Key pair has not been initialized by generateKeys()");
+      }
+      throw new ThresholdSigException("Key pair has not been initialized by generateKeys()");
+    }
+  }
+
+  private KeyShare[] generateKeyShares(final BigInteger d, final BigInteger m, final int k,
+      final int l, final BigInteger n) {
+    BigInteger[] secrets;
+    BigInteger rand;
+    int randbits;
+
+    poly = new Poly(d, k, m);
+    secrets = new BigInteger[l];
+    randbits = n.bitLength() + ThreshUtil.L1 - m.bitLength();
+
+    for (int i = 0; i < l; i++) {
+      secrets[i] = poly.eval(i + 1);
+      rand = (new BigInteger(randbits, ThreshUtil.getRandom())).multiply(m);
+      secrets[i] = secrets[i].add(rand);
     }
 
-    public KeyShare[] getShares() {
-        if (shares == null) {
-            throw new ThresholdSigException("Threshold shares have not been generated yet");
-        }
-        return shares.clone();
+    final BigInteger delta = Dealer.factorial(l);
+
+    final KeyShare[] s = new KeyShare[l];
+    for (int i = 0; i < l; i++) {
+      s[i] = new KeyShare(i + 1, secrets[i], n, delta);
     }
 
-    private static BigInteger choosePublicExponent(int participants, BigInteger m) {
-        if (
-            ThreshUtil.F4.compareTo(BigInteger.valueOf(participants)) > 0 &&
-            ThreshUtil.F4.gcd(m).equals(ThreshUtil.ONE)
-        ) {
-            return ThreshUtil.F4;
-        }
+    return s;
+  }
 
-        BigInteger exponent;
-        do {
-            exponent = BigInteger.probablePrime(
-                BigInteger.valueOf(participants).bitLength() + 2,
-                ThreshUtil.getRandom()
-            );
-        } while (
-            exponent.compareTo(BigInteger.valueOf(participants)) <= 0 ||
-            !exponent.gcd(m).equals(ThreshUtil.ONE)
-        );
-        return exponent;
+  private BigInteger generateVerifiers(final BigInteger n, final KeyShare[] secrets) {
+    debug("Generating Verifiers");
+    BigInteger rand = null;
+
+    for (final KeyShare element : secrets) {
+      while (true) {
+        rand = new BigInteger(n.bitLength(), ThreshUtil.getRandom());
+        final BigInteger d = rand.gcd(n);
+        if (d.compareTo(ThreshUtil.ONE) == 0) {
+          break;
+        }
+        debug("Verifier was not relatively prime");
+      }
+      rand = rand.multiply(rand).mod(n);
+
+      element.setVerifiers(rand.modPow(element.getSecret(), n), rand);
     }
 
-    private static BigInteger generateSafePrime(int bits) {
-        while (true) {
-            BigInteger q = BigInteger.probablePrime(bits - 1, ThreshUtil.getRandom());
-            BigInteger p = q.shiftLeft(1).add(ThreshUtil.ONE);
-            if (p.isProbablePrime(120)) {
-                return p;
-            }
-        }
+    return rand;
+  }
+
+  private static BigInteger factorial(final int l) {
+    BigInteger x = BigInteger.valueOf(1l);
+    for (int i = 1; i <= l; i++) {
+      x = x.multiply(BigInteger.valueOf(i));
+    }
+    return x;
+  }
+
+  private final static boolean DEBUG = true;
+
+  private static void debug(final String s) {
+    System.err.println("Dealer: " + s);
+  }
+
+  public static void main(final String[] args) {
+    int keysize = 512;
+    if (args.length > 0) {
+      try {
+        keysize = Integer.parseInt(args[0]);
+      } catch (final Exception e) {
+      }
     }
 
-    private static BigInteger pickQuadraticResidue(BigInteger modulus) {
-        while (true) {
-            BigInteger candidate =
-                new BigInteger(modulus.bitLength(), ThreshUtil.getRandom()).mod(modulus);
-            if (candidate.signum() == 0) {
-                continue;
-            }
-            if (!candidate.gcd(modulus).equals(ThreshUtil.ONE)) {
-                continue;
-            }
-            return candidate.multiply(candidate).mod(modulus);
-        }
-    }
+    final Dealer d = new Dealer(keysize);
+    d.generateKeys(3, 5);
+  }
 }

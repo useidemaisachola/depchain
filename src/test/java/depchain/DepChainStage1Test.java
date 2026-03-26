@@ -528,7 +528,7 @@ class DepChainStage1Test {
         Thread.sleep(500);
 
         Message first = new Message(0, 1, 100L, MessageType.DATA, "first");
-        first.setSignature(keyManagers.get(0).sign(first.getBytesToSign()));
+        first.setSignature(keyManagers.get(0).computeMac(1, first.getBytesToSign()));
         sendRawUdp(first.serialize(), NetworkConfig.getNodePort(1));
         assertTrue(
             waitUntil(() -> totalDelivered.get() == 1, 3000),
@@ -563,7 +563,7 @@ class DepChainStage1Test {
         Thread.sleep(500);
 
         Message replay = new Message(0, 1, 100L, MessageType.DATA, "replay");
-        replay.setSignature(keyManagers.get(0).sign(replay.getBytesToSign()));
+        replay.setSignature(keyManagers.get(0).computeMac(1, replay.getBytesToSign()));
         sendRawUdp(replay.serialize(), NetworkConfig.getNodePort(1));
 
         Thread.sleep(1500);
@@ -612,7 +612,7 @@ class DepChainStage1Test {
         // Send a valid signed message with a high sequence number
         long highMsgId = 10000L;
         Message firstMsg = new Message(1, 2, highMsgId, MessageType.DATA, "first");
-        firstMsg.setSignature(senderKeys.sign(firstMsg.getBytesToSign()));
+        firstMsg.setSignature(senderKeys.computeMac(2, firstMsg.getBytesToSign()));
         sendRawUdp(firstMsg.serialize(), NetworkConfig.getNodePort(2));
 
         assertTrue(
@@ -624,7 +624,7 @@ class DepChainStage1Test {
         // Send a valid signed message with an older sequence number (replay scenario)
         long oldMsgId = 1L;
         Message replayMsg = new Message(1, 2, oldMsgId, MessageType.DATA, "replay");
-        replayMsg.setSignature(senderKeys.sign(replayMsg.getBytesToSign()));
+        replayMsg.setSignature(senderKeys.computeMac(2, replayMsg.getBytesToSign()));
         sendRawUdp(replayMsg.serialize(), NetworkConfig.getNodePort(2));
 
         Thread.sleep(1500);

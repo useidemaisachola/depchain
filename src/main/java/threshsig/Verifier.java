@@ -1,39 +1,37 @@
 package threshsig;
 
 import java.math.BigInteger;
-import java.util.Objects;
 
-final class Verifier {
-    private final BigInteger z;
-    private final BigInteger c;
-    private final BigInteger shareVerifier;
-    private final BigInteger groupVerifier;
+class Verifier {
+  private BigInteger z;
 
-    Verifier(
-        BigInteger z,
-        BigInteger c,
-        BigInteger shareVerifier,
-        BigInteger groupVerifier
-    ) {
-        this.z = Objects.requireNonNull(z, "z");
-        this.c = Objects.requireNonNull(c, "c");
-        this.shareVerifier = Objects.requireNonNull(shareVerifier, "shareVerifier");
-        this.groupVerifier = Objects.requireNonNull(groupVerifier, "groupVerifier");
-    }
+  private BigInteger c;
 
-    BigInteger getZ() {
-        return z;
-    }
+  private BigInteger groupVerifier;
 
-    BigInteger getC() {
-        return c;
-    }
+  private BigInteger shareVerifier;
 
-    BigInteger getShareVerifier() {
-        return shareVerifier;
-    }
+  public Verifier(final BigInteger z, final BigInteger c, final BigInteger shareVerifier,
+      final BigInteger groupVerifier) {
+    this.z = z;
+    this.c = c;
+    this.shareVerifier = shareVerifier;
+    this.groupVerifier = groupVerifier;
+  }
 
-    BigInteger getGroupVerifier() {
-        return groupVerifier;
-    }
+  public BigInteger getZ() {
+    return z;
+  }
+
+  public BigInteger getShareVerifier() {
+    return shareVerifier;
+  }
+
+  public BigInteger getGroupVerifier() {
+    return groupVerifier;
+  }
+
+  public BigInteger getC() {
+    return c;
+  }
 }

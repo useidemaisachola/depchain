@@ -16,6 +16,16 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>hyperledger-besu-maven</id>
+            <name>Hyperledger Besu Maven</name>
+            <url>https://hyperledger.jfrog.io/artifactory/besu-maven/</url>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+    </repositories>
+
     <dependencies>
 
         <dependency>
@@ -24,6 +34,28 @@
             <version>5.10.2</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- Hyperledger Besu EVM (standalone) -->
+        <dependency>
+            <groupId>org.hyperledger.besu</groupId>
+            <artifactId>evm</artifactId>
+            <version>24.12.2</version>
+        </dependency>
+
+        <!-- Besu datatypes (Address, Wei, Hash) — declared runtime by evm, needed at compile time -->
+        <dependency>
+            <groupId>org.hyperledger.besu</groupId>
+            <artifactId>besu-datatypes</artifactId>
+            <version>24.12.2</version>
+        </dependency>
+
+        <!-- Tuweni Bytes — declared runtime by evm, needed at compile time -->
+        <dependency>
+            <groupId>io.tmio</groupId>
+            <artifactId>tuweni-bytes</artifactId>
+            <version>2.4.2</version>
+        </dependency>
+
     </dependencies>
 
     <build>

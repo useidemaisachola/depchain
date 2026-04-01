@@ -56,6 +56,13 @@
             <version>2.4.2</version>
         </dependency>
 
+        <!-- Tuweni Units — for UInt256 storage slot keys/values -->
+        <dependency>
+            <groupId>io.tmio</groupId>
+            <artifactId>tuweni-units</artifactId>
+            <version>2.4.2</version>
+        </dependency>
+
     </dependencies>
 
     <build>

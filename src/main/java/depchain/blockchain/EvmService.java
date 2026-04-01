@@ -1,14 +1,20 @@
 package depchain.blockchain;
 
+import depchain.crypto.CryptoUtils;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.units.bigints.UInt256;
 import org.hyperledger.besu.datatypes.Address;
 import org.hyperledger.besu.datatypes.Wei;
-import org.hyperledger.besu.evm.frame.MessageFrame;
 import org.hyperledger.besu.evm.fluent.EVMExecutor;
+import org.hyperledger.besu.evm.fluent.SimpleAccount;
 import org.hyperledger.besu.evm.fluent.SimpleWorld;
+import org.hyperledger.besu.evm.frame.MessageFrame;
 import org.hyperledger.besu.evm.internal.EvmConfiguration;
 import org.hyperledger.besu.evm.tracing.OperationTracer;
 
+import java.security.PublicKey;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -151,5 +157,60 @@ public class EvmService {
                 .execute();
 
         return output[0];
+    }
+
+    // -------------------------------------------------------------------------
+    // Account model
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns an immutable {@link Account} snapshot for the given address.
+     *
+     * Type rule: empty code → {@link AccountType#EOA}; non-empty code →
+     * {@link AccountType#CONTRACT}.
+     *
+     * The storage map contains only the slots that have been written since
+     * deployment; unwritten slots are absent (their value is implicitly zero).
+     *
+     * @return the account snapshot, or {@code null} if no account exists at
+     *         the address
+     */
+    public Account getAccount(Address address) {
+        var raw = world.get(address);
+        if (raw == null) return null;
+
+        Bytes code = raw.getCode();
+        if (code == null) code = Bytes.EMPTY;
+
+        AccountType type = code.isEmpty() ? AccountType.EOA : AccountType.CONTRACT;
+        long nonce = getNonce(address);
+
+        Map<UInt256, UInt256> storage;
+        if (type == AccountType.CONTRACT) {
+            // SimpleWorld always stores SimpleAccount instances; this cast is safe.
+            storage = ((SimpleAccount) raw).getUpdatedStorage();
+        } else {
+            storage = Collections.emptyMap();
+        }
+
+        return new Account(type, address, raw.getBalance(), nonce, code, storage);
+    }
+
+    /**
+     * Derives a deterministic 20-byte {@link Address} from an RSA public key.
+     *
+     * <p>Algorithm: SHA-256 of the DER-encoded public key bytes, then take
+     * the last 20 bytes of the 32-byte digest — matching Ethereum's convention
+     * of using the low-order bytes of a key hash as the account address,
+     * adapted for RSA keys (Ethereum uses keccak256 of the uncompressed
+     * ECDSA public key; we use SHA-256 of the DER-encoded RSA public key).
+     *
+     * @param publicKey the RSA public key to derive an address from
+     * @return a deterministic, collision-resistant 20-byte address
+     */
+    public static Address deriveAddress(PublicKey publicKey) {
+        byte[] digest = CryptoUtils.hash(publicKey.getEncoded());
+        byte[] addressBytes = Arrays.copyOfRange(digest, 12, 32);
+        return Address.wrap(Bytes.wrap(addressBytes));
     }
 }

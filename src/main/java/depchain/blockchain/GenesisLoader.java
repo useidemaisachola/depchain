@@ -11,10 +11,13 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
+import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Loads the genesis block from {@code /genesis.json} (classpath resource).
@@ -37,6 +40,7 @@ public class GenesisLoader {
 
     private static final String GENESIS_RESOURCE   = "/genesis.json";
     private static final String ISTCOIN_BIN_RESOURCE = "/contracts/ISTCoin.bin";
+    private static final Pattern CLIENT_NAME_PATTERN = Pattern.compile("client\\d+");
 
     private GenesisLoader() {}
 
@@ -55,10 +59,20 @@ public class GenesisLoader {
      *                          be read, or if the deployment transaction fails
      */
     public static Result load(Map<Integer, PublicKey> nodePublicKeys) {
+        return load(nodePublicKeys, Collections.emptyMap());
+    }
+
+    /**
+     * Loads and processes genesis using node keys plus extra symbolic participants
+     * (e.g., client0..clientN).
+     */
+    public static Result load(
+            Map<Integer, PublicKey> nodePublicKeys,
+            Map<String, PublicKey> extraParticipantPublicKeys) {
         JsonObject template = readTemplate();
 
         // ── 1. Resolve symbolic account names → EVM addresses ────────────────
-        Map<String, Address> nameToAddress = resolveAccounts(nodePublicKeys);
+        Map<String, Address> nameToAddress = resolveAccounts(nodePublicKeys, extraParticipantPublicKeys);
 
         // ── 2. Build EvmService with initial balances ─────────────────────────
         EvmService evm = new EvmService();
@@ -146,18 +160,31 @@ public class GenesisLoader {
      * Builds the symbolic-name → address map for all nodes that appear in the
      * genesis template.
      */
-    private static Map<String, Address> resolveAccounts(Map<Integer, PublicKey> nodePublicKeys) {
+    private static Map<String, Address> resolveAccounts(
+            Map<Integer, PublicKey> nodePublicKeys,
+            Map<String, PublicKey> extraParticipantPublicKeys) {
         Map<String, Address> map = new LinkedHashMap<>();
         for (Map.Entry<Integer, PublicKey> entry : nodePublicKeys.entrySet()) {
             String name = "node" + entry.getKey();
             map.put(name, EvmService.deriveAddress(entry.getValue()));
+        }
+        for (Map.Entry<String, PublicKey> entry : extraParticipantPublicKeys.entrySet()) {
+            map.put(entry.getKey(), EvmService.deriveAddress(entry.getValue()));
         }
         return map;
     }
 
     /** Looks up an address by symbolic name; throws if unknown. */
     private static Address resolve(String name, Map<String, Address> nameToAddress) {
+        if (name != null && name.startsWith("0x") && name.length() == 42) {
+            return Address.fromHexString(name);
+        }
         Address addr = nameToAddress.get(name);
+        if (addr == null && name != null && CLIENT_NAME_PATTERN.matcher(name).matches()) {
+            byte[] hash = depchain.crypto.CryptoUtils.hash(name.getBytes(StandardCharsets.UTF_8));
+            byte[] last20 = Arrays.copyOfRange(hash, hash.length - 20, hash.length);
+            return Address.wrap(Bytes.wrap(last20));
+        }
         if (addr == null) {
             throw new IllegalArgumentException(
                     "Unknown genesis account name: '" + name + "'. " +

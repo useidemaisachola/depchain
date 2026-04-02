@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="depchain.GasFeeTest" time="0.053" tests="12" errors="0" skipped="0" failures="0">
+  <properties>
+    <property name="java.specification.version" value="23"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.class.path" value="/Users/inescachola/Desktop/SDTF/depchain/target/test-classes:/Users/inescachola/Desktop/SDTF/depchain/target/classes:/Users/inescachola/.m2/repository/org/junit/jupiter/junit-jupiter/5.10.2/junit-jupiter-5.10.2.jar:/Users/inescachola/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar:/Users/inescachola/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/inescachola/.m2/repository/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar:/Users/inescachola/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/inescachola/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.10.2/junit-jupiter-params-5.10.2.jar:/Users/inescachola/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar:/Users/inescachola/.m2/repository/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/evm/24.12.2/evm-24.12.2.jar:/Users/inescachola/.m2/repository/org/slf4j/slf4j-api/2.0.16/slf4j-api-2.0.16.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/internal/algorithms/24.12.2/algorithms-24.12.2.jar:/Users/inescachola/.m2/repository/org/bouncycastle/bcprov-jdk18on/1.78.1/bcprov-jdk18on-1.78.1.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/secp256k1/0.9.7/secp256k1-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/secp256r1/0.9.7/secp256r1-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/blake2bf/0.9.7/blake2bf-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/internal/rlp/24.12.2/rlp-24.12.2.jar:/Users/inescachola/.m2/repository/com/github/ben-manes/caffeine/caffeine/3.1.8/caffeine-3.1.8.jar:/Users/inescachola/.m2/repository/org/checkerframework/checker-qual/3.37.0/checker-qual-3.37.0.jar:/Users/inescachola/.m2/repository/com/google/errorprone/error_prone_annotations/2.21.1/error_prone_annotations-2.21.1.jar:/Users/inescachola/.m2/repository/com/google/guava/guava/33.3.1-jre/guava-33.3.1-jre.jar:/Users/inescachola/.m2/repository/com/google/guava/failureaccess/1.0.2/failureaccess-1.0.2.jar:/Users/inescachola/.m2/repository/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar:/Users/inescachola/.m2/repository/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar:/Users/inescachola/.m2/repository/com/google/j2objc/j2objc-annotations/3.0.0/j2objc-annotations-3.0.0.jar:/Users/inescachola/.m2/repository/net/java/dev/jna/jna/5.15.0/jna-5.15.0.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/arithmetic/0.9.7/arithmetic-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/bls12-381/0.9.7/bls12-381-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/gnark/0.9.7/gnark-0.9.7.jar:/Users/inescachola/.m2/repository/tech/pegasys/jc-kzg-4844/1.0.0/jc-kzg-4844-1.0.0.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/besu-datatypes/24.12.2/besu-datatypes-24.12.2.jar:/Users/inescachola/.m2/repository/io/tmio/tuweni-bytes/2.4.2/tuweni-bytes-2.4.2.jar:/Users/inescachola/.m2/repository/org/connid/framework/1.3.2/framework-1.3.2.jar:/Users/inescachola/.m2/repository/org/connid/framework-internal/1.3.2/framework-internal-1.3.2.jar:/Users/inescachola/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.8.21/kotlin-stdlib-jdk8-1.8.21.jar:/Users/inescachola/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.8.21/kotlin-stdlib-1.8.21.jar:/Users/inescachola/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-common/1.8.21/kotlin-stdlib-common-1.8.21.jar:/Users/inescachola/.m2/repository/org/jetbrains/annotations/13.0/annotations-13.0.jar:/Users/inescachola/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.8.21/kotlin-stdlib-jdk7-1.8.21.jar:/Users/inescachola/.m2/repository/io/tmio/tuweni-units/2.4.2/tuweni-units-2.4.2.jar:/Users/inescachola/.m2/repository/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar:"/>
+    <property name="java.vm.vendor" value="Homebrew"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.vendor.url" value="https://github.com/Homebrew/homebrew-core/issues"/>
+    <property name="os.name" value="Mac OS X"/>
+    <property name="java.vm.specification.version" value="23"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="user.country" value="PT"/>
+    <property name="sun.boot.library.path" value="/opt/homebrew/Cellar/openjdk/23.0.2/libexec/openjdk.jdk/Contents/Home/lib"/>
+    <property name="sun.java.command" value="/Users/inescachola/Desktop/SDTF/depchain/target/surefire/surefirebooter-20260402202442907_3.jar /Users/inescachola/Desktop/SDTF/depchain/target/surefire 2026-04-02T20-24-42_862-jvmRun1 surefire-20260402202442907_1tmp surefire_0-20260402202442907_2tmp"/>
+    <property name="http.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="surefire.test.class.path" value="/Users/inescachola/Desktop/SDTF/depchain/target/test-classes:/Users/inescachola/Desktop/SDTF/depchain/target/classes:/Users/inescachola/.m2/repository/org/junit/jupiter/junit-jupiter/5.10.2/junit-jupiter-5.10.2.jar:/Users/inescachola/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar:/Users/inescachola/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/inescachola/.m2/repository/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar:/Users/inescachola/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/inescachola/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.10.2/junit-jupiter-params-5.10.2.jar:/Users/inescachola/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar:/Users/inescachola/.m2/repository/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/evm/24.12.2/evm-24.12.2.jar:/Users/inescachola/.m2/repository/org/slf4j/slf4j-api/2.0.16/slf4j-api-2.0.16.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/internal/algorithms/24.12.2/algorithms-24.12.2.jar:/Users/inescachola/.m2/repository/org/bouncycastle/bcprov-jdk18on/1.78.1/bcprov-jdk18on-1.78.1.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/secp256k1/0.9.7/secp256k1-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/secp256r1/0.9.7/secp256r1-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/blake2bf/0.9.7/blake2bf-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/internal/rlp/24.12.2/rlp-24.12.2.jar:/Users/inescachola/.m2/repository/com/github/ben-manes/caffeine/caffeine/3.1.8/caffeine-3.1.8.jar:/Users/inescachola/.m2/repository/org/checkerframework/checker-qual/3.37.0/checker-qual-3.37.0.jar:/Users/inescachola/.m2/repository/com/google/errorprone/error_prone_annotations/2.21.1/error_prone_annotations-2.21.1.jar:/Users/inescachola/.m2/repository/com/google/guava/guava/33.3.1-jre/guava-33.3.1-jre.jar:/Users/inescachola/.m2/repository/com/google/guava/failureaccess/1.0.2/failureaccess-1.0.2.jar:/Users/inescachola/.m2/repository/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar:/Users/inescachola/.m2/repository/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar:/Users/inescachola/.m2/repository/com/google/j2objc/j2objc-annotations/3.0.0/j2objc-annotations-3.0.0.jar:/Users/inescachola/.m2/repository/net/java/dev/jna/jna/5.15.0/jna-5.15.0.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/arithmetic/0.9.7/arithmetic-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/bls12-381/0.9.7/bls12-381-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/gnark/0.9.7/gnark-0.9.7.jar:/Users/inescachola/.m2/repository/tech/pegasys/jc-kzg-4844/1.0.0/jc-kzg-4844-1.0.0.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/besu-datatypes/24.12.2/besu-datatypes-24.12.2.jar:/Users/inescachola/.m2/repository/io/tmio/tuweni-bytes/2.4.2/tuweni-bytes-2.4.2.jar:/Users/inescachola/.m2/repository/org/connid/framework/1.3.2/framework-1.3.2.jar:/Users/inescachola/.m2/repository/org/connid/framework-internal/1.3.2/framework-internal-1.3.2.jar:/Users/inescachola/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.8.21/kotlin-stdlib-jdk8-1.8.21.jar:/Users/inescachola/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.8.21/kotlin-stdlib-1.8.21.jar:/Users/inescachola/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-common/1.8.21/kotlin-stdlib-common-1.8.21.jar:/Users/inescachola/.m2/repository/org/jetbrains/annotations/13.0/annotations-13.0.jar:/Users/inescachola/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.8.21/kotlin-stdlib-jdk7-1.8.21.jar:/Users/inescachola/.m2/repository/io/tmio/tuweni-units/2.4.2/tuweni-units-2.4.2.jar:/Users/inescachola/.m2/repository/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar:"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="/Users/inescachola"/>
+    <property name="user.language" value="pt"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.version.date" value="2025-01-21"/>
+    <property name="java.home" value="/opt/homebrew/Cellar/openjdk/23.0.2/libexec/openjdk.jdk/Contents/Home"/>
+    <property name="file.separator" value="/"/>
+    <property name="basedir" value="/Users/inescachola/Desktop/SDTF/depchain"/>
+    <property name="java.vm.compressedOopsMode" value="Zero based"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="apple.awt.application.name" value="ForkedBooter"/>
+    <property name="surefire.real.class.path" value="/Users/inescachola/Desktop/SDTF/depchain/target/surefire/surefirebooter-20260402202442907_3.jar"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="ftp.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
+    <property name="java.runtime.version" value="23.0.2"/>
+    <property name="user.name" value="inescachola"/>
+    <property name="stdout.encoding" value="UTF-8"/>
+    <property name="path.separator" value=":"/>
+    <property name="os.version" value="26.3.1"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="jnidispatch.path" value="/Users/inescachola/Library/Caches/JNA/temp/jna3001722901394183693.tmp"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="jna.platform.library.path" value="/usr/lib:/usr/lib"/>
+    <property name="java.vendor.version" value="Homebrew"/>
+    <property name="localRepository" value="/Users/inescachola/.m2/repository"/>
+    <property name="jna.loaded" value="true"/>
+    <property name="java.vendor.url.bug" value="https://github.com/Homebrew/homebrew-core/issues"/>
+    <property name="java.io.tmpdir" value="/var/folders/tw/gmp3_nbx1vz6j7kw3t9k1nxm0000gp/T/"/>
+    <property name="java.version" value="23.0.2"/>
+    <property name="user.dir" value="/Users/inescachola/Desktop/SDTF/depchain"/>
+    <property name="os.arch" value="aarch64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="native.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/Users/inescachola/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:."/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="stderr.encoding" value="UTF-8"/>
+    <property name="java.vendor" value="Homebrew"/>
+    <property name="java.vm.version" value="23.0.2"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeBig"/>
+    <property name="socksNonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
+    <property name="java.class.version" value="67.0"/>
+  </properties>
+  <testcase name="transferSucceeds_feeEqualsGasPriceTimesGasUsed" classname="depchain.GasFeeTest" time="0.0"/>
+  <testcase name="insufficientBalance_exactlyAtMaxFee_butNoValueCovered" classname="depchain.GasFeeTest" time="0.0"/>
+  <testcase name="zeroValueTransfer_exactBalanceForFee_succeeds" classname="depchain.GasFeeTest" time="0.001"/>
+  <testcase name="gasLimitZero_throwsAtConstruction" classname="depchain.GasFeeTest" time="0.001"/>
+  <testcase name="transferOutOfGas_gasLimitBelowBaseCost_abortAndChargeFullLimit" classname="depchain.GasFeeTest" time="0.001"/>
+  <testcase name="nonceIncrementedEvenOnOutOfGas" classname="depchain.GasFeeTest" time="0.001"/>
+  <testcase name="contractCall_feeDeductedFromDeployerDepCoin_notFromIstBalance" classname="depchain.GasFeeTest" time="0.021"/>
+  <testcase name="gasPriceZero_throwsAtConstruction" classname="depchain.GasFeeTest" time="0.001"/>
+  <testcase name="insufficientBalance_transactionRejected_noFeeCharged" classname="depchain.GasFeeTest" time="0.001"/>
+  <testcase name="nonceIncrementedOnSuccess" classname="depchain.GasFeeTest" time="0.0"/>
+  <testcase name="transfer_gasLimitExactlyAtBaseCost_succeeds" classname="depchain.GasFeeTest" time="0.001"/>
+  <testcase name="contractCall_outOfGas_abortAndChargeFullLimit" classname="depchain.GasFeeTest" time="0.019"/>
+</testsuite>

@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="depchain.TransactionExecutionTest" time="16.081" tests="7" errors="0" skipped="0" failures="0">
+  <properties>
+    <property name="java.specification.version" value="23"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.class.path" value="/Users/inescachola/Desktop/SDTF/depchain/target/test-classes:/Users/inescachola/Desktop/SDTF/depchain/target/classes:/Users/inescachola/.m2/repository/org/junit/jupiter/junit-jupiter/5.10.2/junit-jupiter-5.10.2.jar:/Users/inescachola/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar:/Users/inescachola/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/inescachola/.m2/repository/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar:/Users/inescachola/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/inescachola/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.10.2/junit-jupiter-params-5.10.2.jar:/Users/inescachola/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar:/Users/inescachola/.m2/repository/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/evm/24.12.2/evm-24.12.2.jar:/Users/inescachola/.m2/repository/org/slf4j/slf4j-api/2.0.16/slf4j-api-2.0.16.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/internal/algorithms/24.12.2/algorithms-24.12.2.jar:/Users/inescachola/.m2/repository/org/bouncycastle/bcprov-jdk18on/1.78.1/bcprov-jdk18on-1.78.1.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/secp256k1/0.9.7/secp256k1-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/secp256r1/0.9.7/secp256r1-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/blake2bf/0.9.7/blake2bf-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/internal/rlp/24.12.2/rlp-24.12.2.jar:/Users/inescachola/.m2/repository/com/github/ben-manes/caffeine/caffeine/3.1.8/caffeine-3.1.8.jar:/Users/inescachola/.m2/repository/org/checkerframework/checker-qual/3.37.0/checker-qual-3.37.0.jar:/Users/inescachola/.m2/repository/com/google/errorprone/error_prone_annotations/2.21.1/error_prone_annotations-2.21.1.jar:/Users/inescachola/.m2/repository/com/google/guava/guava/33.3.1-jre/guava-33.3.1-jre.jar:/Users/inescachola/.m2/repository/com/google/guava/failureaccess/1.0.2/failureaccess-1.0.2.jar:/Users/inescachola/.m2/repository/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar:/Users/inescachola/.m2/repository/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar:/Users/inescachola/.m2/repository/com/google/j2objc/j2objc-annotations/3.0.0/j2objc-annotations-3.0.0.jar:/Users/inescachola/.m2/repository/net/java/dev/jna/jna/5.15.0/jna-5.15.0.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/arithmetic/0.9.7/arithmetic-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/bls12-381/0.9.7/bls12-381-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/gnark/0.9.7/gnark-0.9.7.jar:/Users/inescachola/.m2/repository/tech/pegasys/jc-kzg-4844/1.0.0/jc-kzg-4844-1.0.0.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/besu-datatypes/24.12.2/besu-datatypes-24.12.2.jar:/Users/inescachola/.m2/repository/io/tmio/tuweni-bytes/2.4.2/tuweni-bytes-2.4.2.jar:/Users/inescachola/.m2/repository/org/connid/framework/1.3.2/framework-1.3.2.jar:/Users/inescachola/.m2/repository/org/connid/framework-internal/1.3.2/framework-internal-1.3.2.jar:/Users/inescachola/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.8.21/kotlin-stdlib-jdk8-1.8.21.jar:/Users/inescachola/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.8.21/kotlin-stdlib-1.8.21.jar:/Users/inescachola/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-common/1.8.21/kotlin-stdlib-common-1.8.21.jar:/Users/inescachola/.m2/repository/org/jetbrains/annotations/13.0/annotations-13.0.jar:/Users/inescachola/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.8.21/kotlin-stdlib-jdk7-1.8.21.jar:/Users/inescachola/.m2/repository/io/tmio/tuweni-units/2.4.2/tuweni-units-2.4.2.jar:/Users/inescachola/.m2/repository/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar:"/>
+    <property name="java.vm.vendor" value="Homebrew"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.vendor.url" value="https://github.com/Homebrew/homebrew-core/issues"/>
+    <property name="os.name" value="Mac OS X"/>
+    <property name="java.vm.specification.version" value="23"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="user.country" value="PT"/>
+    <property name="sun.boot.library.path" value="/opt/homebrew/Cellar/openjdk/23.0.2/libexec/openjdk.jdk/Contents/Home/lib"/>
+    <property name="sun.java.command" value="/Users/inescachola/Desktop/SDTF/depchain/target/surefire/surefirebooter-20260402202442907_3.jar /Users/inescachola/Desktop/SDTF/depchain/target/surefire 2026-04-02T20-24-42_862-jvmRun1 surefire-20260402202442907_1tmp surefire_0-20260402202442907_2tmp"/>
+    <property name="http.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="surefire.test.class.path" value="/Users/inescachola/Desktop/SDTF/depchain/target/test-classes:/Users/inescachola/Desktop/SDTF/depchain/target/classes:/Users/inescachola/.m2/repository/org/junit/jupiter/junit-jupiter/5.10.2/junit-jupiter-5.10.2.jar:/Users/inescachola/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar:/Users/inescachola/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/inescachola/.m2/repository/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar:/Users/inescachola/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/inescachola/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.10.2/junit-jupiter-params-5.10.2.jar:/Users/inescachola/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar:/Users/inescachola/.m2/repository/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/evm/24.12.2/evm-24.12.2.jar:/Users/inescachola/.m2/repository/org/slf4j/slf4j-api/2.0.16/slf4j-api-2.0.16.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/internal/algorithms/24.12.2/algorithms-24.12.2.jar:/Users/inescachola/.m2/repository/org/bouncycastle/bcprov-jdk18on/1.78.1/bcprov-jdk18on-1.78.1.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/secp256k1/0.9.7/secp256k1-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/secp256r1/0.9.7/secp256r1-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/blake2bf/0.9.7/blake2bf-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/internal/rlp/24.12.2/rlp-24.12.2.jar:/Users/inescachola/.m2/repository/com/github/ben-manes/caffeine/caffeine/3.1.8/caffeine-3.1.8.jar:/Users/inescachola/.m2/repository/org/checkerframework/checker-qual/3.37.0/checker-qual-3.37.0.jar:/Users/inescachola/.m2/repository/com/google/errorprone/error_prone_annotations/2.21.1/error_prone_annotations-2.21.1.jar:/Users/inescachola/.m2/repository/com/google/guava/guava/33.3.1-jre/guava-33.3.1-jre.jar:/Users/inescachola/.m2/repository/com/google/guava/failureaccess/1.0.2/failureaccess-1.0.2.jar:/Users/inescachola/.m2/repository/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar:/Users/inescachola/.m2/repository/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar:/Users/inescachola/.m2/repository/com/google/j2objc/j2objc-annotations/3.0.0/j2objc-annotations-3.0.0.jar:/Users/inescachola/.m2/repository/net/java/dev/jna/jna/5.15.0/jna-5.15.0.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/arithmetic/0.9.7/arithmetic-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/bls12-381/0.9.7/bls12-381-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/gnark/0.9.7/gnark-0.9.7.jar:/Users/inescachola/.m2/repository/tech/pegasys/jc-kzg-4844/1.0.0/jc-kzg-4844-1.0.0.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/besu-datatypes/24.12.2/besu-datatypes-24.12.2.jar:/Users/inescachola/.m2/repository/io/tmio/tuweni-bytes/2.4.2/tuweni-bytes-2.4.2.jar:/Users/inescachola/.m2/repository/org/connid/framework/1.3.2/framework-1.3.2.jar:/Users/inescachola/.m2/repository/org/connid/framework-internal/1.3.2/framework-internal-1.3.2.jar:/Users/inescachola/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.8.21/kotlin-stdlib-jdk8-1.8.21.jar:/Users/inescachola/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.8.21/kotlin-stdlib-1.8.21.jar:/Users/inescachola/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-common/1.8.21/kotlin-stdlib-common-1.8.21.jar:/Users/inescachola/.m2/repository/org/jetbrains/annotations/13.0/annotations-13.0.jar:/Users/inescachola/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.8.21/kotlin-stdlib-jdk7-1.8.21.jar:/Users/inescachola/.m2/repository/io/tmio/tuweni-units/2.4.2/tuweni-units-2.4.2.jar:/Users/inescachola/.m2/repository/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar:"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="/Users/inescachola"/>
+    <property name="user.language" value="pt"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.version.date" value="2025-01-21"/>
+    <property name="java.home" value="/opt/homebrew/Cellar/openjdk/23.0.2/libexec/openjdk.jdk/Contents/Home"/>
+    <property name="file.separator" value="/"/>
+    <property name="basedir" value="/Users/inescachola/Desktop/SDTF/depchain"/>
+    <property name="java.vm.compressedOopsMode" value="Zero based"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="apple.awt.application.name" value="ForkedBooter"/>
+    <property name="surefire.real.class.path" value="/Users/inescachola/Desktop/SDTF/depchain/target/surefire/surefirebooter-20260402202442907_3.jar"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="ftp.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
+    <property name="java.runtime.version" value="23.0.2"/>
+    <property name="user.name" value="inescachola"/>
+    <property name="stdout.encoding" value="UTF-8"/>
+    <property name="path.separator" value=":"/>
+    <property name="os.version" value="26.3.1"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="jnidispatch.path" value="/Users/inescachola/Library/Caches/JNA/temp/jna3001722901394183693.tmp"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="jna.platform.library.path" value="/usr/lib:/usr/lib"/>
+    <property name="java.vendor.version" value="Homebrew"/>
+    <property name="localRepository" value="/Users/inescachola/.m2/repository"/>
+    <property name="jna.loaded" value="true"/>
+    <property name="java.vendor.url.bug" value="https://github.com/Homebrew/homebrew-core/issues"/>
+    <property name="java.io.tmpdir" value="/var/folders/tw/gmp3_nbx1vz6j7kw3t9k1nxm0000gp/T/"/>
+    <property name="java.version" value="23.0.2"/>
+    <property name="user.dir" value="/Users/inescachola/Desktop/SDTF/depchain"/>
+    <property name="os.arch" value="aarch64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="native.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/Users/inescachola/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:."/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="stderr.encoding" value="UTF-8"/>
+    <property name="java.vendor" value="Homebrew"/>
+    <property name="java.vm.version" value="23.0.2"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeBig"/>
+    <property name="socksNonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
+    <property name="java.class.version" value="67.0"/>
+  </properties>
+  <testcase name="legacyPlainStringRequest_stillReturnsTrue" classname="depchain.TransactionExecutionTest" time="3.285">
+    <system-out><![CDATA[[Node 0] genesis loaded — ISTCoin at 0x1dff45d95dd5815b02f5b427c4d4049f0ca97a52
+[Node 0] genesis block persisted: 0x06faabf079dfef3c74d1689034072d715f895c13d7c0a73a0484b038b91f07dd
+[UdpTransport] listening on port 5000
+[FL] Node 0 up on port 5000
+[SL] Node 0 up
+[PL] Node 0 up
+[APL] Node 0 up w/ auth stuff
+[Node 0] up on port 5000 (leader for view 0 is 0, behavior=HONEST)
+[Node 1] genesis loaded — ISTCoin at 0x1dff45d95dd5815b02f5b427c4d4049f0ca97a52
+[Node 1] genesis block persisted: 0x06faabf079dfef3c74d1689034072d715f895c13d7c0a73a0484b038b91f07dd
+[UdpTransport] listening on port 5001
+[FL] Node 1 up on port 5001
+[SL] Node 1 up
+[PL] Node 1 up
+[APL] Node 1 up w/ auth stuff
+[Node 1] up on port 5001 (leader for view 0 is 0, behavior=HONEST)
+[Node 2] genesis loaded — ISTCoin at 0x1dff45d95dd5815b02f5b427c4d4049f0ca97a52
+[Node 2] genesis block persisted: 0x06faabf079dfef3c74d1689034072d715f895c13d7c0a73a0484b038b91f07dd
+[UdpTransport] listening on port 5002
+[FL] Node 2 up on port 5002
+[SL] Node 2 up
+[PL] Node 2 up
+[APL] Node 2 up w/ auth stuff
+[Node 2] up on port 5002 (leader for view 0 is 0, behavior=HONEST)
+[Node 3] genesis loaded — ISTCoin at 0x1dff45d95dd5815b02f5b427c4d4049f0ca97a52
+[Node 3] genesis block persisted: 0x06faabf079dfef3c74d1689034072d715f895c13d7c0a73a0484b038b91f07dd
+[UdpTransport] listening on port 5003
+[FL] Node 3 up on port 5003
+[SL] Node 3 up
+[PL] Node 3 up
+[APL] Node 3 up w/ auth stuff
+[Node 3] up on port 5003 (leader for view 0 is 0, behavior=HONEST)
+[Client 6300] up on port 6300
+[Client 6300] sent req 89878380-1b04-4cf8-b6c3-50ef8cbbac77 to node 0
+[Client 6300] sent req 89878380-1b04-4cf8-b6c3-50ef8cbbac77 to node 1
+[Client 6300] sent req 89878380-1b04-4cf8-b6c3-50ef8cbbac77 to node 2
+[Client 6300] sent req 89878380-1b04-4cf8-b6c3-50ef8cbbac77 to node 3
+[Node 0] chain got: legacy-plain-string
+[Node 2] chain got: legacy-plain-string
+[Node 1] chain got: legacy-plain-string
+[Node 3] chain got: legacy-plain-string
+[Client 6300] got reply frm node 0 (view 0): committed:view=0
+[Client 6300] got reply frm node 1 (view 0): committed:view=0
+[Client 6300] stopped
+[Node 1] now on view 1 (block decided)
+[Node 2] now on view 1 (block decided)
+[Node 3] now on view 1 (block decided)
+[Node 0] now on view 1 (block decided)
+[Node 0] stopped
+[Node 1] stopped
+[Node 2] stopped
+[Node 3] stopped
+]]></system-out>
+    <system-err><![CDATA[Dealer: Testing 512 bit Keys...
+Dealer: Attempting to generate group keypair..
+Dealer: Generating Verifiers
+[Node 0] could not execute tx in block 1: Illegal base64 character 2d
+[Node 2] could not execute tx in block 1: Illegal base64 character 2d
+[Node 1] could not execute tx in block 1: Illegal base64 character 2d
+[Node 3] could not execute tx in block 1: Illegal base64 character 2d
+[FL] packet parse went bad: socket isnt up
+[FL] packet parse went bad: socket isnt up
+[FL] packet parse went bad: socket isnt up
+[FL] packet parse went bad: socket isnt up
+]]></system-err>
+  </testcase>
+  <testcase name="successfulTransfer_returnsTrue" classname="depchain.TransactionExecutionTest" time="2.174">
+    <system-out><![CDATA[[Node 0] genesis loaded — ISTCoin at 0xbec50b66681204e4cf1ad0f6d0101239b3bd58a7
+[Node 0] genesis block persisted: 0x572f9016a8f17a0482ff5f297edd400a5fc97a9acacc69cf816774319c1b4993
+[UdpTransport] listening on port 5000
+[FL] Node 0 up on port 5000
+[SL] Node 0 up
+[PL] Node 0 up
+[APL] Node 0 up w/ auth stuff
+[Node 0] up on port 5000 (leader for view 0 is 0, behavior=HONEST)
+[Node 1] genesis loaded — ISTCoin at 0xbec50b66681204e4cf1ad0f6d0101239b3bd58a7
+[Node 1] genesis block persisted: 0x572f9016a8f17a0482ff5f297edd400a5fc97a9acacc69cf816774319c1b4993
+[UdpTransport] listening on port 5001
+[FL] Node 1 up on port 5001
+[SL] Node 1 up
+[PL] Node 1 up
+[APL] Node 1 up w/ auth stuff
+[Node 1] up on port 5001 (leader for view 0 is 0, behavior=HONEST)
+[Node 2] genesis loaded — ISTCoin at 0xbec50b66681204e4cf1ad0f6d0101239b3bd58a7
+[Node 2] genesis block persisted: 0x572f9016a8f17a0482ff5f297edd400a5fc97a9acacc69cf816774319c1b4993
+[UdpTransport] listening on port 5002
+[FL] Node 2 up on port 5002
+[SL] Node 2 up
+[PL] Node 2 up
+[APL] Node 2 up w/ auth stuff
+[Node 2] up on port 5002 (leader for view 0 is 0, behavior=HONEST)
+[Node 3] genesis loaded — ISTCoin at 0xbec50b66681204e4cf1ad0f6d0101239b3bd58a7
+[Node 3] genesis block persisted: 0x572f9016a8f17a0482ff5f297edd400a5fc97a9acacc69cf816774319c1b4993
+[UdpTransport] listening on port 5003
+[FL] Node 3 up on port 5003
+[SL] Node 3 up
+[PL] Node 3 up
+[APL] Node 3 up w/ auth stuff
+[Node 3] up on port 5003 (leader for view 0 is 0, behavior=HONEST)
+[Client 6300] up on port 6300
+[Client 6300] sent req aa1e626b-796d-461c-89d1-0f94b3267553 to node 0
+[Client 6300] sent req aa1e626b-796d-461c-89d1-0f94b3267553 to node 1
+[Client 6300] sent req aa1e626b-796d-461c-89d1-0f94b3267553 to node 2
+[Client 6300] sent req aa1e626b-796d-461c-89d1-0f94b3267553 to node 3
+[Node 0] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAAAdAAAdAAqMHhjZDFkNGU1MDA5ZjNmZDE5NWIzMzkwNWI0NTUxY2JjNDFhZTM0OWVidXIAAltCrPMX+AYIVOACAAB4cAAAAQBGzEg0Yz+dpBtTXGDns/DoenI3LYaSWe4tt3Nw4qDSdQybvDKnIB6iI6W5xdnI55KZB8HKCvhq+2m5hhqKDO3nEiwai9SIturYNlCxrNv6Rj29AETEWV1H6valh0r6hOEQCaiSTcKb9WzKWovBxYHlBhNUyHS8fIZEYoNfoygu2X9se53EBq8fESY7EIEqxsaOn8SlvN+raqh9X25aeAvVawsiVRQNkZb0IFkfm4Y30cEJppXWW0ycgo/9cYjNhj5dQH8bUMWCIeE++2adCjNTc55jHt/nXsal+sll61IlRavPih4sCXrGfVLvPx4RNluB0bQZ9cJ8AVtYHcpmGOg2dAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDAwdAAkODIwMDk1M2UtNDQ4Yi00OWI0LWFhNDEtNDQ2ZDVhMTg3Zjc4dAAEMTAwMA==
+[Client 6300] got reply frm node 0 (view 0): gasUsed=21000,fee=21000,success=true
+[Node 0] now on view 1 (block decided)
+[Node 2] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAAAdAAAdAAqMHhjZDFkNGU1MDA5ZjNmZDE5NWIzMzkwNWI0NTUxY2JjNDFhZTM0OWVidXIAAltCrPMX+AYIVOACAAB4cAAAAQBGzEg0Yz+dpBtTXGDns/DoenI3LYaSWe4tt3Nw4qDSdQybvDKnIB6iI6W5xdnI55KZB8HKCvhq+2m5hhqKDO3nEiwai9SIturYNlCxrNv6Rj29AETEWV1H6valh0r6hOEQCaiSTcKb9WzKWovBxYHlBhNUyHS8fIZEYoNfoygu2X9se53EBq8fESY7EIEqxsaOn8SlvN+raqh9X25aeAvVawsiVRQNkZb0IFkfm4Y30cEJppXWW0ycgo/9cYjNhj5dQH8bUMWCIeE++2adCjNTc55jHt/nXsal+sll61IlRavPih4sCXrGfVLvPx4RNluB0bQZ9cJ8AVtYHcpmGOg2dAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDAwdAAkODIwMDk1M2UtNDQ4Yi00OWI0LWFhNDEtNDQ2ZDVhMTg3Zjc4dAAEMTAwMA==
+[Node 1] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAAAdAAAdAAqMHhjZDFkNGU1MDA5ZjNmZDE5NWIzMzkwNWI0NTUxY2JjNDFhZTM0OWVidXIAAltCrPMX+AYIVOACAAB4cAAAAQBGzEg0Yz+dpBtTXGDns/DoenI3LYaSWe4tt3Nw4qDSdQybvDKnIB6iI6W5xdnI55KZB8HKCvhq+2m5hhqKDO3nEiwai9SIturYNlCxrNv6Rj29AETEWV1H6valh0r6hOEQCaiSTcKb9WzKWovBxYHlBhNUyHS8fIZEYoNfoygu2X9se53EBq8fESY7EIEqxsaOn8SlvN+raqh9X25aeAvVawsiVRQNkZb0IFkfm4Y30cEJppXWW0ycgo/9cYjNhj5dQH8bUMWCIeE++2adCjNTc55jHt/nXsal+sll61IlRavPih4sCXrGfVLvPx4RNluB0bQZ9cJ8AVtYHcpmGOg2dAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDAwdAAkODIwMDk1M2UtNDQ4Yi00OWI0LWFhNDEtNDQ2ZDVhMTg3Zjc4dAAEMTAwMA==
+[Node 2] now on view 1 (block decided)
+[Client 6300] got reply frm node 2 (view 0): gasUsed=21000,fee=21000,success=true
+[Client 6300] stopped
+[Node 3] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAAAdAAAdAAqMHhjZDFkNGU1MDA5ZjNmZDE5NWIzMzkwNWI0NTUxY2JjNDFhZTM0OWVidXIAAltCrPMX+AYIVOACAAB4cAAAAQBGzEg0Yz+dpBtTXGDns/DoenI3LYaSWe4tt3Nw4qDSdQybvDKnIB6iI6W5xdnI55KZB8HKCvhq+2m5hhqKDO3nEiwai9SIturYNlCxrNv6Rj29AETEWV1H6valh0r6hOEQCaiSTcKb9WzKWovBxYHlBhNUyHS8fIZEYoNfoygu2X9se53EBq8fESY7EIEqxsaOn8SlvN+raqh9X25aeAvVawsiVRQNkZb0IFkfm4Y30cEJppXWW0ycgo/9cYjNhj5dQH8bUMWCIeE++2adCjNTc55jHt/nXsal+sll61IlRavPih4sCXrGfVLvPx4RNluB0bQZ9cJ8AVtYHcpmGOg2dAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDAwdAAkODIwMDk1M2UtNDQ4Yi00OWI0LWFhNDEtNDQ2ZDVhMTg3Zjc4dAAEMTAwMA==
+[Node 0] stopped
+[Node 1] now on view 1 (block decided)
+[Node 1] stopped
+[Node 3] now on view 1 (block decided)
+[Node 2] stopped
+[Node 3] stopped
+]]></system-out>
+    <system-err><![CDATA[[FL] packet parse went bad: socket isnt up
+[FL] packet parse went bad: socket isnt up
+]]></system-err>
+  </testcase>
+  <testcase name="successfulTransfer_senderBalanceDecreased" classname="depchain.TransactionExecutionTest" time="3.974">
+    <system-out><![CDATA[[Node 0] genesis loaded — ISTCoin at 0x1437b5687f5f9fb3a0ceaf63207d761d9df9fbb6
+[Node 0] genesis block persisted: 0xdb018ceef8ca2216d131fb3ad1bc9660909e08cc0ad06d01c6356e9bef7c22e4
+[UdpTransport] listening on port 5000
+[FL] Node 0 up on port 5000
+[SL] Node 0 up
+[PL] Node 0 up
+[APL] Node 0 up w/ auth stuff
+[Node 0] up on port 5000 (leader for view 0 is 0, behavior=HONEST)
+[Node 1] genesis loaded — ISTCoin at 0x1437b5687f5f9fb3a0ceaf63207d761d9df9fbb6
+[Node 1] genesis block persisted: 0xdb018ceef8ca2216d131fb3ad1bc9660909e08cc0ad06d01c6356e9bef7c22e4
+[UdpTransport] listening on port 5001
+[FL] Node 1 up on port 5001
+[SL] Node 1 up
+[PL] Node 1 up
+[APL] Node 1 up w/ auth stuff
+[Node 1] up on port 5001 (leader for view 0 is 0, behavior=HONEST)
+[Node 2] genesis loaded — ISTCoin at 0x1437b5687f5f9fb3a0ceaf63207d761d9df9fbb6
+[Node 2] genesis block persisted: 0xdb018ceef8ca2216d131fb3ad1bc9660909e08cc0ad06d01c6356e9bef7c22e4
+[UdpTransport] listening on port 5002
+[FL] Node 2 up on port 5002
+[SL] Node 2 up
+[PL] Node 2 up
+[APL] Node 2 up w/ auth stuff
+[Node 2] up on port 5002 (leader for view 0 is 0, behavior=HONEST)
+[Node 3] genesis loaded — ISTCoin at 0x1437b5687f5f9fb3a0ceaf63207d761d9df9fbb6
+[Node 3] genesis block persisted: 0xdb018ceef8ca2216d131fb3ad1bc9660909e08cc0ad06d01c6356e9bef7c22e4
+[UdpTransport] listening on port 5003
+[FL] Node 3 up on port 5003
+[SL] Node 3 up
+[PL] Node 3 up
+[APL] Node 3 up w/ auth stuff
+[Node 3] up on port 5003 (leader for view 0 is 0, behavior=HONEST)
+[Client 6300] up on port 6300
+[Client 6300] sent req 47bc46a7-ce96-4ced-98ae-97cd17d2d873 to node 0
+[Client 6300] sent req 47bc46a7-ce96-4ced-98ae-97cd17d2d873 to node 1
+[Client 6300] sent req 47bc46a7-ce96-4ced-98ae-97cd17d2d873 to node 2
+[Client 6300] sent req 47bc46a7-ce96-4ced-98ae-97cd17d2d873 to node 3
+[Node 0] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAAAdAAAdAAqMHg5MzNmYWQxZmE1OTYwOThlNzI0ZTg3OGNmZGMxNGM1OTZjZDlmY2VldXIAAltCrPMX+AYIVOACAAB4cAAAAQCNAtP0V2APxjDF6hq3b/bg1BEux6OH08RhRltt/7zYci6j4gf+UxVzw7spmfXKyxu491nn0CpGoPksl1h7ulV5oR7qQoR7YJVxlfeUG1nIhWNVMC5GNadf+QV8s7NJgR9OsfxFcPV9lSi4sJfo7FMgJyy37BrzcXWnMDo7edp7bkXofxTlT6s1vLb36Qvi4wAbDEwmbs9n+Fx3uFoSd1Bkcq3g9agG3eNyo2uePiotzrhRmhm9duwmlZtbdotfMSITgO3j8iYLrvkPRuiS9baA4HoEnC3uwAewPXhGLV2gCuZYJ2zAgsMd8W7BF7TNMNfwF4EPZirTLZd/WmnkLuPgdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDAxdAAkNjIyOTY2YTEtYmVlMy00YTBjLTg1ZGQtNTE4NThhNzdmNjQ2dAAEMTAwMA==
+[Client 6300] got reply frm node 0 (view 0): gasUsed=21000,fee=21000,success=true
+[Node 0] now on view 1 (block decided)
+[Node 1] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAAAdAAAdAAqMHg5MzNmYWQxZmE1OTYwOThlNzI0ZTg3OGNmZGMxNGM1OTZjZDlmY2VldXIAAltCrPMX+AYIVOACAAB4cAAAAQCNAtP0V2APxjDF6hq3b/bg1BEux6OH08RhRltt/7zYci6j4gf+UxVzw7spmfXKyxu491nn0CpGoPksl1h7ulV5oR7qQoR7YJVxlfeUG1nIhWNVMC5GNadf+QV8s7NJgR9OsfxFcPV9lSi4sJfo7FMgJyy37BrzcXWnMDo7edp7bkXofxTlT6s1vLb36Qvi4wAbDEwmbs9n+Fx3uFoSd1Bkcq3g9agG3eNyo2uePiotzrhRmhm9duwmlZtbdotfMSITgO3j8iYLrvkPRuiS9baA4HoEnC3uwAewPXhGLV2gCuZYJ2zAgsMd8W7BF7TNMNfwF4EPZirTLZd/WmnkLuPgdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDAxdAAkNjIyOTY2YTEtYmVlMy00YTBjLTg1ZGQtNTE4NThhNzdmNjQ2dAAEMTAwMA==
+[Node 3] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAAAdAAAdAAqMHg5MzNmYWQxZmE1OTYwOThlNzI0ZTg3OGNmZGMxNGM1OTZjZDlmY2VldXIAAltCrPMX+AYIVOACAAB4cAAAAQCNAtP0V2APxjDF6hq3b/bg1BEux6OH08RhRltt/7zYci6j4gf+UxVzw7spmfXKyxu491nn0CpGoPksl1h7ulV5oR7qQoR7YJVxlfeUG1nIhWNVMC5GNadf+QV8s7NJgR9OsfxFcPV9lSi4sJfo7FMgJyy37BrzcXWnMDo7edp7bkXofxTlT6s1vLb36Qvi4wAbDEwmbs9n+Fx3uFoSd1Bkcq3g9agG3eNyo2uePiotzrhRmhm9duwmlZtbdotfMSITgO3j8iYLrvkPRuiS9baA4HoEnC3uwAewPXhGLV2gCuZYJ2zAgsMd8W7BF7TNMNfwF4EPZirTLZd/WmnkLuPgdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDAxdAAkNjIyOTY2YTEtYmVlMy00YTBjLTg1ZGQtNTE4NThhNzdmNjQ2dAAEMTAwMA==
+[Node 2] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAAAdAAAdAAqMHg5MzNmYWQxZmE1OTYwOThlNzI0ZTg3OGNmZGMxNGM1OTZjZDlmY2VldXIAAltCrPMX+AYIVOACAAB4cAAAAQCNAtP0V2APxjDF6hq3b/bg1BEux6OH08RhRltt/7zYci6j4gf+UxVzw7spmfXKyxu491nn0CpGoPksl1h7ulV5oR7qQoR7YJVxlfeUG1nIhWNVMC5GNadf+QV8s7NJgR9OsfxFcPV9lSi4sJfo7FMgJyy37BrzcXWnMDo7edp7bkXofxTlT6s1vLb36Qvi4wAbDEwmbs9n+Fx3uFoSd1Bkcq3g9agG3eNyo2uePiotzrhRmhm9duwmlZtbdotfMSITgO3j8iYLrvkPRuiS9baA4HoEnC3uwAewPXhGLV2gCuZYJ2zAgsMd8W7BF7TNMNfwF4EPZirTLZd/WmnkLuPgdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDAxdAAkNjIyOTY2YTEtYmVlMy00YTBjLTg1ZGQtNTE4NThhNzdmNjQ2dAAEMTAwMA==
+[Client 6300] got reply frm node 1 (view 0): gasUsed=21000,fee=21000,success=true
+[Node 1] now on view 1 (block decided)
+[Node 3] now on view 1 (block decided)
+[Node 2] now on view 1 (block decided)
+[Client 6300] stopped
+[Node 0] stopped
+[Node 1] stopped
+[Node 2] stopped
+[Node 3] stopped
+]]></system-out>
+    <system-err><![CDATA[[FL] packet parse went bad: socket isnt up
+[FL] packet parse went bad: socket isnt up
+]]></system-err>
+  </testcase>
+  <testcase name="successfulTransfer_recipientBalanceIncreased" classname="depchain.TransactionExecutionTest" time="2.07">
+    <system-out><![CDATA[[Node 0] genesis loaded — ISTCoin at 0xd1e960b35653f5b090c6650909e5cb789580953d
+[Node 0] genesis block persisted: 0xf2f5b845c15b69264b62d746647e538fc3a802ac071eb4fd61aef4dd9fbfc98d
+[UdpTransport] listening on port 5000
+[FL] Node 0 up on port 5000
+[SL] Node 0 up
+[PL] Node 0 up
+[APL] Node 0 up w/ auth stuff
+[Node 0] up on port 5000 (leader for view 0 is 0, behavior=HONEST)
+[Node 1] genesis loaded — ISTCoin at 0xd1e960b35653f5b090c6650909e5cb789580953d
+[Node 1] genesis block persisted: 0xf2f5b845c15b69264b62d746647e538fc3a802ac071eb4fd61aef4dd9fbfc98d
+[UdpTransport] listening on port 5001
+[FL] Node 1 up on port 5001
+[SL] Node 1 up
+[PL] Node 1 up
+[APL] Node 1 up w/ auth stuff
+[Node 1] up on port 5001 (leader for view 0 is 0, behavior=HONEST)
+[Node 2] genesis loaded — ISTCoin at 0xd1e960b35653f5b090c6650909e5cb789580953d
+[Node 2] genesis block persisted: 0xf2f5b845c15b69264b62d746647e538fc3a802ac071eb4fd61aef4dd9fbfc98d
+[UdpTransport] listening on port 5002
+[FL] Node 2 up on port 5002
+[SL] Node 2 up
+[PL] Node 2 up
+[APL] Node 2 up w/ auth stuff
+[Node 2] up on port 5002 (leader for view 0 is 0, behavior=HONEST)
+[Node 3] genesis loaded — ISTCoin at 0xd1e960b35653f5b090c6650909e5cb789580953d
+[Node 3] genesis block persisted: 0xf2f5b845c15b69264b62d746647e538fc3a802ac071eb4fd61aef4dd9fbfc98d
+[UdpTransport] listening on port 5003
+[FL] Node 3 up on port 5003
+[SL] Node 3 up
+[PL] Node 3 up
+[APL] Node 3 up w/ auth stuff
+[Node 3] up on port 5003 (leader for view 0 is 0, behavior=HONEST)
+[Client 6300] up on port 6300
+[Client 6300] sent req ba9da9c9-7e99-47ed-b133-a17b9b8d50a5 to node 0
+[Client 6300] sent req ba9da9c9-7e99-47ed-b133-a17b9b8d50a5 to node 1
+[Client 6300] sent req ba9da9c9-7e99-47ed-b133-a17b9b8d50a5 to node 2
+[Client 6300] sent req ba9da9c9-7e99-47ed-b133-a17b9b8d50a5 to node 3
+[Node 0] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAAAdAAAdAAqMHg3MjVmOTAxZGQ1NGQ1YjYxNmY1ZDNmMmNkMWM2MTA4MTEyODI2MDJhdXIAAltCrPMX+AYIVOACAAB4cAAAAQAAsOYuWenI7XPPJGba8+4kBMZaQQIBSIKHgNYaO+gp/4GyznoB0vaNbKnDPPvNppXki9c4k7QhKNNHffAv3bI8nTzjinyf3YCRUJEZWfG1kyegShoHXAB6SgfoFNcQmNvgVmZ65m+xPTWXvETXutG7MVnRNO3alsv/AhKwbLEB1uF3JWPRXHiWxXS+IYTM/c8c15BA1GpZY7mDcsgu3VktBt88FOqiFVXCVcuYAsSHSnRso2eYRVdJBOOfIbSQFsGF8SpwuL+TStRedAV+9YNf+WnEVTZxklTQUA5FTmgJcnR5OZ6i8qWFmCV1v3urVcWupUnpP/7bhxKWSs/SjHrqdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDAydAAkYWM0OTYzM2MtZDViYS00NTU5LTk5OWMtYmYxNDU0ZTMwNjdjdAAGNTAwMDAw
+[Node 0] now on view 1 (block decided)
+[Client 6300] got reply frm node 0 (view 0): gasUsed=21000,fee=21000,success=true
+[Node 2] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAAAdAAAdAAqMHg3MjVmOTAxZGQ1NGQ1YjYxNmY1ZDNmMmNkMWM2MTA4MTEyODI2MDJhdXIAAltCrPMX+AYIVOACAAB4cAAAAQAAsOYuWenI7XPPJGba8+4kBMZaQQIBSIKHgNYaO+gp/4GyznoB0vaNbKnDPPvNppXki9c4k7QhKNNHffAv3bI8nTzjinyf3YCRUJEZWfG1kyegShoHXAB6SgfoFNcQmNvgVmZ65m+xPTWXvETXutG7MVnRNO3alsv/AhKwbLEB1uF3JWPRXHiWxXS+IYTM/c8c15BA1GpZY7mDcsgu3VktBt88FOqiFVXCVcuYAsSHSnRso2eYRVdJBOOfIbSQFsGF8SpwuL+TStRedAV+9YNf+WnEVTZxklTQUA5FTmgJcnR5OZ6i8qWFmCV1v3urVcWupUnpP/7bhxKWSs/SjHrqdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDAydAAkYWM0OTYzM2MtZDViYS00NTU5LTk5OWMtYmYxNDU0ZTMwNjdjdAAGNTAwMDAw
+[Node 3] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAAAdAAAdAAqMHg3MjVmOTAxZGQ1NGQ1YjYxNmY1ZDNmMmNkMWM2MTA4MTEyODI2MDJhdXIAAltCrPMX+AYIVOACAAB4cAAAAQAAsOYuWenI7XPPJGba8+4kBMZaQQIBSIKHgNYaO+gp/4GyznoB0vaNbKnDPPvNppXki9c4k7QhKNNHffAv3bI8nTzjinyf3YCRUJEZWfG1kyegShoHXAB6SgfoFNcQmNvgVmZ65m+xPTWXvETXutG7MVnRNO3alsv/AhKwbLEB1uF3JWPRXHiWxXS+IYTM/c8c15BA1GpZY7mDcsgu3VktBt88FOqiFVXCVcuYAsSHSnRso2eYRVdJBOOfIbSQFsGF8SpwuL+TStRedAV+9YNf+WnEVTZxklTQUA5FTmgJcnR5OZ6i8qWFmCV1v3urVcWupUnpP/7bhxKWSs/SjHrqdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDAydAAkYWM0OTYzM2MtZDViYS00NTU5LTk5OWMtYmYxNDU0ZTMwNjdjdAAGNTAwMDAw
+[Node 1] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAAAdAAAdAAqMHg3MjVmOTAxZGQ1NGQ1YjYxNmY1ZDNmMmNkMWM2MTA4MTEyODI2MDJhdXIAAltCrPMX+AYIVOACAAB4cAAAAQAAsOYuWenI7XPPJGba8+4kBMZaQQIBSIKHgNYaO+gp/4GyznoB0vaNbKnDPPvNppXki9c4k7QhKNNHffAv3bI8nTzjinyf3YCRUJEZWfG1kyegShoHXAB6SgfoFNcQmNvgVmZ65m+xPTWXvETXutG7MVnRNO3alsv/AhKwbLEB1uF3JWPRXHiWxXS+IYTM/c8c15BA1GpZY7mDcsgu3VktBt88FOqiFVXCVcuYAsSHSnRso2eYRVdJBOOfIbSQFsGF8SpwuL+TStRedAV+9YNf+WnEVTZxklTQUA5FTmgJcnR5OZ6i8qWFmCV1v3urVcWupUnpP/7bhxKWSs/SjHrqdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDAydAAkYWM0OTYzM2MtZDViYS00NTU5LTk5OWMtYmYxNDU0ZTMwNjdjdAAGNTAwMDAw
+[Client 6300] got reply frm node 2 (view 0): gasUsed=21000,fee=21000,success=true
+[Node 3] now on view 1 (block decided)
+[Node 2] now on view 1 (block decided)
+[Node 1] now on view 1 (block decided)
+[Client 6300] stopped
+[Node 0] stopped
+[Node 1] stopped
+[Node 2] stopped
+[Node 3] stopped
+]]></system-out>
+    <system-err><![CDATA[[FL] packet parse went bad: socket isnt up
+[FL] packet parse went bad: socket isnt up
+[FL] packet parse went bad: socket isnt up
+]]></system-err>
+  </testcase>
+  <testcase name="transferWithInsufficientBalance_returnsFalse" classname="depchain.TransactionExecutionTest" time="1.292">
+    <system-out><![CDATA[[Node 0] genesis loaded — ISTCoin at 0xc4dc39f0a1ca4dea55883ca588f378661205baf0
+[Node 0] genesis block persisted: 0x7a30f147de59bc2a7cfbac35011d71cfd19affa4efe290d10a6c54f8f6555380
+[UdpTransport] listening on port 5000
+[FL] Node 0 up on port 5000
+[SL] Node 0 up
+[PL] Node 0 up
+[APL] Node 0 up w/ auth stuff
+[Node 0] up on port 5000 (leader for view 0 is 0, behavior=HONEST)
+[Node 1] genesis loaded — ISTCoin at 0xc4dc39f0a1ca4dea55883ca588f378661205baf0
+[Node 1] genesis block persisted: 0x7a30f147de59bc2a7cfbac35011d71cfd19affa4efe290d10a6c54f8f6555380
+[UdpTransport] listening on port 5001
+[FL] Node 1 up on port 5001
+[SL] Node 1 up
+[PL] Node 1 up
+[APL] Node 1 up w/ auth stuff
+[Node 1] up on port 5001 (leader for view 0 is 0, behavior=HONEST)
+[Node 2] genesis loaded — ISTCoin at 0xc4dc39f0a1ca4dea55883ca588f378661205baf0
+[Node 2] genesis block persisted: 0x7a30f147de59bc2a7cfbac35011d71cfd19affa4efe290d10a6c54f8f6555380
+[UdpTransport] listening on port 5002
+[FL] Node 2 up on port 5002
+[SL] Node 2 up
+[PL] Node 2 up
+[APL] Node 2 up w/ auth stuff
+[Node 2] up on port 5002 (leader for view 0 is 0, behavior=HONEST)
+[Node 3] genesis loaded — ISTCoin at 0xc4dc39f0a1ca4dea55883ca588f378661205baf0
+[Node 3] genesis block persisted: 0x7a30f147de59bc2a7cfbac35011d71cfd19affa4efe290d10a6c54f8f6555380
+[UdpTransport] listening on port 5003
+[FL] Node 3 up on port 5003
+[SL] Node 3 up
+[PL] Node 3 up
+[APL] Node 3 up w/ auth stuff
+[Node 3] up on port 5003 (leader for view 0 is 0, behavior=HONEST)
+[Client 6300] up on port 6300
+[Client 6300] sent req 41c0cff5-8f7a-4a37-91cd-d858d197e6f8 to node 0
+[Client 6300] sent req 41c0cff5-8f7a-4a37-91cd-d858d197e6f8 to node 1
+[Client 6300] sent req 41c0cff5-8f7a-4a37-91cd-d858d197e6f8 to node 2
+[Client 6300] sent req 41c0cff5-8f7a-4a37-91cd-d858d197e6f8 to node 3
+[Node 0] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAAAdAAAdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDAzdXIAAltCrPMX+AYIVOACAAB4cAAAAQBnM2TjvK/7gLN5Okx+2mv8zF7JEPbn0snPioBaYX9h1+i2SV4iCfESi5j9Whpzq4CqFQ6AB9qpvblo1ug9xSJJ1XqqQ8mY/paLMQasdC6AbjQh5A/V3XrYLtP3zvBTPPIoZTCHR6SpyPzCFxjwRcvGLOCTB4aIhM65/yF1YVfgWof198ZKa9Ubuq8W9yiBz0scby6ELgEOS6hd8wluSKyHmaoBay0XLXKf1igNko8O/SHPROylo6kMZq5n1dMFT8YQunpbTqa2x+dsryxVPmr4G4oyNXccE6F+And0D8iQ/EVDTFEN4kptuHQTwhhvzGBy8Cg+5F3DZai1PVhL1LaHdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDA0dAAkMTIyYTcxMmEtM2E2Mi00MDM4LThiZTYtZmE1YjNjMDIyY2YxdAAEMTAwMA==
+[Client 6300] got reply frm node 0 (view 0): gasUsed=0,fee=0,success=false
+[Node 0] now on view 1 (block decided)
+[Node 2] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAAAdAAAdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDAzdXIAAltCrPMX+AYIVOACAAB4cAAAAQBnM2TjvK/7gLN5Okx+2mv8zF7JEPbn0snPioBaYX9h1+i2SV4iCfESi5j9Whpzq4CqFQ6AB9qpvblo1ug9xSJJ1XqqQ8mY/paLMQasdC6AbjQh5A/V3XrYLtP3zvBTPPIoZTCHR6SpyPzCFxjwRcvGLOCTB4aIhM65/yF1YVfgWof198ZKa9Ubuq8W9yiBz0scby6ELgEOS6hd8wluSKyHmaoBay0XLXKf1igNko8O/SHPROylo6kMZq5n1dMFT8YQunpbTqa2x+dsryxVPmr4G4oyNXccE6F+And0D8iQ/EVDTFEN4kptuHQTwhhvzGBy8Cg+5F3DZai1PVhL1LaHdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDA0dAAkMTIyYTcxMmEtM2E2Mi00MDM4LThiZTYtZmE1YjNjMDIyY2YxdAAEMTAwMA==
+[Node 1] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAAAdAAAdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDAzdXIAAltCrPMX+AYIVOACAAB4cAAAAQBnM2TjvK/7gLN5Okx+2mv8zF7JEPbn0snPioBaYX9h1+i2SV4iCfESi5j9Whpzq4CqFQ6AB9qpvblo1ug9xSJJ1XqqQ8mY/paLMQasdC6AbjQh5A/V3XrYLtP3zvBTPPIoZTCHR6SpyPzCFxjwRcvGLOCTB4aIhM65/yF1YVfgWof198ZKa9Ubuq8W9yiBz0scby6ELgEOS6hd8wluSKyHmaoBay0XLXKf1igNko8O/SHPROylo6kMZq5n1dMFT8YQunpbTqa2x+dsryxVPmr4G4oyNXccE6F+And0D8iQ/EVDTFEN4kptuHQTwhhvzGBy8Cg+5F3DZai1PVhL1LaHdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDA0dAAkMTIyYTcxMmEtM2E2Mi00MDM4LThiZTYtZmE1YjNjMDIyY2YxdAAEMTAwMA==
+[Client 6300] got reply frm node 2 (view 0): gasUsed=0,fee=0,success=false
+[Node 2] now on view 1 (block decided)
+[Node 1] now on view 1 (block decided)
+[Node 3] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAAAdAAAdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDAzdXIAAltCrPMX+AYIVOACAAB4cAAAAQBnM2TjvK/7gLN5Okx+2mv8zF7JEPbn0snPioBaYX9h1+i2SV4iCfESi5j9Whpzq4CqFQ6AB9qpvblo1ug9xSJJ1XqqQ8mY/paLMQasdC6AbjQh5A/V3XrYLtP3zvBTPPIoZTCHR6SpyPzCFxjwRcvGLOCTB4aIhM65/yF1YVfgWof198ZKa9Ubuq8W9yiBz0scby6ELgEOS6hd8wluSKyHmaoBay0XLXKf1igNko8O/SHPROylo6kMZq5n1dMFT8YQunpbTqa2x+dsryxVPmr4G4oyNXccE6F+And0D8iQ/EVDTFEN4kptuHQTwhhvzGBy8Cg+5F3DZai1PVhL1LaHdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDA0dAAkMTIyYTcxMmEtM2E2Mi00MDM4LThiZTYtZmE1YjNjMDIyY2YxdAAEMTAwMA==
+[Client 6300] req 41c0cff5-8f7a-4a37-91cd-d858d197e6f8 failed: gasUsed=0,fee=0,success=false
+[Client 6300] stopped
+[Node 3] now on view 1 (block decided)
+[Node 0] stopped
+[Node 1] stopped
+[Node 2] stopped
+[Node 3] stopped
+]]></system-out>
+    <system-err><![CDATA[[FL] packet parse went bad: socket isnt up
+[FL] packet parse went bad: socket isnt up
+[FL] packet parse went bad: socket isnt up
+]]></system-err>
+  </testcase>
+  <testcase name="clientGetEvmAddress_matchesNodeDerivedAddress" classname="depchain.TransactionExecutionTest" time="1.088">
+    <system-out><![CDATA[[Node 0] genesis loaded — ISTCoin at 0xbd8b8b37b50eeb1d963306782add7d647c5ce5d4
+[Node 0] genesis block persisted: 0x4d167f46a26979a857257317a93273c5ba92f333cde02297628c611322ef2561
+[UdpTransport] listening on port 5000
+[FL] Node 0 up on port 5000
+[SL] Node 0 up
+[PL] Node 0 up
+[APL] Node 0 up w/ auth stuff
+[Node 0] up on port 5000 (leader for view 0 is 0, behavior=HONEST)
+[Node 1] genesis loaded — ISTCoin at 0xbd8b8b37b50eeb1d963306782add7d647c5ce5d4
+[Node 1] genesis block persisted: 0x4d167f46a26979a857257317a93273c5ba92f333cde02297628c611322ef2561
+[UdpTransport] listening on port 5001
+[FL] Node 1 up on port 5001
+[SL] Node 1 up
+[PL] Node 1 up
+[APL] Node 1 up w/ auth stuff
+[Node 1] up on port 5001 (leader for view 0 is 0, behavior=HONEST)
+[Node 2] genesis loaded — ISTCoin at 0xbd8b8b37b50eeb1d963306782add7d647c5ce5d4
+[Node 2] genesis block persisted: 0x4d167f46a26979a857257317a93273c5ba92f333cde02297628c611322ef2561
+[UdpTransport] listening on port 5002
+[FL] Node 2 up on port 5002
+[SL] Node 2 up
+[PL] Node 2 up
+[APL] Node 2 up w/ auth stuff
+[Node 2] up on port 5002 (leader for view 0 is 0, behavior=HONEST)
+[Node 3] genesis loaded — ISTCoin at 0xbd8b8b37b50eeb1d963306782add7d647c5ce5d4
+[Node 3] genesis block persisted: 0x4d167f46a26979a857257317a93273c5ba92f333cde02297628c611322ef2561
+[UdpTransport] listening on port 5003
+[FL] Node 3 up on port 5003
+[SL] Node 3 up
+[PL] Node 3 up
+[APL] Node 3 up w/ auth stuff
+[Node 3] up on port 5003 (leader for view 0 is 0, behavior=HONEST)
+[Client 6300] up on port 6300
+[Client 6301] up on port 6301
+[Client 6300] stopped
+[Client 6301] stopped
+[Node 0] stopped
+[Node 1] stopped
+[Node 2] stopped
+[Node 3] stopped
+]]></system-out>
+  </testcase>
+  <testcase name="multipleSequentialTransactions_allCommit" classname="depchain.TransactionExecutionTest" time="2.192">
+    <system-out><![CDATA[[Node 0] genesis loaded — ISTCoin at 0xcd1a35d60fb8dab6228569892bf3ab72094d0ad0
+[Node 0] genesis block persisted: 0x0976c861af5719d3e998ca9dd4981b1348c753ea194e8f31769b216297e5d383
+[UdpTransport] listening on port 5000
+[FL] Node 0 up on port 5000
+[SL] Node 0 up
+[PL] Node 0 up
+[APL] Node 0 up w/ auth stuff
+[Node 0] up on port 5000 (leader for view 0 is 0, behavior=HONEST)
+[Node 1] genesis loaded — ISTCoin at 0xcd1a35d60fb8dab6228569892bf3ab72094d0ad0
+[Node 1] genesis block persisted: 0x0976c861af5719d3e998ca9dd4981b1348c753ea194e8f31769b216297e5d383
+[UdpTransport] listening on port 5001
+[FL] Node 1 up on port 5001
+[SL] Node 1 up
+[PL] Node 1 up
+[APL] Node 1 up w/ auth stuff
+[Node 1] up on port 5001 (leader for view 0 is 0, behavior=HONEST)
+[Node 2] genesis loaded — ISTCoin at 0xcd1a35d60fb8dab6228569892bf3ab72094d0ad0
+[Node 2] genesis block persisted: 0x0976c861af5719d3e998ca9dd4981b1348c753ea194e8f31769b216297e5d383
+[UdpTransport] listening on port 5002
+[FL] Node 2 up on port 5002
+[SL] Node 2 up
+[PL] Node 2 up
+[APL] Node 2 up w/ auth stuff
+[Node 2] up on port 5002 (leader for view 0 is 0, behavior=HONEST)
+[Node 3] genesis loaded — ISTCoin at 0xcd1a35d60fb8dab6228569892bf3ab72094d0ad0
+[Node 3] genesis block persisted: 0x0976c861af5719d3e998ca9dd4981b1348c753ea194e8f31769b216297e5d383
+[UdpTransport] listening on port 5003
+[FL] Node 3 up on port 5003
+[SL] Node 3 up
+[PL] Node 3 up
+[APL] Node 3 up w/ auth stuff
+[Node 3] up on port 5003 (leader for view 0 is 0, behavior=HONEST)
+[Client 6300] up on port 6300
+[Client 6300] sent req 80e3c2d4-0cc0-4343-b624-8e8aea00c364 to node 0
+[Client 6300] sent req 80e3c2d4-0cc0-4343-b624-8e8aea00c364 to node 1
+[Client 6300] sent req 80e3c2d4-0cc0-4343-b624-8e8aea00c364 to node 2
+[Client 6300] sent req 80e3c2d4-0cc0-4343-b624-8e8aea00c364 to node 3
+[Node 0] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAAAdAAAdAAqMHhjODgwM2I3YjE3ZTdkMjlmMDUyMTljYjViZjhmODU1M2E1NjAxYTA0dXIAAltCrPMX+AYIVOACAAB4cAAAAQAYG5MRRfcDfWSDssC04bKmYAFpbdsJP/MfpnRVUJ4Oxfb7bbfO8WZTQ31yG5Nu+qPOhjWZR/fDPKyCqhbFLyRyfBnTRRnGID6OVms7/CiXnXN6rL3Bf4Y8npTRy50YFAt2O2M9wza+8Dm9a6vfHqbF0kCIaaEYSHpid0tLt1DDaq8giFoQA4X5Kde0d0IsSNFluuC28vrNPEsc+swb8somkUk9K9+QLBHKdPX5c/hN0vqtqccCQQPXQo5tihQ46OpP+Y+JMYYqbxhCcAvinS/WyCHD0BIW3X34WNt3sXx0lyq8OaFqDZvpfrfouHB77+Cr0WiqIZYGWGO3XqEHOD1GdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDA1dAAkZmRhZDJhOWMtYjkzMi00ZmFlLWI1MGUtZDkxZTIyNzQyMDM2dAADMTAw
+[Client 6300] got reply frm node 0 (view 0): gasUsed=21000,fee=21000,success=true
+[Node 0] now on view 1 (block decided)
+[Node 1] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAAAdAAAdAAqMHhjODgwM2I3YjE3ZTdkMjlmMDUyMTljYjViZjhmODU1M2E1NjAxYTA0dXIAAltCrPMX+AYIVOACAAB4cAAAAQAYG5MRRfcDfWSDssC04bKmYAFpbdsJP/MfpnRVUJ4Oxfb7bbfO8WZTQ31yG5Nu+qPOhjWZR/fDPKyCqhbFLyRyfBnTRRnGID6OVms7/CiXnXN6rL3Bf4Y8npTRy50YFAt2O2M9wza+8Dm9a6vfHqbF0kCIaaEYSHpid0tLt1DDaq8giFoQA4X5Kde0d0IsSNFluuC28vrNPEsc+swb8somkUk9K9+QLBHKdPX5c/hN0vqtqccCQQPXQo5tihQ46OpP+Y+JMYYqbxhCcAvinS/WyCHD0BIW3X34WNt3sXx0lyq8OaFqDZvpfrfouHB77+Cr0WiqIZYGWGO3XqEHOD1GdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDA1dAAkZmRhZDJhOWMtYjkzMi00ZmFlLWI1MGUtZDkxZTIyNzQyMDM2dAADMTAw
+[Node 2] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAAAdAAAdAAqMHhjODgwM2I3YjE3ZTdkMjlmMDUyMTljYjViZjhmODU1M2E1NjAxYTA0dXIAAltCrPMX+AYIVOACAAB4cAAAAQAYG5MRRfcDfWSDssC04bKmYAFpbdsJP/MfpnRVUJ4Oxfb7bbfO8WZTQ31yG5Nu+qPOhjWZR/fDPKyCqhbFLyRyfBnTRRnGID6OVms7/CiXnXN6rL3Bf4Y8npTRy50YFAt2O2M9wza+8Dm9a6vfHqbF0kCIaaEYSHpid0tLt1DDaq8giFoQA4X5Kde0d0IsSNFluuC28vrNPEsc+swb8somkUk9K9+QLBHKdPX5c/hN0vqtqccCQQPXQo5tihQ46OpP+Y+JMYYqbxhCcAvinS/WyCHD0BIW3X34WNt3sXx0lyq8OaFqDZvpfrfouHB77+Cr0WiqIZYGWGO3XqEHOD1GdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDA1dAAkZmRhZDJhOWMtYjkzMi00ZmFlLWI1MGUtZDkxZTIyNzQyMDM2dAADMTAw
+[Node 3] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAAAdAAAdAAqMHhjODgwM2I3YjE3ZTdkMjlmMDUyMTljYjViZjhmODU1M2E1NjAxYTA0dXIAAltCrPMX+AYIVOACAAB4cAAAAQAYG5MRRfcDfWSDssC04bKmYAFpbdsJP/MfpnRVUJ4Oxfb7bbfO8WZTQ31yG5Nu+qPOhjWZR/fDPKyCqhbFLyRyfBnTRRnGID6OVms7/CiXnXN6rL3Bf4Y8npTRy50YFAt2O2M9wza+8Dm9a6vfHqbF0kCIaaEYSHpid0tLt1DDaq8giFoQA4X5Kde0d0IsSNFluuC28vrNPEsc+swb8somkUk9K9+QLBHKdPX5c/hN0vqtqccCQQPXQo5tihQ46OpP+Y+JMYYqbxhCcAvinS/WyCHD0BIW3X34WNt3sXx0lyq8OaFqDZvpfrfouHB77+Cr0WiqIZYGWGO3XqEHOD1GdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDA1dAAkZmRhZDJhOWMtYjkzMi00ZmFlLWI1MGUtZDkxZTIyNzQyMDM2dAADMTAw
+[Client 6300] got reply frm node 1 (view 0): gasUsed=21000,fee=21000,success=true
+[Node 1] now on view 1 (block decided)
+[Node 2] now on view 1 (block decided)
+[Node 3] now on view 1 (block decided)
+[Client 6300] sent req c3ae38f9-b38f-4889-8f94-e6d336ca6f67 to node 0
+[Client 6300] sent req c3ae38f9-b38f-4889-8f94-e6d336ca6f67 to node 1
+[Client 6300] sent req c3ae38f9-b38f-4889-8f94-e6d336ca6f67 to node 2
+[Client 6300] sent req c3ae38f9-b38f-4889-8f94-e6d336ca6f67 to node 3
+[Node 1] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAABdAAAdAAqMHhjODgwM2I3YjE3ZTdkMjlmMDUyMTljYjViZjhmODU1M2E1NjAxYTA0dXIAAltCrPMX+AYIVOACAAB4cAAAAQBpnndDYWkp9Ocm2UzPx4Y55wqEk2lubPnM4dcAO2lErB0YsKLuLz0k2T0jfhAf2o89IT8/EUKIDONW4ybvFtdWA/TiDkNbWUk39caTRAhJwKP6tdVLYbIDFJV86gBh8+0Z7B8DvnvCojpCou60R3ZcVzn7m+bTrLNi4oxt6GlvLQIUk+EBAZtWrcKakWBBdARGwIaQxTuDGsiOX845EuvyIBBBlCq3eUpeU1UNb72jveZ2QB5CLuqr/h4nZTvFeEfpwUsrKJs6cAosNR1ATVb6XPXeAYQw7kIBZqiafxtW5D16JuyM+kl8URMRn5GannZ0W0CKSRctQS5n5WW9n0UxdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDA2dAAkMTMyMWIwZmQtN2VlNC00ZGMyLWFiY2MtMDZjZGVhNDhlYTJldAADMTAw
+[Client 6300] got reply frm node 1 (view 1): gasUsed=21000,fee=21000,success=true
+[Node 1] now on view 2 (block decided)
+[Node 3] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAABdAAAdAAqMHhjODgwM2I3YjE3ZTdkMjlmMDUyMTljYjViZjhmODU1M2E1NjAxYTA0dXIAAltCrPMX+AYIVOACAAB4cAAAAQBpnndDYWkp9Ocm2UzPx4Y55wqEk2lubPnM4dcAO2lErB0YsKLuLz0k2T0jfhAf2o89IT8/EUKIDONW4ybvFtdWA/TiDkNbWUk39caTRAhJwKP6tdVLYbIDFJV86gBh8+0Z7B8DvnvCojpCou60R3ZcVzn7m+bTrLNi4oxt6GlvLQIUk+EBAZtWrcKakWBBdARGwIaQxTuDGsiOX845EuvyIBBBlCq3eUpeU1UNb72jveZ2QB5CLuqr/h4nZTvFeEfpwUsrKJs6cAosNR1ATVb6XPXeAYQw7kIBZqiafxtW5D16JuyM+kl8URMRn5GannZ0W0CKSRctQS5n5WW9n0UxdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDA2dAAkMTMyMWIwZmQtN2VlNC00ZGMyLWFiY2MtMDZjZGVhNDhlYTJldAADMTAw
+[Node 2] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAABdAAAdAAqMHhjODgwM2I3YjE3ZTdkMjlmMDUyMTljYjViZjhmODU1M2E1NjAxYTA0dXIAAltCrPMX+AYIVOACAAB4cAAAAQBpnndDYWkp9Ocm2UzPx4Y55wqEk2lubPnM4dcAO2lErB0YsKLuLz0k2T0jfhAf2o89IT8/EUKIDONW4ybvFtdWA/TiDkNbWUk39caTRAhJwKP6tdVLYbIDFJV86gBh8+0Z7B8DvnvCojpCou60R3ZcVzn7m+bTrLNi4oxt6GlvLQIUk+EBAZtWrcKakWBBdARGwIaQxTuDGsiOX845EuvyIBBBlCq3eUpeU1UNb72jveZ2QB5CLuqr/h4nZTvFeEfpwUsrKJs6cAosNR1ATVb6XPXeAYQw7kIBZqiafxtW5D16JuyM+kl8URMRn5GannZ0W0CKSRctQS5n5WW9n0UxdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDA2dAAkMTMyMWIwZmQtN2VlNC00ZGMyLWFiY2MtMDZjZGVhNDhlYTJldAADMTAw
+[Node 0] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAABdAAAdAAqMHhjODgwM2I3YjE3ZTdkMjlmMDUyMTljYjViZjhmODU1M2E1NjAxYTA0dXIAAltCrPMX+AYIVOACAAB4cAAAAQBpnndDYWkp9Ocm2UzPx4Y55wqEk2lubPnM4dcAO2lErB0YsKLuLz0k2T0jfhAf2o89IT8/EUKIDONW4ybvFtdWA/TiDkNbWUk39caTRAhJwKP6tdVLYbIDFJV86gBh8+0Z7B8DvnvCojpCou60R3ZcVzn7m+bTrLNi4oxt6GlvLQIUk+EBAZtWrcKakWBBdARGwIaQxTuDGsiOX845EuvyIBBBlCq3eUpeU1UNb72jveZ2QB5CLuqr/h4nZTvFeEfpwUsrKJs6cAosNR1ATVb6XPXeAYQw7kIBZqiafxtW5D16JuyM+kl8URMRn5GannZ0W0CKSRctQS5n5WW9n0UxdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDA2dAAkMTMyMWIwZmQtN2VlNC00ZGMyLWFiY2MtMDZjZGVhNDhlYTJldAADMTAw
+[Client 6300] got reply frm node 0 (view 1): gasUsed=21000,fee=21000,success=true
+[Node 2] now on view 2 (block decided)
+[Node 3] now on view 2 (block decided)
+[Client 6300] sent req ee8561bb-0fec-43af-9012-7b9b865e364e to node 0
+[Node 0] now on view 2 (block decided)
+[Client 6300] sent req ee8561bb-0fec-43af-9012-7b9b865e364e to node 1
+[Client 6300] sent req ee8561bb-0fec-43af-9012-7b9b865e364e to node 2
+[Client 6300] sent req ee8561bb-0fec-43af-9012-7b9b865e364e to node 3
+[Node 2] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAACdAAAdAAqMHhjODgwM2I3YjE3ZTdkMjlmMDUyMTljYjViZjhmODU1M2E1NjAxYTA0dXIAAltCrPMX+AYIVOACAAB4cAAAAQBWivKCjr0YoA7mPq6V1mKuLY20weEeRr1JpyfqUMqvmUxXKfEF6zqCKoNCf0HoVX+e1DCQjbwH9Bpd0ACHhZsoL38xPiYFxBzt4BWjLh/xjNSKO8IF4cYIGZmcYdErV8Mkr72j1Xyj3fOGje5AD/M3aUvchSsJ8Omur29h1snSGF8/0geZX75ULqXQEa4Eksmvjeo2sRLFjeS+yk1vLoz6KGRdKd0ihD/qUWuQdINa1APybyO2isJQL8dcwxae9gLHIs8qZI8BDwE/iRGEr8ktUyZvZHSk0VxK/tjEeJGCiB4j8Ih95wIqYwawp4FoF4Fij20KGcyygBIDsk3IZ7GCdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDA3dAAkOGRkYjk3MWUtZmNiOC00MWI4LWE5YzgtNzE0ZGZmNDg1OWVldAADMTAw
+[Client 6300] got reply frm node 2 (view 2): gasUsed=21000,fee=21000,success=true
+[Node 2] now on view 3 (block decided)
+[Node 0] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAACdAAAdAAqMHhjODgwM2I3YjE3ZTdkMjlmMDUyMTljYjViZjhmODU1M2E1NjAxYTA0dXIAAltCrPMX+AYIVOACAAB4cAAAAQBWivKCjr0YoA7mPq6V1mKuLY20weEeRr1JpyfqUMqvmUxXKfEF6zqCKoNCf0HoVX+e1DCQjbwH9Bpd0ACHhZsoL38xPiYFxBzt4BWjLh/xjNSKO8IF4cYIGZmcYdErV8Mkr72j1Xyj3fOGje5AD/M3aUvchSsJ8Omur29h1snSGF8/0geZX75ULqXQEa4Eksmvjeo2sRLFjeS+yk1vLoz6KGRdKd0ihD/qUWuQdINa1APybyO2isJQL8dcwxae9gLHIs8qZI8BDwE/iRGEr8ktUyZvZHSk0VxK/tjEeJGCiB4j8Ih95wIqYwawp4FoF4Fij20KGcyygBIDsk3IZ7GCdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDA3dAAkOGRkYjk3MWUtZmNiOC00MWI4LWE5YzgtNzE0ZGZmNDg1OWVldAADMTAw
+[Node 3] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAACdAAAdAAqMHhjODgwM2I3YjE3ZTdkMjlmMDUyMTljYjViZjhmODU1M2E1NjAxYTA0dXIAAltCrPMX+AYIVOACAAB4cAAAAQBWivKCjr0YoA7mPq6V1mKuLY20weEeRr1JpyfqUMqvmUxXKfEF6zqCKoNCf0HoVX+e1DCQjbwH9Bpd0ACHhZsoL38xPiYFxBzt4BWjLh/xjNSKO8IF4cYIGZmcYdErV8Mkr72j1Xyj3fOGje5AD/M3aUvchSsJ8Omur29h1snSGF8/0geZX75ULqXQEa4Eksmvjeo2sRLFjeS+yk1vLoz6KGRdKd0ihD/qUWuQdINa1APybyO2isJQL8dcwxae9gLHIs8qZI8BDwE/iRGEr8ktUyZvZHSk0VxK/tjEeJGCiB4j8Ih95wIqYwawp4FoF4Fij20KGcyygBIDsk3IZ7GCdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDA3dAAkOGRkYjk3MWUtZmNiOC00MWI4LWE5YzgtNzE0ZGZmNDg1OWVldAADMTAw
+[Node 1] chain got: rO0ABXNyAB9kZXBjaGFpbi5ibG9ja2NoYWluLlRyYW5zYWN0aW9uAAAAAAAAAAECAAlKAAhnYXNMaW1pdEoACGdhc1ByaWNlSgAFbm9uY2VMAARkYXRhdAASTGphdmEvbGFuZy9TdHJpbmc7TAAEZnJvbXEAfgABWwAJc2lnbmF0dXJldAACW0JMAAJ0b3EAfgABTAANdHJhbnNhY3Rpb25JZHEAfgABTAAFdmFsdWVxAH4AAXhwAAAAAAAAUggAAAAAAAAAAQAAAAAAAAACdAAAdAAqMHhjODgwM2I3YjE3ZTdkMjlmMDUyMTljYjViZjhmODU1M2E1NjAxYTA0dXIAAltCrPMX+AYIVOACAAB4cAAAAQBWivKCjr0YoA7mPq6V1mKuLY20weEeRr1JpyfqUMqvmUxXKfEF6zqCKoNCf0HoVX+e1DCQjbwH9Bpd0ACHhZsoL38xPiYFxBzt4BWjLh/xjNSKO8IF4cYIGZmcYdErV8Mkr72j1Xyj3fOGje5AD/M3aUvchSsJ8Omur29h1snSGF8/0geZX75ULqXQEa4Eksmvjeo2sRLFjeS+yk1vLoz6KGRdKd0ihD/qUWuQdINa1APybyO2isJQL8dcwxae9gLHIs8qZI8BDwE/iRGEr8ktUyZvZHSk0VxK/tjEeJGCiB4j8Ih95wIqYwawp4FoF4Fij20KGcyygBIDsk3IZ7GCdAAqMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDA3dAAkOGRkYjk3MWUtZmNiOC00MWI4LWE5YzgtNzE0ZGZmNDg1OWVldAADMTAw
+[Client 6300] got reply frm node 0 (view 2): gasUsed=21000,fee=21000,success=true
+[Client 6300] stopped
+[Node 0] now on view 3 (block decided)
+[Node 3] now on view 3 (block decided)
+[Node 1] now on view 3 (block decided)
+[Node 0] stopped
+[Node 1] stopped
+[Node 2] stopped
+[Node 3] stopped
+]]></system-out>
+    <system-err><![CDATA[[FL] packet parse went bad: socket isnt up
+[FL] packet parse went bad: socket isnt up
+[FL] packet parse went bad: socket isnt up
+]]></system-err>
+  </testcase>
+</testsuite>

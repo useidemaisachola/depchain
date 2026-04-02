@@ -1397,7 +1397,9 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
     private void initializeFromGenesisLocked() {
         try {
             Map<Integer, java.security.PublicKey> nodeKeys = keyManager.getAllPublicKeys();
-            GenesisLoader.Result result = GenesisLoader.load(nodeKeys);
+            GenesisLoader.Result result = GenesisLoader.load(
+                    nodeKeys,
+                    keyManager.getExtraParticipantPublicKeys());
             this.evmService     = result.evmService();
             this.istCoinAddress = result.istCoinAddress();
             System.out.println("[Node " + nodeId + "] genesis loaded — ISTCoin at "

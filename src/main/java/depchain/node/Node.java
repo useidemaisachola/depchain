@@ -483,10 +483,10 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
      * Validates a transaction within a client request.
      * Checks: nonce, balance, gas parameters.
      * 
-     * Note: Transaction signature validation is NOT performed here because:
-     * - The ClientRequest signature was already validated (proves client is who they claim)
-     * - The Transaction may be signed by a different key (the account owner, not the client)
-     * - Validating transaction signature would require keeping all public keys on hand
+        * Transaction sender authorization:
+        * - The enclosing ClientRequest signature is validated first (authenticates the client's public key)
+        * - The transaction must be signed by the same key
+        * - The derived EVM address of that key must match {@code tx.from}
      * 
      * Returns null if:
      * - Request data is not a valid transaction (plain string request = OK)
@@ -515,9 +515,25 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             return basicError;
         }
 
-        // Validate signature: must be present and valid for sender
-        PublicKey senderKey = keyManager.getPublicKeyForAddress(tx.getFrom());
-        if (senderKey == null || !tx.verifySignature(senderKey)) {
+        // Enforce sender authorization: tx.from must belong to the request's public key
+        byte[] senderPublicKeyBytes = request.getClientPublicKey();
+        if (senderPublicKeyBytes == null || senderPublicKeyBytes.length == 0) {
+            return "missing sender public key";
+        }
+        PublicKey senderKey;
+        try {
+            senderKey = CryptoUtils.decodePublicKey(senderPublicKeyBytes);
+        } catch (Exception e) {
+            return "invalid sender public key";
+        }
+        Address derived = EvmService.deriveAddress(senderKey);
+        if (!derived.equals(tx.getFrom())) {
+            return "unauthorized sender: tx.from does not match request public key";
+        }
+        if (!tx.isSigned()) {
+            return "missing transaction signature";
+        }
+        if (!tx.verifySignature(senderKey)) {
             return "invalid transaction signature for sender " + tx.getFrom();
         }
 

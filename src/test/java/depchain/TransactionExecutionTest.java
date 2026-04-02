@@ -19,10 +19,12 @@ import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.PublicKey;
+import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Base64;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -79,7 +81,7 @@ class TransactionExecutionTest {
 
     @Test
     void successfulTransfer_returnsTrue() throws Exception {
-        BlockchainClient client = createClient();
+        BlockchainClient client = createAuthorizedClient(0);
 
         Address sender    = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
         Address recipient = freshAddress();
@@ -96,7 +98,7 @@ class TransactionExecutionTest {
 
     @Test
     void successfulTransfer_recipientBalanceIncreased() throws Exception {
-        BlockchainClient client = createClient();
+        BlockchainClient client = createAuthorizedClient(0);
 
         Address sender    = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
         Address recipient = freshAddress();
@@ -120,7 +122,7 @@ class TransactionExecutionTest {
 
     @Test
     void successfulTransfer_senderBalanceDecreased() throws Exception {
-        BlockchainClient client = createClient();
+        BlockchainClient client = createAuthorizedClient(0);
 
         Address sender    = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
         Wei     initial   = genesisBalanceOf(sender);
@@ -147,7 +149,7 @@ class TransactionExecutionTest {
 
     @Test
     void transferWithInsufficientBalance_returnsFalse() throws Exception {
-        BlockchainClient client = createClient();
+        BlockchainClient client = createAuthorizedClient(0);
 
         // Use node0 (funded in genesis) but attempt to transfer more than its balance.
         Address broke     = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
@@ -168,7 +170,7 @@ class TransactionExecutionTest {
 
     @Test
     void multipleSequentialTransactions_allCommit() throws Exception {
-        BlockchainClient client = createClient();
+        BlockchainClient client = createAuthorizedClient(0);
 
         Address sender = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
         long startNonce = nodesToStop.get(0).getEvmService().getNonce(sender);
@@ -188,6 +190,35 @@ class TransactionExecutionTest {
         BlockchainClient client = createClient();
         boolean ok = client.submitRequest("legacy-plain-string");
         assertTrue(ok, "Legacy plain-string requests must still be accepted");
+    }
+
+    @Test
+    void transactionMissingSignature_rejected() throws Exception {
+        BlockchainClient client = createAuthorizedClient(0);
+
+        Address sender = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
+        long nonce = nodesToStop.get(0).getEvmService().getNonce(sender);
+        Transaction unsigned = Transaction.create(
+                sender, freshAddress(), Wei.of(1), Bytes.EMPTY, 1L, 21_000L, nonce);
+
+        String data = Base64.getEncoder().encodeToString(unsigned.serialize());
+        boolean result = client.submitRequest(data);
+        assertFalse(result, "Unsigned transaction must be rejected");
+    }
+
+    @Test
+    void transactionInvalidSignature_rejected() throws Exception {
+        BlockchainClient client = createAuthorizedClient(0);
+
+        Address sender = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
+        long nonce = nodesToStop.get(0).getEvmService().getNonce(sender);
+        Transaction tx = Transaction.create(
+                sender, freshAddress(), Wei.of(1), Bytes.EMPTY, 1L, 21_000L, nonce);
+        // Sign with a different key than the sender (must be rejected)
+        tx = tx.sign(keyManagers.get(1).getPrivateKey());
+
+        boolean result = client.submitTransaction(tx);
+        assertFalse(result, "Transaction signed by wrong key must be rejected");
     }
 
     @Test
@@ -216,6 +247,20 @@ class TransactionExecutionTest {
     private BlockchainClient createClient() throws Exception {
         int port = nextClientPort++;
         BlockchainClient client = new BlockchainClient(port, port);
+        return startClient(client);
+    }
+
+    private BlockchainClient createAuthorizedClient(int nodeId) throws Exception {
+        int port = nextClientPort++;
+        KeyPair keyPair = new KeyPair(
+                keyManagers.get(nodeId).getPublicKey(nodeId),
+                keyManagers.get(nodeId).getPrivateKey()
+        );
+        BlockchainClient client = new BlockchainClient(port, port, keyPair);
+        return startClient(client);
+    }
+
+    private BlockchainClient startClient(BlockchainClient client) {
         Map<Integer, PublicKey> publicKeys = new HashMap<>();
         for (int i = 0; i < NetworkConfig.NUM_NODES; i++) {
             publicKeys.put(i, keyManagers.get(i).getPublicKey(i));

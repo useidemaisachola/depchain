@@ -24,7 +24,10 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.security.PublicKey;
+import depchain.blockchain.EvmService;
+import depchain.blockchain.GenesisLoader;
 import depchain.blockchain.Transaction;
+import org.hyperledger.besu.datatypes.Address;
 import java.util.Base64;
 import java.util.Comparator;
 import java.util.PriorityQueue;
@@ -65,6 +68,11 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
     private final ByzantineBehavior byzantineBehavior;
     private final NodeStateStore stateStore;
     private final boolean persistenceEnabled;
+
+    /** EVM world state — initialized from genesis on first startup. */
+    private EvmService evmService;
+    /** Address of the ISTCoin ERC-20 contract deployed in the genesis block. */
+    private Address istCoinAddress;
 
     private final Queue<ClientRequest> pendingClientRequests;
     private final Set<String> pendingRequestIds;
@@ -137,7 +145,9 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         this.lock = new Object();
         this.byzantineBehavior = byzantineBehavior;
         this.persistenceEnabled = persistenceEnabled;
-        this.stateStore = new NodeStateStore(nodeId, stateDirectory);
+        this.stateStore   = new NodeStateStore(nodeId, stateDirectory);
+        this.evmService   = new EvmService();
+        this.istCoinAddress = null;
 
         this.pendingClientRequests = new PriorityQueue<>(
             Comparator.comparingLong(Node::extractFee).reversed()
@@ -253,6 +263,12 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
     public List<String> getBlockchain() {
         return Collections.unmodifiableList(blockchain);
     }
+
+    /** Returns the node's EVM service (world state + execution engine). */
+    public EvmService getEvmService() { return evmService; }
+
+    /** Returns the address of the ISTCoin contract deployed in the genesis block, or null. */
+    public Address getIstCoinAddress() { return istCoinAddress; }
 
     public int getCurrentView() {
         synchronized (lock) {
@@ -1331,6 +1347,30 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         );
     }
 
+    /**
+     * Initializes the EVM world state from the genesis block on the very first
+     * startup (no persisted state found on disk).
+     *
+     * <p>Uses the node public keys to derive deterministic EVM addresses, funds
+     * each genesis account, and deploys the ISTCoin ERC-20 contract.
+     * Failures are logged but do not prevent the node from starting (the EVM
+     * state simply stays empty and will be populated once real blocks arrive).
+     */
+    private void initializeFromGenesisLocked() {
+        try {
+            Map<Integer, java.security.PublicKey> nodeKeys = keyManager.getAllPublicKeys();
+            GenesisLoader.Result result = GenesisLoader.load(nodeKeys);
+            this.evmService    = result.evmService();
+            this.istCoinAddress = result.istCoinAddress();
+            System.out.println("[Node " + nodeId + "] genesis loaded — ISTCoin at "
+                    + istCoinAddress);
+        } catch (Exception e) {
+            System.err.println("[Node " + nodeId
+                    + "] WARNING: genesis loading failed: " + e.getMessage()
+                    + " — starting with empty EVM state");
+        }
+    }
+
     private void loadPersistentStateLocked() {
         apl.restoreCurrentMessageId(0);
         apl.restoreReplayWindows(Collections.emptyMap());
@@ -1341,6 +1381,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         }
         Optional<NodePersistentState> loadedState = stateStore.load();
         if (loadedState.isEmpty()) {
+            initializeFromGenesisLocked();
             return;
         }
         NodePersistentState state = loadedState.get();

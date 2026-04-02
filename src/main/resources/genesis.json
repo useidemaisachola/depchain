@@ -1,0 +1,12 @@
+{
+  "previous_block_hash": null,
+  "deployer": "node0",
+  "deployment_gas_price": 1,
+  "deployment_gas_limit": 5000000,
+  "accounts": {
+    "node0": "1000000000000000000",
+    "node1": "1000000000000000000",
+    "node2": "1000000000000000000",
+    "node3": "1000000000000000000"
+  }
+}

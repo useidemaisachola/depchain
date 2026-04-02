@@ -196,6 +196,150 @@ public class EvmService {
         return new Account(type, address, raw.getBalance(), nonce, code, storage);
     }
 
+    // -------------------------------------------------------------------------
+    // Transaction execution
+    // -------------------------------------------------------------------------
+
+    /** Base gas cost for a plain DepCoin transfer (matching Ethereum's flat transfer cost). */
+    private static final long GAS_TRANSFER = 21_000L;
+
+    /**
+     * Executes a transaction against the current world state, enforcing gas fee rules.
+     *
+     * <p>Fee rules (per project spec):
+     * <ul>
+     *   <li>Pre-condition: sender balance ≥ gasPrice × gasLimit + value; otherwise rejected
+     *       (returns {@code success=false}, no fee charged).</li>
+     *   <li>Fee = gasPrice × min(gasLimit, gasUsed), always deducted from the sender's
+     *       DepCoin balance — even when the transaction is aborted.</li>
+     *   <li>If gasUsed ≥ gasLimit (out-of-gas): transaction is aborted, full gasLimit is
+     *       charged (no refund).</li>
+     * </ul>
+     *
+     * <p>The sender's nonce is incremented for every processed transaction (even failed ones)
+     * to prevent replay attacks.
+     *
+     * @param tx the transaction to execute
+     * @return execution result with success flag, output bytes, gasUsed, and fee charged
+     */
+    public EvmResult executeTransaction(Transaction tx) {
+        Address sender   = tx.getFrom();
+        long    gasLimit = tx.getGasLimit();
+        long    gasPrice = tx.getGasPrice();
+        Wei     value    = tx.getValue();
+        Wei     maxFee   = Wei.of(gasPrice * gasLimit);
+
+        // Pre-check: sender must cover worst-case fee + any value being transferred.
+        if (getBalance(sender).compareTo(maxFee.add(value)) < 0) {
+            return new EvmResult(false, Bytes.EMPTY, 0, Wei.ZERO);
+        }
+
+        long  currentNonce = nonces.getOrDefault(sender, 0L);
+        long  gasUsed;
+        Bytes output  = Bytes.EMPTY;
+        boolean success;
+
+        if (tx.isTransfer()) {
+            // Plain DepCoin transfer — fixed base cost, no EVM involved.
+            if (gasLimit < GAS_TRANSFER) {
+                // Gas limit too low: out-of-gas, abort and charge the full gasLimit.
+                gasUsed = gasLimit;
+                success = false;
+            } else {
+                gasUsed = GAS_TRANSFER;
+                Address recipient = tx.getTo().get();
+                world.getAccount(sender).decrementBalance(value);
+                var recipientMut = world.getAccount(recipient);
+                if (recipientMut == null) {
+                    world.createAccount(recipient, 0, value);
+                } else {
+                    recipientMut.incrementBalance(value);
+                }
+                success = true;
+            }
+        } else {
+            // EVM execution (deployment or contract call).
+            // Capture gasUsed, output and success via a context-exit tracer.
+            long[]    gasUsedArr = {gasLimit};   // default = OOG (all gas consumed)
+            Bytes[]   outputArr  = {Bytes.EMPTY};
+            boolean[] successArr = {false};
+
+            OperationTracer tracer = new OperationTracer() {
+                @Override
+                public void traceContextExit(MessageFrame frame) {
+                    if (frame.getDepth() == 0) {
+                        gasUsedArr[0] = gasLimit - frame.getRemainingGas();
+                        outputArr[0]  = frame.getOutputData();
+                        successArr[0] = frame.getState() == MessageFrame.State.COMPLETED_SUCCESS;
+                    }
+                }
+            };
+
+            if (tx.isDeployment()) {
+                Address contractAddress = Address.contractAddress(sender, currentNonce);
+
+                EVMExecutor.cancun(EvmConfiguration.DEFAULT)
+                        .messageFrameType(MessageFrame.Type.CONTRACT_CREATION)
+                        .code(tx.getData())
+                        .sender(sender)
+                        .receiver(contractAddress)
+                        .contract(contractAddress)
+                        .ethValue(value)
+                        .gas(gasLimit)
+                        .worldUpdater(world)
+                        .commitWorldState()
+                        .tracer(tracer)
+                        .execute();
+
+                success = successArr[0];
+                gasUsed = gasUsedArr[0];
+                // For deployments, output carries the 20-byte contract address so callers
+                // can retrieve it via EvmResult.deployedAddress().
+                output  = success ? contractAddress : Bytes.EMPTY;
+
+            } else { // isContractCall()
+                Address contractAddress = tx.getTo().get();
+                var contractAccount = world.get(contractAddress);
+
+                if (contractAccount != null) {
+                    EVMExecutor.cancun(EvmConfiguration.DEFAULT)
+                            .code(contractAccount.getCode())
+                            .sender(sender)
+                            .receiver(contractAddress)
+                            .contract(contractAddress)
+                            .ethValue(value)
+                            .gas(gasLimit)
+                            .callData(tx.getData())
+                            .worldUpdater(world)
+                            .commitWorldState()
+                            .tracer(tracer)
+                            .execute();
+
+                    success = successArr[0];
+                    gasUsed = gasUsedArr[0];
+                    output  = outputArr[0];
+                } else {
+                    // No contract at the target address — treat as out-of-gas abort.
+                    success = false;
+                    gasUsed = gasLimit;
+                }
+            }
+        }
+
+        // Always increment sender nonce (even on failure) for replay protection.
+        nonces.put(sender, currentNonce + 1);
+
+        // Always deduct fee — no refund on abort (spec: "gas_used is not refunded").
+        Wei fee = tx.gasFee(gasUsed);
+        world.getAccount(sender).decrementBalance(fee);
+
+        return new EvmResult(success, output, gasUsed, fee);
+    }
+
+    // -------------------------------------------------------------------------
+    // Address derivation
+    // -------------------------------------------------------------------------
+
     /**
      * Derives a deterministic 20-byte {@link Address} from an RSA public key.
      *

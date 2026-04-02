@@ -376,7 +376,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
 
         synchronized (lock) {
             if (decidedRequestIds.contains(request.getRequestId())) {
-                sendClientReply(request, true, "req was alrdy decided");
+                sendClientReply(request, true, "already-decided");
                 return;
             }
 
@@ -970,7 +970,15 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         }
 
         if (repliedRequestIds.add(block.getRequestId())) {
-            sendClientReply(block, true, "commited on view " + currentView);
+            // If we executed a real transaction use its result; fall back to
+            // success=true for legacy plain-string requests (Stage 1 compat).
+            boolean txSuccess = evmResult == null || evmResult.success();
+            String replyMsg = evmResult != null
+                    ? "gasUsed=" + evmResult.gasUsed()
+                      + ",fee=" + evmResult.fee().getAsBigInteger()
+                      + ",success=" + evmResult.success()
+                    : "committed:view=" + currentView;
+            sendClientReply(block, txSuccess, replyMsg);
         }
 
         activeBlockHash = null;

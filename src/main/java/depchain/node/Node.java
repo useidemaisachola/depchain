@@ -34,6 +34,7 @@ import depchain.blockchain.Transaction;
 import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.besu.datatypes.Address;
 import org.hyperledger.besu.datatypes.Wei;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
@@ -374,6 +375,22 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             return;
         }
 
+        // Validate the transaction within the request
+        String validationError = validateTransactionInRequest(request);
+        if (validationError != null) {
+            System.err.println(
+                "[Node " +
+                    nodeId +
+                    "] transaction validation failed for client " +
+                    request.getClientId() +
+                    " (request " +
+                    request.getRequestId() +
+                    "): " +
+                    validationError
+            );
+            return;
+        }
+
         synchronized (lock) {
             if (decidedRequestIds.contains(request.getRequestId())) {
                 sendClientReply(request, true, "already-decided");
@@ -460,6 +477,77 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    /**
+     * Validates a transaction within a client request.
+     * Checks: nonce, balance, gas parameters.
+     * 
+     * Note: Transaction signature validation is NOT performed here because:
+     * - The ClientRequest signature was already validated (proves client is who they claim)
+     * - The Transaction may be signed by a different key (the account owner, not the client)
+     * - Validating transaction signature would require keeping all public keys on hand
+     * 
+     * Returns null if:
+     * - Request data is not a valid transaction (plain string request = OK)
+     * - Transaction is valid
+     * 
+     * Returns error message only if:
+     * - Data appears to be a transaction but fails validation
+     *
+     * @return null if valid/skipped, or error message if transaction is invalid
+     */
+    private String validateTransactionInRequest(ClientRequest request) {
+        // Try to extract transaction from Base64-encoded data
+        Transaction tx;
+        try {
+            byte[] txBytes = java.util.Base64.getDecoder().decode(request.getData());
+            tx = Transaction.deserialize(txBytes);
+        } catch (Exception e) {
+            // Not a valid transaction encoding — likely a plain-string request from Stage 1
+            // These are allowed for backward compatibility
+            return null;
+        }
+
+        // Validate basic fields (gasPrice > 0, gasLimit > 0, value format)
+        String basicError = tx.validateBasicFields();
+        if (basicError != null) {
+            return basicError;
+        }
+
+        // Validate signature: must be present and valid for sender
+        PublicKey senderKey = keyManager.getPublicKeyForAddress(tx.getFrom());
+        if (senderKey == null || !tx.verifySignature(senderKey)) {
+            return "invalid transaction signature for sender " + tx.getFrom();
+        }
+
+        // Validate nonce: must match current account nonce
+        Address fromAddr = tx.getFrom();
+        long currentNonce = evmService.getNonce(fromAddr);
+        if (tx.getNonce() > currentNonce) {
+            return "nonce too high: expected at most " + currentNonce + ", got " + tx.getNonce();
+        }
+        if (tx.getNonce() < currentNonce) {
+            // Nonce is old - likely a retransmission or duplicate
+            // Log but allow (for network tolerance)
+            System.err.println(
+                "[Node " + nodeId + "] warning: transaction has old nonce " + tx.getNonce() +
+                        ", current nonce is " + currentNonce + " (possibly a retransmission)"
+            );
+        }
+
+        // Validate balance: sender must have enough to cover gasPrice * gasLimit + value
+        Wei balance = evmService.getBalance(fromAddr);
+        BigInteger gasCost = BigInteger.valueOf(tx.getGasPrice())
+                .multiply(BigInteger.valueOf(tx.getGasLimit()));
+        BigInteger totalCost = gasCost.add(tx.getValue().getAsBigInteger());
+        if (balance.getAsBigInteger().compareTo(totalCost) < 0) {
+            return "insufficient balance: have " + balance.getAsBigInteger() +
+                   ", need " + totalCost + " (gasPrice=" + tx.getGasPrice() +
+                   " * gasLimit=" + tx.getGasLimit() + " + value=" + tx.getValue().getAsBigInteger() + ")";
+        }
+
+        return null; // Valid
     }
 
     private void handlePrepare(int senderId, Message message) {

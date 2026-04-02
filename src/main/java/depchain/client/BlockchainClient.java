@@ -124,6 +124,14 @@ public class BlockchainClient {
         return EvmService.deriveAddress(keyPair.getPublic());
     }
 
+    /**
+     * Returns this client's RSA private key for signing transactions.
+     * Use only in tests.
+     */
+    public PrivateKey getPrivateKey() {
+        return keyPair.getPrivate();
+    }
+
     private ClientRequest buildSignedRequest(String data) {
         String requestId = UUID.randomUUID().toString();
         ClientRequest unsignedRequest = new ClientRequest(

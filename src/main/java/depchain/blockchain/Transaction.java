@@ -223,6 +223,26 @@ public final class Transaction implements Serializable {
         return CryptoUtils.verify(bytesToSign(), signature, publicKey);
     }
 
+    /**
+     * Validates basic transaction properties.
+     * 
+     * @return null if valid, or error message if invalid
+     */
+    public String validateBasicFields() {
+        if (gasPrice <= 0) {
+            return "gasPrice must be > 0";
+        }
+        if (gasLimit <= 0) {
+            return "gasLimit must be > 0";
+        }
+        try {
+            new BigInteger(value);
+        } catch (Exception e) {
+            return "invalid value format: " + e.getMessage();
+        }
+        return null;
+    }
+
     // -------------------------------------------------------------------------
     // Serialization
     // -------------------------------------------------------------------------

@@ -18,6 +18,26 @@ import threshsig.KeyShare;
 import threshsig.ThresholdSignatures;
 
 public class KeyManager {
+
+        /**
+         * Obtém a chave pública associada a um Address Ethereum (usado como 'from' em transações).
+         * Procura tanto em publicKeys (por nodeId) como em extraParticipantPublicKeys (por string).
+         * Retorna null se não encontrar.
+         */
+        public PublicKey getPublicKeyForAddress(org.hyperledger.besu.datatypes.Address address) {
+            // Tenta procurar pelo encoding hexadecimal do Address
+            String hex = address.toHexString();
+            PublicKey pk = extraParticipantPublicKeys.get(hex);
+            if (pk != null) return pk;
+            // Tenta procurar por nodeId se Address for de um node conhecido
+            for (Map.Entry<Integer, PublicKey> entry : publicKeys.entrySet()) {
+                org.hyperledger.besu.datatypes.Address nodeAddr = depchain.blockchain.EvmService.deriveAddress(entry.getValue());
+                if (nodeAddr.equals(address)) {
+                    return entry.getValue();
+                }
+            }
+            return null;
+        }
     private static final int THRESHOLD_KEY_SIZE_BITS = 512;
     private static final String THRESHOLD_GROUP_KEY_FILE = "threshold.group";
     private static final String THRESHOLD_SHARE_SUFFIX = ".thshare";

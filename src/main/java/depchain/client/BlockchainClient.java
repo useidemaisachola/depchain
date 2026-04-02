@@ -1,5 +1,7 @@
 package depchain.client;
 
+import depchain.blockchain.EvmService;
+import depchain.blockchain.Transaction;
 import depchain.config.NetworkConfig;
 import depchain.crypto.CryptoUtils;
 import depchain.net.*;
@@ -7,9 +9,11 @@ import depchain.net.FairLossLinks.NodeAddress;
 import java.net.*;
 import java.security.*;
 import java.util.*;
+import java.util.Base64;
 import java.util.concurrent.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
+import org.hyperledger.besu.datatypes.Address;
 
 public class BlockchainClient {
 
@@ -89,6 +93,33 @@ public class BlockchainClient {
         return waitForReply(request.getRequestId());
     }
 
+    /**
+     * Signs {@code tx} with this client's RSA private key, encodes it as
+     * Base64, and submits it to all nodes as a {@link ClientRequest}.
+     *
+     * <p>Returns {@code true} when {@code f+1} nodes report EVM execution
+     * success; returns {@code false} immediately when {@code f+1} nodes report
+     * execution failure (fee deducted, nonce incremented, but operation failed).
+     *
+     * @param tx an <em>unsigned</em> or already-signed transaction
+     * @return {@code true} if the transaction was committed and the EVM
+     *         execution succeeded on a quorum of nodes
+     */
+    public boolean submitTransaction(Transaction tx) throws Exception {
+        Transaction signed = tx.isSigned() ? tx : tx.sign(keyPair.getPrivate());
+        String data = Base64.getEncoder().encodeToString(signed.serialize());
+        return submitRequest(data);
+    }
+
+    /**
+     * Returns the EVM address derived from this client's RSA public key.
+     *
+     * <p>Use this address as the {@code from} field when building transactions.
+     */
+    public Address getEvmAddress() {
+        return EvmService.deriveAddress(keyPair.getPublic());
+    }
+
     private ClientRequest buildSignedRequest(String data) {
         String requestId = UUID.randomUUID().toString();
         ClientRequest unsignedRequest = new ClientRequest(
@@ -140,9 +171,12 @@ public class BlockchainClient {
     }
 
     private boolean waitForReply(String requestId) {
-        // Need f+1 matching successful replies to be safe against Byzantine nodes
+        // Require f+1 matching replies for Byzantine safety.
+        // Count success and failure replies separately so that a transaction
+        // that fails EVM execution returns false quickly instead of timing out.
         int requiredReplies = NetworkConfig.MAX_FAULTS + 1;
-        Set<Integer> successfulResponders = new HashSet<>();
+        Set<Integer> successResponders = new HashSet<>();
+        Set<Integer> failureResponders = new HashSet<>();
         long deadline = System.currentTimeMillis() + TIMEOUT_MS;
         while (System.currentTimeMillis() < deadline) {
             long remaining = deadline - System.currentTimeMillis();
@@ -179,12 +213,18 @@ public class BlockchainClient {
                         "): " +
                         reply.getMessage()
                 );
-                if (
-                    reply.isSuccess() &&
-                    successfulResponders.add(reply.getResponderNodeId())
-                ) {
-                    if (successfulResponders.size() >= requiredReplies) {
+                if (reply.isSuccess()) {
+                    if (successResponders.add(reply.getResponderNodeId())
+                            && successResponders.size() >= requiredReplies) {
                         return true;
+                    }
+                } else {
+                    if (failureResponders.add(reply.getResponderNodeId())
+                            && failureResponders.size() >= requiredReplies) {
+                        // Quorum agrees the tx failed (OOG / revert / bad input).
+                        System.out.println("[Client " + clientId + "] req "
+                                + requestId + " failed: " + reply.getMessage());
+                        return false;
                     }
                 }
             } catch (InterruptedException e) {
@@ -195,11 +235,9 @@ public class BlockchainClient {
         }
         System.out.println(
             "[Client " + clientId + "] req " + requestId + " timed out " +
-            "(got " +
-            successfulResponders.size() +
-            "/" +
-            requiredReplies +
-            " replies)"
+            "(success=" + successResponders.size() +
+            ", failure=" + failureResponders.size() +
+            ", need " + requiredReplies + ")"
         );
         return false;
     }

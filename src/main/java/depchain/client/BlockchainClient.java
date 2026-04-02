@@ -29,9 +29,13 @@ public class BlockchainClient {
     private static final int TIMEOUT_MS = 12000;
 
     public BlockchainClient(int clientId, int localPort) throws Exception {
+        this(clientId, localPort, CryptoUtils.generateKeyPair());
+    }
+
+    public BlockchainClient(int clientId, int localPort, KeyPair keyPair) throws Exception {
         this.clientId = clientId;
         this.localPort = localPort;
-        this.keyPair = CryptoUtils.generateKeyPair();
+        this.keyPair = keyPair;
         this.nodePublicKeys = new HashMap<>();
         this.replyQueue = new LinkedBlockingQueue<>();
         this.socket = new DatagramSocket(localPort);
@@ -118,6 +122,14 @@ public class BlockchainClient {
      */
     public Address getEvmAddress() {
         return EvmService.deriveAddress(keyPair.getPublic());
+    }
+
+    /**
+     * Returns this client's RSA private key for signing transactions.
+     * Use only in tests.
+     */
+    public PrivateKey getPrivateKey() {
+        return keyPair.getPrivate();
     }
 
     private ClientRequest buildSignedRequest(String data) {

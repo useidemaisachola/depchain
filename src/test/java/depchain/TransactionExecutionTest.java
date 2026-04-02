@@ -3,6 +3,7 @@ package depchain;
 import depchain.blockchain.EvmService;
 import depchain.blockchain.Transaction;
 import depchain.client.BlockchainClient;
+import depchain.client.ClientRequest;
 import depchain.config.NetworkConfig;
 import depchain.crypto.KeyManager;
 import depchain.net.fault.NetworkFaultController;
@@ -19,10 +20,13 @@ import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.PublicKey;
+import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Base64;
+import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -79,13 +83,14 @@ class TransactionExecutionTest {
 
     @Test
     void successfulTransfer_returnsTrue() throws Exception {
-        BlockchainClient client = createClient();
+        BlockchainClient client = createAuthorizedClient(0);
 
         Address sender    = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
         Address recipient = freshAddress();
+        long nonce = nodesToStop.get(0).getEvmService().getNonce(sender);
 
         Transaction tx = Transaction.create(
-                sender, recipient, Wei.of(1000), Bytes.EMPTY, 1L, 21_000L, 0L);
+            sender, recipient, Wei.of(1000), Bytes.EMPTY, 1L, 21_000L, nonce);
         tx = tx.sign(keyManagers.get(0).getPrivateKey());
 
         boolean result = client.submitTransaction(tx);
@@ -95,14 +100,15 @@ class TransactionExecutionTest {
 
     @Test
     void successfulTransfer_recipientBalanceIncreased() throws Exception {
-        BlockchainClient client = createClient();
+        BlockchainClient client = createAuthorizedClient(0);
 
         Address sender    = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
         Address recipient = freshAddress();
         Wei transferValue = Wei.of(500_000);
+        long nonce = nodesToStop.get(0).getEvmService().getNonce(sender);
 
         Transaction tx = Transaction.create(
-                sender, recipient, transferValue, Bytes.EMPTY, 1L, 21_000L, 0L);
+            sender, recipient, transferValue, Bytes.EMPTY, 1L, 21_000L, nonce);
         tx = tx.sign(keyManagers.get(0).getPrivateKey());
 
         boolean committed = client.submitTransaction(tx);
@@ -118,16 +124,17 @@ class TransactionExecutionTest {
 
     @Test
     void successfulTransfer_senderBalanceDecreased() throws Exception {
-        BlockchainClient client = createClient();
+        BlockchainClient client = createAuthorizedClient(0);
 
         Address sender    = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
         Wei     initial   = genesisBalanceOf(sender);
         Wei     value     = Wei.of(1_000);
         long    gasPrice  = 1L;
         long    gasLimit  = 21_000L;
+        long    nonce     = nodesToStop.get(0).getEvmService().getNonce(sender);
 
         Transaction tx = Transaction.create(
-                sender, freshAddress(), value, Bytes.EMPTY, gasPrice, gasLimit, 0L);
+            sender, freshAddress(), value, Bytes.EMPTY, gasPrice, gasLimit, nonce);
         tx = tx.sign(keyManagers.get(0).getPrivateKey());
 
         assertTrue(client.submitTransaction(tx), "Transfer must commit");
@@ -144,15 +151,19 @@ class TransactionExecutionTest {
 
     @Test
     void transferWithInsufficientBalance_returnsFalse() throws Exception {
-        BlockchainClient client = createClient();
+        BlockchainClient client = createAuthorizedClient(0);
 
-        // Use a brand-new address with zero balance as sender.
-        Address broke     = freshAddress();
+        // Use node0 (funded in genesis) but attempt to transfer more than its balance.
+        Address broke     = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
         Address recipient = freshAddress();
 
+        Wei brokeBalance = genesisBalanceOf(broke);
+        Wei tooMuch = brokeBalance.add(Wei.of(1));
+        long nonce = nodesToStop.get(0).getEvmService().getNonce(broke);
+
         Transaction tx = Transaction.create(
-                broke, recipient, Wei.of(1_000), Bytes.EMPTY, 1L, 21_000L, 0L);
-        tx = tx.sign(keyManagers.get(0).getPrivateKey()); // signature doesn't have to match `from`
+            broke, recipient, tooMuch, Bytes.EMPTY, 1L, 21_000L, nonce);
+        tx = tx.sign(keyManagers.get(0).getPrivateKey());
 
         boolean result = client.submitTransaction(tx);
 
@@ -161,13 +172,14 @@ class TransactionExecutionTest {
 
     @Test
     void multipleSequentialTransactions_allCommit() throws Exception {
-        BlockchainClient client = createClient();
+        BlockchainClient client = createAuthorizedClient(0);
 
         Address sender = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
+        long startNonce = nodesToStop.get(0).getEvmService().getNonce(sender);
 
         for (int i = 0; i < 3; i++) {
             Transaction tx = Transaction.create(
-                    sender, freshAddress(), Wei.of(100), Bytes.EMPTY, 1L, 21_000L, (long) i);
+                sender, freshAddress(), Wei.of(100), Bytes.EMPTY, 1L, 21_000L, startNonce + i);
             tx = tx.sign(keyManagers.get(0).getPrivateKey());
             assertTrue(client.submitTransaction(tx), "Transfer #" + i + " must commit");
         }
@@ -180,6 +192,64 @@ class TransactionExecutionTest {
         BlockchainClient client = createClient();
         boolean ok = client.submitRequest("legacy-plain-string");
         assertTrue(ok, "Legacy plain-string requests must still be accepted");
+    }
+
+    @Test
+    void transactionMissingSignature_rejected() throws Exception {
+        BlockchainClient client = createAuthorizedClient(0);
+
+        Address sender = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
+        long nonce = nodesToStop.get(0).getEvmService().getNonce(sender);
+        Transaction unsigned = Transaction.create(
+                sender, freshAddress(), Wei.of(1), Bytes.EMPTY, 1L, 21_000L, nonce);
+
+        String data = Base64.getEncoder().encodeToString(unsigned.serialize());
+        boolean result = client.submitRequest(data);
+        assertFalse(result, "Unsigned transaction must be rejected");
+    }
+
+    @Test
+    void transactionInvalidSignature_rejected() throws Exception {
+        BlockchainClient client = createAuthorizedClient(0);
+
+        Address sender = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
+        long nonce = nodesToStop.get(0).getEvmService().getNonce(sender);
+        Transaction tx = Transaction.create(
+                sender, freshAddress(), Wei.of(1), Bytes.EMPTY, 1L, 21_000L, nonce);
+        // Sign with a different key than the sender (must be rejected)
+        tx = tx.sign(keyManagers.get(1).getPrivateKey());
+
+        boolean result = client.submitTransaction(tx);
+        assertFalse(result, "Transaction signed by wrong key must be rejected");
+    }
+
+    @Test
+    void pendingPoolPreventsDoubleSpend_combinedPendingExceedsBalance() throws Exception {
+        BlockchainClient client = createAuthorizedClient(0);
+
+        Address sender = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
+        long nonce = nodesToStop.get(0).getEvmService().getNonce(sender);
+
+        Wei balance = genesisBalanceOf(sender);
+        BigInteger gas = BigInteger.valueOf(21_000L); // gasPrice=1
+        BigInteger value1 = balance.getAsBigInteger().subtract(gas).divide(BigInteger.valueOf(2));
+        assertTrue(value1.compareTo(BigInteger.ZERO) > 0);
+
+        Transaction tx1 = Transaction.create(
+                sender, freshAddress(), Wei.of(value1), Bytes.EMPTY, 1L, 21_000L, nonce);
+        tx1 = tx1.sign(keyManagers.get(0).getPrivateKey());
+
+        // Send tx1 requests without waiting for commit (keeps it pending/in-flight).
+        String data1 = Base64.getEncoder().encodeToString(tx1.serialize());
+        sendRawRequestToAllNodes(client, data1);
+
+        // Second tx: individually affordable, but combined with tx1 exceeds balance.
+        Transaction tx2 = Transaction.create(
+                sender, freshAddress(), Wei.of(value1), Bytes.EMPTY, 1L, 21_000L, nonce);
+        tx2 = tx2.sign(keyManagers.get(0).getPrivateKey());
+
+        boolean ok = client.submitTransaction(tx2);
+        assertFalse(ok, "Second tx must be rejected (pending pool double-spend prevention)");
     }
 
     @Test
@@ -208,6 +278,20 @@ class TransactionExecutionTest {
     private BlockchainClient createClient() throws Exception {
         int port = nextClientPort++;
         BlockchainClient client = new BlockchainClient(port, port);
+        return startClient(client);
+    }
+
+    private BlockchainClient createAuthorizedClient(int nodeId) throws Exception {
+        int port = nextClientPort++;
+        KeyPair keyPair = new KeyPair(
+                keyManagers.get(nodeId).getPublicKey(nodeId),
+                keyManagers.get(nodeId).getPrivateKey()
+        );
+        BlockchainClient client = new BlockchainClient(port, port, keyPair);
+        return startClient(client);
+    }
+
+    private BlockchainClient startClient(BlockchainClient client) {
         Map<Integer, PublicKey> publicKeys = new HashMap<>();
         for (int i = 0; i < NetworkConfig.NUM_NODES; i++) {
             publicKeys.put(i, keyManagers.get(i).getPublicKey(i));
@@ -216,6 +300,18 @@ class TransactionExecutionTest {
         client.start();
         clientsToStop.add(client);
         return client;
+    }
+
+    private static void sendRawRequestToAllNodes(BlockchainClient client, String data) throws Exception {
+        Method buildSignedRequest = BlockchainClient.class.getDeclaredMethod("buildSignedRequest", String.class);
+        buildSignedRequest.setAccessible(true);
+        ClientRequest request = (ClientRequest) buildSignedRequest.invoke(client, data);
+
+        Method sendRequestToNode = BlockchainClient.class.getDeclaredMethod("sendRequestToNode", int.class, ClientRequest.class);
+        sendRequestToNode.setAccessible(true);
+        for (int nodeId = 0; nodeId < NetworkConfig.NUM_NODES; nodeId++) {
+            sendRequestToNode.invoke(client, nodeId, request);
+        }
     }
 
     /** Derives the genesis balance of {@code address} from any running node. */

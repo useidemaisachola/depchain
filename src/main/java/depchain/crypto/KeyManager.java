@@ -18,6 +18,26 @@ import threshsig.KeyShare;
 import threshsig.ThresholdSignatures;
 
 public class KeyManager {
+
+        /**
+         * Obtém a chave pública associada a um Address Ethereum (usado como 'from' em transações).
+         * Procura tanto em publicKeys (por nodeId) como em extraParticipantPublicKeys (por string).
+         * Retorna null se não encontrar.
+         */
+        public PublicKey getPublicKeyForAddress(org.hyperledger.besu.datatypes.Address address) {
+            // Tenta procurar pelo encoding hexadecimal do Address
+            String hex = address.toHexString();
+            PublicKey pk = extraParticipantPublicKeys.get(hex);
+            if (pk != null) return pk;
+            // Tenta procurar por nodeId se Address for de um node conhecido
+            for (Map.Entry<Integer, PublicKey> entry : publicKeys.entrySet()) {
+                org.hyperledger.besu.datatypes.Address nodeAddr = depchain.blockchain.EvmService.deriveAddress(entry.getValue());
+                if (nodeAddr.equals(address)) {
+                    return entry.getValue();
+                }
+            }
+            return null;
+        }
     private static final int THRESHOLD_KEY_SIZE_BITS = 512;
     private static final String THRESHOLD_GROUP_KEY_FILE = "threshold.group";
     private static final String THRESHOLD_SHARE_SUFFIX = ".thshare";
@@ -28,6 +48,7 @@ public class KeyManager {
     private final int nodeId;
     private final PrivateKey privateKey;
     private final Map<Integer, PublicKey> publicKeys;
+    private final Map<String, PublicKey> extraParticipantPublicKeys;
     private final GroupKey thresholdGroupKey;
     private final KeyShare thresholdKeyShare;
     private final Object thresholdShareLock;
@@ -41,6 +62,7 @@ public class KeyManager {
         int nodeId,
         PrivateKey privateKey,
         Map<Integer, PublicKey> publicKeys,
+        Map<String, PublicKey> extraParticipantPublicKeys,
         GroupKey thresholdGroupKey,
         KeyShare thresholdKeyShare,
         Map<Integer, byte[]> outgoingMacKeys,
@@ -49,6 +71,7 @@ public class KeyManager {
         this.nodeId = nodeId;
         this.privateKey = privateKey;
         this.publicKeys = new HashMap<>(publicKeys);
+        this.extraParticipantPublicKeys = new HashMap<>(extraParticipantPublicKeys);
         this.thresholdGroupKey = thresholdGroupKey;
         this.thresholdKeyShare = thresholdKeyShare;
         this.thresholdShareLock = new Object();
@@ -70,6 +93,10 @@ public class KeyManager {
 
     public Map<Integer, PublicKey> getAllPublicKeys() {
         return Collections.unmodifiableMap(publicKeys);
+    }
+
+    public Map<String, PublicKey> getExtraParticipantPublicKeys() {
+        return Collections.unmodifiableMap(extraParticipantPublicKeys);
     }
 
     public byte[] sign(byte[] data) {
@@ -161,6 +188,13 @@ public class KeyManager {
             System.out.println("made keys for node " + i);
         }
 
+        for (int i = 0; i < NetworkConfig.NUM_STATIC_CLIENTS; i++) {
+            KeyPair kp = CryptoUtils.generateKeyPair();
+            String basePath = keysDir.resolve("client" + i).toString();
+            CryptoUtils.saveKeyPair(kp, basePath);
+            System.out.println("made keys for client " + i);
+        }
+
         // Derive and save pairwise HMAC keys: hmac_i_j.key is the key node i
         // uses to MAC messages sent to node j (and node j uses to verify them).
         for (int i = 0; i < numNodes; i++) {
@@ -200,6 +234,15 @@ public class KeyManager {
             publicKeys.put(i, pk);
         }
 
+        Map<String, PublicKey> extraParticipantPublicKeys = new HashMap<>();
+        for (int i = 0; i < NetworkConfig.NUM_STATIC_CLIENTS; i++) {
+            String publicKeyPath = keysDir
+                .resolve("client" + i + ".pub")
+                .toString();
+            PublicKey pk = CryptoUtils.loadPublicKey(publicKeyPath);
+            extraParticipantPublicKeys.put("client" + i, pk);
+        }
+
         ensureThresholdMaterial(keysDir, numNodes);
         GroupKey groupKey = ThresholdSignatures.deserializeGroupKey(
             Files.readAllBytes(keysDir.resolve(THRESHOLD_GROUP_KEY_FILE))
@@ -226,6 +269,7 @@ public class KeyManager {
             nodeId,
             privateKey,
             publicKeys,
+            extraParticipantPublicKeys,
             groupKey,
             thresholdShare,
             outgoingMacKeys,
@@ -236,11 +280,17 @@ public class KeyManager {
     public static Map<Integer, KeyManager> generateInMemory(int numNodes) {
         Map<Integer, KeyPair> keyPairs = new HashMap<>();
         Map<Integer, PublicKey> publicKeys = new HashMap<>();
+        Map<String, PublicKey> extraParticipantPublicKeys = new HashMap<>();
 
         for (int i = 0; i < numNodes; i++) {
             KeyPair kp = CryptoUtils.generateKeyPair();
             keyPairs.put(i, kp);
             publicKeys.put(i, kp.getPublic());
+        }
+
+        for (int i = 0; i < NetworkConfig.NUM_STATIC_CLIENTS; i++) {
+            KeyPair kp = CryptoUtils.generateKeyPair();
+            extraParticipantPublicKeys.put("client" + i, kp.getPublic());
         }
 
         ThresholdMaterial material = getCachedThresholdMaterial(numNodes);
@@ -264,6 +314,7 @@ public class KeyManager {
                     i,
                     keyPairs.get(i).getPrivate(),
                     publicKeys,
+                    extraParticipantPublicKeys,
                     material.groupKey,
                     thresholdShare,
                     outgoingMacKeys,

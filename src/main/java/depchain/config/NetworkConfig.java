@@ -7,6 +7,9 @@ public class NetworkConfig {
 
     public static final int NUM_NODES = 4;
 
+    // Stage 2 requirement: static known clients (minimum requested by staff).
+    public static final int NUM_STATIC_CLIENTS = 6;
+
     public static final int MAX_FAULTS = 1;
 
     public static final int QUORUM_SIZE = 2 * MAX_FAULTS + 1;

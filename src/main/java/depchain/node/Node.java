@@ -24,7 +24,10 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.security.PublicKey;
-import java.util.ArrayDeque;
+import depchain.blockchain.Transaction;
+import java.util.Base64;
+import java.util.Comparator;
+import java.util.PriorityQueue;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -136,7 +139,9 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         this.persistenceEnabled = persistenceEnabled;
         this.stateStore = new NodeStateStore(nodeId, stateDirectory);
 
-        this.pendingClientRequests = new ArrayDeque<>();
+        this.pendingClientRequests = new PriorityQueue<>(
+            Comparator.comparingLong(Node::extractFee).reversed()
+        );
         this.pendingRequestIds = new HashSet<>();
         this.decidedRequestIds = new HashSet<>();
         this.repliedRequestIds = new HashSet<>();
@@ -938,6 +943,22 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             hasNewViewQuorumLocked(currentView)
         ) {
             tryStartConsensusLocked();
+        }
+    }
+
+    /**
+     * Extracts the fee (gasPrice × gasLimit) from a client request whose
+     * {@code data} field is a Base64-encoded serialized {@link Transaction}.
+     * Returns {@code 0} for non-transaction requests (e.g. plain-string data
+     * from stage-1 tests) so they are treated as lowest priority.
+     */
+    public static long extractFee(ClientRequest req) {
+        try {
+            byte[] bytes = Base64.getDecoder().decode(req.getData());
+            Transaction tx = Transaction.deserialize(bytes);
+            return tx.getGasPrice() * tx.getGasLimit();
+        } catch (Exception e) {
+            return 0L;
         }
     }
 

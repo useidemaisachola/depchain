@@ -388,6 +388,8 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
                     "): " +
                     validationError
             );
+            // Explicitly reply so clients don't time out on rejected requests.
+            sendClientReply(request, false, "rejected:" + validationError);
             return;
         }
 
@@ -395,6 +397,22 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             if (decidedRequestIds.contains(request.getRequestId())) {
                 sendClientReply(request, true, "already-decided");
                 return;
+            }
+
+            // [Security] Prevent double-spend in pending transaction pool (#14):
+            // Ensure sender balance covers all pending transactions combined.
+            Transaction newTx = tryDeserializeTransaction(request.getData());
+            if (newTx != null) {
+                String pendingError = validatePendingPoolFundsLocked(newTx);
+                if (pendingError != null) {
+                    System.err.println(
+                        "[Node " + nodeId + "] pending-pool validation failed for client "
+                            + request.getClientId() + " (request " + request.getRequestId() + "): "
+                            + pendingError
+                    );
+                    sendClientReply(request, false, "rejected:" + pendingError);
+                    return;
+                }
             }
 
             if (pendingRequestIds.add(request.getRequestId())) {
@@ -415,6 +433,56 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
 
             tryStartConsensusLocked();
         }
+    }
+
+    /** Attempts to deserialize a Base64-encoded {@link Transaction}; returns null if not a transaction. */
+    private static Transaction tryDeserializeTransaction(String base64Data) {
+        try {
+            byte[] bytes = Base64.getDecoder().decode(base64Data);
+            return Transaction.deserialize(bytes);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Validates that adding {@code newTx} would not cause the sender's DepCoin balance
+     * to go negative when considering all of their pending transactions combined.
+     * Must be called under {@code lock}.
+     */
+    private String validatePendingPoolFundsLocked(Transaction newTx) {
+        Address sender = newTx.getFrom();
+        Wei balance = evmService.getBalance(sender);
+
+        BigInteger reserved = BigInteger.ZERO;
+        // Include the in-flight request currently being decided.
+        if (activeClientRequest != null && !decidedRequestIds.contains(activeClientRequest.getRequestId())) {
+            Transaction activeTx = tryDeserializeTransaction(activeClientRequest.getData());
+            if (activeTx != null && sender.equals(activeTx.getFrom())) {
+                reserved = reserved.add(maxDepCoinCost(activeTx));
+            }
+        }
+        // Include all transactions still in the pending pool.
+        for (ClientRequest r : pendingClientRequests) {
+            Transaction pendingTx = tryDeserializeTransaction(r.getData());
+            if (pendingTx != null && sender.equals(pendingTx.getFrom())) {
+                reserved = reserved.add(maxDepCoinCost(pendingTx));
+            }
+        }
+
+        BigInteger newCost = maxDepCoinCost(newTx);
+        BigInteger total = reserved.add(newCost);
+        if (balance.getAsBigInteger().compareTo(total) < 0) {
+            return "insufficient balance for pending txs: have " + balance.getAsBigInteger()
+                    + ", pending=" + reserved + ", new=" + newCost + ", total=" + total;
+        }
+        return null;
+    }
+
+    /** Maximum DepCoin cost reserved by a transaction: value + gasPrice * gasLimit. */
+    private static BigInteger maxDepCoinCost(Transaction tx) {
+        BigInteger gas = BigInteger.valueOf(tx.getGasPrice()).multiply(BigInteger.valueOf(tx.getGasLimit()));
+        return gas.add(tx.getValue().getAsBigInteger());
     }
 
     private ClientRequest decodeClientRequest(int senderId, Message message) {

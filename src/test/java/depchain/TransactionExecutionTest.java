@@ -3,6 +3,7 @@ package depchain;
 import depchain.blockchain.EvmService;
 import depchain.blockchain.Transaction;
 import depchain.client.BlockchainClient;
+import depchain.client.ClientRequest;
 import depchain.config.NetworkConfig;
 import depchain.crypto.KeyManager;
 import depchain.net.fault.NetworkFaultController;
@@ -25,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Base64;
+import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -222,6 +224,35 @@ class TransactionExecutionTest {
     }
 
     @Test
+    void pendingPoolPreventsDoubleSpend_combinedPendingExceedsBalance() throws Exception {
+        BlockchainClient client = createAuthorizedClient(0);
+
+        Address sender = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
+        long nonce = nodesToStop.get(0).getEvmService().getNonce(sender);
+
+        Wei balance = genesisBalanceOf(sender);
+        BigInteger gas = BigInteger.valueOf(21_000L); // gasPrice=1
+        BigInteger value1 = balance.getAsBigInteger().subtract(gas).divide(BigInteger.valueOf(2));
+        assertTrue(value1.compareTo(BigInteger.ZERO) > 0);
+
+        Transaction tx1 = Transaction.create(
+                sender, freshAddress(), Wei.of(value1), Bytes.EMPTY, 1L, 21_000L, nonce);
+        tx1 = tx1.sign(keyManagers.get(0).getPrivateKey());
+
+        // Send tx1 requests without waiting for commit (keeps it pending/in-flight).
+        String data1 = Base64.getEncoder().encodeToString(tx1.serialize());
+        sendRawRequestToAllNodes(client, data1);
+
+        // Second tx: individually affordable, but combined with tx1 exceeds balance.
+        Transaction tx2 = Transaction.create(
+                sender, freshAddress(), Wei.of(value1), Bytes.EMPTY, 1L, 21_000L, nonce);
+        tx2 = tx2.sign(keyManagers.get(0).getPrivateKey());
+
+        boolean ok = client.submitTransaction(tx2);
+        assertFalse(ok, "Second tx must be rejected (pending pool double-spend prevention)");
+    }
+
+    @Test
     void clientGetEvmAddress_matchesNodeDerivedAddress() throws Exception {
         BlockchainClient client = createClient();
         // The node will derive the same address for any public key using the
@@ -269,6 +300,18 @@ class TransactionExecutionTest {
         client.start();
         clientsToStop.add(client);
         return client;
+    }
+
+    private static void sendRawRequestToAllNodes(BlockchainClient client, String data) throws Exception {
+        Method buildSignedRequest = BlockchainClient.class.getDeclaredMethod("buildSignedRequest", String.class);
+        buildSignedRequest.setAccessible(true);
+        ClientRequest request = (ClientRequest) buildSignedRequest.invoke(client, data);
+
+        Method sendRequestToNode = BlockchainClient.class.getDeclaredMethod("sendRequestToNode", int.class, ClientRequest.class);
+        sendRequestToNode.setAccessible(true);
+        for (int nodeId = 0; nodeId < NetworkConfig.NUM_NODES; nodeId++) {
+            sendRequestToNode.invoke(client, nodeId, request);
+        }
     }
 
     /** Derives the genesis balance of {@code address} from any running node. */

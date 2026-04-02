@@ -83,9 +83,10 @@ class TransactionExecutionTest {
 
         Address sender    = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
         Address recipient = freshAddress();
+        long nonce = nodesToStop.get(0).getEvmService().getNonce(sender);
 
         Transaction tx = Transaction.create(
-                sender, recipient, Wei.of(1000), Bytes.EMPTY, 1L, 21_000L, 0L);
+            sender, recipient, Wei.of(1000), Bytes.EMPTY, 1L, 21_000L, nonce);
         tx = tx.sign(keyManagers.get(0).getPrivateKey());
 
         boolean result = client.submitTransaction(tx);
@@ -100,9 +101,10 @@ class TransactionExecutionTest {
         Address sender    = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
         Address recipient = freshAddress();
         Wei transferValue = Wei.of(500_000);
+        long nonce = nodesToStop.get(0).getEvmService().getNonce(sender);
 
         Transaction tx = Transaction.create(
-                sender, recipient, transferValue, Bytes.EMPTY, 1L, 21_000L, 0L);
+            sender, recipient, transferValue, Bytes.EMPTY, 1L, 21_000L, nonce);
         tx = tx.sign(keyManagers.get(0).getPrivateKey());
 
         boolean committed = client.submitTransaction(tx);
@@ -125,9 +127,10 @@ class TransactionExecutionTest {
         Wei     value     = Wei.of(1_000);
         long    gasPrice  = 1L;
         long    gasLimit  = 21_000L;
+        long    nonce     = nodesToStop.get(0).getEvmService().getNonce(sender);
 
         Transaction tx = Transaction.create(
-                sender, freshAddress(), value, Bytes.EMPTY, gasPrice, gasLimit, 0L);
+            sender, freshAddress(), value, Bytes.EMPTY, gasPrice, gasLimit, nonce);
         tx = tx.sign(keyManagers.get(0).getPrivateKey());
 
         assertTrue(client.submitTransaction(tx), "Transfer must commit");
@@ -146,13 +149,17 @@ class TransactionExecutionTest {
     void transferWithInsufficientBalance_returnsFalse() throws Exception {
         BlockchainClient client = createClient();
 
-        // Use a brand-new address with zero balance as sender.
-        Address broke     = freshAddress();
+        // Use node0 (funded in genesis) but attempt to transfer more than its balance.
+        Address broke     = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
         Address recipient = freshAddress();
 
+        Wei brokeBalance = genesisBalanceOf(broke);
+        Wei tooMuch = brokeBalance.add(Wei.of(1));
+        long nonce = nodesToStop.get(0).getEvmService().getNonce(broke);
+
         Transaction tx = Transaction.create(
-                broke, recipient, Wei.of(1_000), Bytes.EMPTY, 1L, 21_000L, 0L);
-        tx = tx.sign(keyManagers.get(0).getPrivateKey()); // signature doesn't have to match `from`
+            broke, recipient, tooMuch, Bytes.EMPTY, 1L, 21_000L, nonce);
+        tx = tx.sign(keyManagers.get(0).getPrivateKey());
 
         boolean result = client.submitTransaction(tx);
 
@@ -164,10 +171,11 @@ class TransactionExecutionTest {
         BlockchainClient client = createClient();
 
         Address sender = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
+        long startNonce = nodesToStop.get(0).getEvmService().getNonce(sender);
 
         for (int i = 0; i < 3; i++) {
             Transaction tx = Transaction.create(
-                    sender, freshAddress(), Wei.of(100), Bytes.EMPTY, 1L, 21_000L, (long) i);
+                sender, freshAddress(), Wei.of(100), Bytes.EMPTY, 1L, 21_000L, startNonce + i);
             tx = tx.sign(keyManagers.get(0).getPrivateKey());
             assertTrue(client.submitTransaction(tx), "Transfer #" + i + " must commit");
         }

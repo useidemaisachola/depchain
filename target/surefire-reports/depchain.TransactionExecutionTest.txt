@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: depchain.TransactionExecutionTest
 -------------------------------------------------------------------------------
-Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 21.06 s -- in depchain.TransactionExecutionTest
+Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.90 s -- in depchain.TransactionExecutionTest

@@ -521,19 +521,11 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             return "invalid transaction signature for sender " + tx.getFrom();
         }
 
-        // Validate nonce: must match current account nonce
+        // Validate nonce: must match current account nonce (no replay allowed)
         Address fromAddr = tx.getFrom();
         long currentNonce = evmService.getNonce(fromAddr);
-        if (tx.getNonce() > currentNonce) {
-            return "nonce too high: expected at most " + currentNonce + ", got " + tx.getNonce();
-        }
-        if (tx.getNonce() < currentNonce) {
-            // Nonce is old - likely a retransmission or duplicate
-            // Log but allow (for network tolerance)
-            System.err.println(
-                "[Node " + nodeId + "] warning: transaction has old nonce " + tx.getNonce() +
-                        ", current nonce is " + currentNonce + " (possibly a retransmission)"
-            );
+        if (tx.getNonce() != currentNonce) {
+            return "invalid nonce: expected " + currentNonce + ", got " + tx.getNonce();
         }
 
         // Validate balance: sender must have enough to cover gasPrice * gasLimit + value

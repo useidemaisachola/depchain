@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="depchain.DepChainStage1Test" time="35.988" tests="12" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="depchain.DepChainStage1Test" time="36.268" tests="12" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="23"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
@@ -12,7 +12,7 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="PT"/>
     <property name="sun.boot.library.path" value="/opt/homebrew/Cellar/openjdk/23.0.2/libexec/openjdk.jdk/Contents/Home/lib"/>
-    <property name="sun.java.command" value="/Users/inescachola/Desktop/SDTF/depchain/target/surefire/surefirebooter-20260402212911807_3.jar /Users/inescachola/Desktop/SDTF/depchain/target/surefire 2026-04-02T21-29-11_756-jvmRun1 surefire-20260402212911807_1tmp surefire_0-20260402212911807_2tmp"/>
+    <property name="sun.java.command" value="/Users/inescachola/Desktop/SDTF/depchain/target/surefire/surefirebooter-20260402215837034_3.jar /Users/inescachola/Desktop/SDTF/depchain/target/surefire 2026-04-02T21-58-36_991-jvmRun1 surefire-20260402215837034_1tmp surefire_0-20260402215837034_2tmp"/>
     <property name="http.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="jdk.debug" value="release"/>
     <property name="surefire.test.class.path" value="/Users/inescachola/Desktop/SDTF/depchain/target/test-classes:/Users/inescachola/Desktop/SDTF/depchain/target/classes:/Users/inescachola/.m2/repository/org/junit/jupiter/junit-jupiter/5.10.2/junit-jupiter-5.10.2.jar:/Users/inescachola/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar:/Users/inescachola/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/inescachola/.m2/repository/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar:/Users/inescachola/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/inescachola/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.10.2/junit-jupiter-params-5.10.2.jar:/Users/inescachola/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar:/Users/inescachola/.m2/repository/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/evm/24.12.2/evm-24.12.2.jar:/Users/inescachola/.m2/repository/org/slf4j/slf4j-api/2.0.16/slf4j-api-2.0.16.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/internal/algorithms/24.12.2/algorithms-24.12.2.jar:/Users/inescachola/.m2/repository/org/bouncycastle/bcprov-jdk18on/1.78.1/bcprov-jdk18on-1.78.1.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/secp256k1/0.9.7/secp256k1-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/secp256r1/0.9.7/secp256r1-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/blake2bf/0.9.7/blake2bf-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/internal/rlp/24.12.2/rlp-24.12.2.jar:/Users/inescachola/.m2/repository/com/github/ben-manes/caffeine/caffeine/3.1.8/caffeine-3.1.8.jar:/Users/inescachola/.m2/repository/org/checkerframework/checker-qual/3.37.0/checker-qual-3.37.0.jar:/Users/inescachola/.m2/repository/com/google/errorprone/error_prone_annotations/2.21.1/error_prone_annotations-2.21.1.jar:/Users/inescachola/.m2/repository/com/google/guava/guava/33.3.1-jre/guava-33.3.1-jre.jar:/Users/inescachola/.m2/repository/com/google/guava/failureaccess/1.0.2/failureaccess-1.0.2.jar:/Users/inescachola/.m2/repository/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar:/Users/inescachola/.m2/repository/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar:/Users/inescachola/.m2/repository/com/google/j2objc/j2objc-annotations/3.0.0/j2objc-annotations-3.0.0.jar:/Users/inescachola/.m2/repository/net/java/dev/jna/jna/5.15.0/jna-5.15.0.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/arithmetic/0.9.7/arithmetic-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/bls12-381/0.9.7/bls12-381-0.9.7.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/gnark/0.9.7/gnark-0.9.7.jar:/Users/inescachola/.m2/repository/tech/pegasys/jc-kzg-4844/1.0.0/jc-kzg-4844-1.0.0.jar:/Users/inescachola/.m2/repository/org/hyperledger/besu/besu-datatypes/24.12.2/besu-datatypes-24.12.2.jar:/Users/inescachola/.m2/repository/io/tmio/tuweni-bytes/2.4.2/tuweni-bytes-2.4.2.jar:/Users/inescachola/.m2/repository/org/connid/framework/1.3.2/framework-1.3.2.jar:/Users/inescachola/.m2/repository/org/connid/framework-internal/1.3.2/framework-internal-1.3.2.jar:/Users/inescachola/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.8.21/kotlin-stdlib-jdk8-1.8.21.jar:/Users/inescachola/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.8.21/kotlin-stdlib-1.8.21.jar:/Users/inescachola/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-common/1.8.21/kotlin-stdlib-common-1.8.21.jar:/Users/inescachola/.m2/repository/org/jetbrains/annotations/13.0/annotations-13.0.jar:/Users/inescachola/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.8.21/kotlin-stdlib-jdk7-1.8.21.jar:/Users/inescachola/.m2/repository/io/tmio/tuweni-units/2.4.2/tuweni-units-2.4.2.jar:/Users/inescachola/.m2/repository/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar:"/>
@@ -29,7 +29,7 @@
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
     <property name="apple.awt.application.name" value="ForkedBooter"/>
-    <property name="surefire.real.class.path" value="/Users/inescachola/Desktop/SDTF/depchain/target/surefire/surefirebooter-20260402212911807_3.jar"/>
+    <property name="surefire.real.class.path" value="/Users/inescachola/Desktop/SDTF/depchain/target/surefire/surefirebooter-20260402215837034_3.jar"/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="ftp.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="java.runtime.version" value="23.0.2"/>
@@ -39,7 +39,7 @@
     <property name="os.version" value="26.3.1"/>
     <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
     <property name="file.encoding" value="UTF-8"/>
-    <property name="jnidispatch.path" value="/Users/inescachola/Library/Caches/JNA/temp/jna9878140506109387349.tmp"/>
+    <property name="jnidispatch.path" value="/Users/inescachola/Library/Caches/JNA/temp/jna9683111549992523428.tmp"/>
     <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
     <property name="jna.platform.library.path" value="/usr/lib:/usr/lib"/>
     <property name="java.vendor.version" value="Homebrew"/>
@@ -61,7 +61,7 @@
     <property name="socksNonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="java.class.version" value="67.0"/>
   </properties>
-  <testcase name="byzantineEquivocatingLeaderStillMakesProgress" classname="depchain.DepChainStage1Test" time="6.193">
+  <testcase name="byzantineEquivocatingLeaderStillMakesProgress" classname="depchain.DepChainStage1Test" time="6.14">
     <system-out><![CDATA[[UdpTransport] listening on port 5000
 [FL] Node 0 up on port 5000
 [SL] Node 0 up
@@ -87,22 +87,22 @@
 [APL] Node 3 up w/ auth stuff
 [Node 3] up on port 5003 (leader for view 0 is 0, behavior=HONEST)
 [Client 203] up on port 6203
-[Client 203] sent req bdc8bdde-22b1-4050-b4af-6dd61e801100 to node 0
-[Client 203] sent req bdc8bdde-22b1-4050-b4af-6dd61e801100 to node 1
-[Client 203] sent req bdc8bdde-22b1-4050-b4af-6dd61e801100 to node 2
-[Client 203] sent req bdc8bdde-22b1-4050-b4af-6dd61e801100 to node 3
+[Client 203] sent req 6aec52c4-b535-44d8-b9d6-2ec0e9947634 to node 0
+[Client 203] sent req 6aec52c4-b535-44d8-b9d6-2ec0e9947634 to node 1
+[Client 203] sent req 6aec52c4-b535-44d8-b9d6-2ec0e9947634 to node 2
+[Client 203] sent req 6aec52c4-b535-44d8-b9d6-2ec0e9947634 to node 3
 [Node 0] now on view 1 (timeout)
-[Node 1] now on view 1 (timeout)
-[Node 2] now on view 1 (timeout)
-[Node 3] now on view 1 (timeout)
+[Node 3] now on view 1 (received NEW_VIEW)
+[Node 2] now on view 1 (received NEW_VIEW)
+[Node 1] now on view 1 (received NEW_VIEW)
 [Node 1] chain got: test-byz-equiv-1
 [Node 1] now on view 2 (block decided)
 [Client 203] got reply frm node 1 (view 1): committed:view=1
-[Node 0] chain got: test-byz-equiv-1
 [Node 2] chain got: test-byz-equiv-1
+[Node 0] chain got: test-byz-equiv-1
 [Node 3] chain got: test-byz-equiv-1
-[Node 0] now on view 2 (block decided)
 [Node 2] now on view 2 (block decided)
+[Node 0] now on view 2 (block decided)
 [Node 3] now on view 2 (block decided)
 [Client 203] got reply frm node 2 (view 1): committed:view=1
 [Client 203] stopped
@@ -112,8 +112,8 @@
 [Node 3] stopped
 ]]></system-out>
     <system-err><![CDATA[[Node 1] could not execute tx in block 1: Illegal base64 character 2d
-[Node 0] could not execute tx in block 1: Illegal base64 character 2d
 [Node 2] could not execute tx in block 1: Illegal base64 character 2d
+[Node 0] could not execute tx in block 1: Illegal base64 character 2d
 [Node 3] could not execute tx in block 1: Illegal base64 character 2d
 [FL] packet parse went bad: socket isnt up
 [FL] packet parse went bad: socket isnt up
@@ -121,9 +121,9 @@
 [FL] packet parse went bad: socket isnt up
 ]]></system-err>
   </testcase>
-  <testcase name="replayWatermarkPersistsAcrossRestart" classname="depchain.DepChainStage1Test" time="3.409">
-    <system-out><![CDATA[[Node 1] genesis loaded — ISTCoin at 0x9f04e4821ccfea50f7e86ba9fea2daa45405fd54
-[Node 1] genesis block persisted: 0x68170b481ba55312c7d4a6a594b961942f8fafa6148aa4de326129c7dcafad46
+  <testcase name="replayWatermarkPersistsAcrossRestart" classname="depchain.DepChainStage1Test" time="3.534">
+    <system-out><![CDATA[[Node 1] genesis loaded — ISTCoin at 0x5bd82e515331d7c43da10bfab6ce5d2732756bd0
+[Node 1] genesis block persisted: 0x4c481ab1a2e0f7b56928b485168d120d3e21d43cd7bcec58fb150768ec3f372c
 [UdpTransport] listening on port 5001
 [FL] Node 1 up on port 5001
 [SL] Node 1 up
@@ -144,9 +144,9 @@
     <system-err><![CDATA[[APL] Replay from node 0 (msgId=100), dropping
 ]]></system-err>
   </testcase>
-  <testcase name="replayAttackIsRejected" classname="depchain.DepChainStage1Test" time="3.209">
-    <system-out><![CDATA[[Node 2] genesis loaded — ISTCoin at 0x418331c67a83f88b1b452dff646f4a4109e903fb
-[Node 2] genesis block persisted: 0xeec6e36311a319c5821a1c3da9c05005e562f9e2a5429a977e2a186b35ebf705
+  <testcase name="replayAttackIsRejected" classname="depchain.DepChainStage1Test" time="2.982">
+    <system-out><![CDATA[[Node 2] genesis loaded — ISTCoin at 0xa67d27449ec721c84afbf8f79c48846801fa919f
+[Node 2] genesis block persisted: 0x415b671f6de69674b5982b9676c1f92bba5cede6762f2c654ee96cc1456f90b5
 [UdpTransport] listening on port 5002
 [FL] Node 2 up on port 5002
 [SL] Node 2 up
@@ -159,7 +159,7 @@
     <system-err><![CDATA[[APL] Replay from node 1 (msgId=1), dropping
 ]]></system-err>
   </testcase>
-  <testcase name="clientRequiresDistinctSignedReplies" classname="depchain.DepChainStage1Test" time="1.799">
+  <testcase name="clientRequiresDistinctSignedReplies" classname="depchain.DepChainStage1Test" time="1.952">
     <system-out><![CDATA[[Client 206] up on port 6206
 [Client 206] got reply frm node 0 (view 7): ok-from-0
 [Client 206] got reply frm node 0 (view 7): duplicate-from-0
@@ -167,7 +167,7 @@
 [Client 206] stopped
 ]]></system-out>
   </testcase>
-  <testcase name="invalidVoteSignatureByzantineNodeDoesNotBreakConsensus" classname="depchain.DepChainStage1Test" time="1.232">
+  <testcase name="invalidVoteSignatureByzantineNodeDoesNotBreakConsensus" classname="depchain.DepChainStage1Test" time="1.343">
     <system-out><![CDATA[[UdpTransport] listening on port 5000
 [FL] Node 0 up on port 5000
 [SL] Node 0 up
@@ -193,10 +193,10 @@
 [APL] Node 3 up w/ auth stuff
 [Node 3] up on port 5003 (leader for view 0 is 0, behavior=INVALID_VOTE_SIGNATURE)
 [Client 204] up on port 6204
-[Client 204] sent req e6481d27-27f7-434f-b6a6-657963231dc0 to node 0
-[Client 204] sent req e6481d27-27f7-434f-b6a6-657963231dc0 to node 1
-[Client 204] sent req e6481d27-27f7-434f-b6a6-657963231dc0 to node 2
-[Client 204] sent req e6481d27-27f7-434f-b6a6-657963231dc0 to node 3
+[Client 204] sent req 05e6e64a-3d1f-48d5-88ef-a3b8893ad941 to node 0
+[Client 204] sent req 05e6e64a-3d1f-48d5-88ef-a3b8893ad941 to node 1
+[Client 204] sent req 05e6e64a-3d1f-48d5-88ef-a3b8893ad941 to node 2
+[Client 204] sent req 05e6e64a-3d1f-48d5-88ef-a3b8893ad941 to node 3
 [Node 0] chain got: test-invalid-vote-byz-1
 [Node 0] now on view 1 (block decided)
 [Client 204] got reply frm node 0 (view 0): committed:view=0
@@ -204,9 +204,9 @@
 [Node 3] chain got: test-invalid-vote-byz-1
 [Node 1] chain got: test-invalid-vote-byz-1
 [Node 1] now on view 1 (block decided)
-[Node 3] now on view 1 (block decided)
 [Node 2] now on view 1 (block decided)
-[Client 204] got reply frm node 3 (view 0): committed:view=0
+[Node 3] now on view 1 (block decided)
+[Client 204] got reply frm node 2 (view 0): committed:view=0
 [Client 204] stopped
 [Node 0] stopped
 [Node 1] stopped
@@ -215,16 +215,16 @@
 ]]></system-out>
     <system-err><![CDATA[[Node 0] could not execute tx in block 1: Illegal base64 character 2d
 [Node 2] could not execute tx in block 1: Illegal base64 character 2d
-[Node 1] could not execute tx in block 1: Illegal base64 character 2d
 [Node 3] could not execute tx in block 1: Illegal base64 character 2d
+[Node 1] could not execute tx in block 1: Illegal base64 character 2d
 [FL] packet parse went bad: socket isnt up
 [FL] packet parse went bad: socket isnt up
 [FL] packet parse went bad: socket isnt up
 ]]></system-err>
   </testcase>
-  <testcase name="invalidNodeSignatureIsRejected" classname="depchain.DepChainStage1Test" time="3.427">
-    <system-out><![CDATA[[Node 2] genesis loaded — ISTCoin at 0x648e26414286174fc0f85ae6e012b140ace7958d
-[Node 2] genesis block persisted: 0x61180474398798842614935d1bbff3ff3db858c73f1066777ef0fcfc3e2f565b
+  <testcase name="invalidNodeSignatureIsRejected" classname="depchain.DepChainStage1Test" time="3.718">
+    <system-out><![CDATA[[Node 2] genesis loaded — ISTCoin at 0xaec143f6d3755f9f1288dfee09f58fac1e8131ea
+[Node 2] genesis block persisted: 0xcae635cc706e919ce48c7a54cbda640349eecee0aba4a3308cc5f86360d8048e
 [UdpTransport] listening on port 5002
 [FL] Node 2 up on port 5002
 [SL] Node 2 up
@@ -233,10 +233,11 @@
 [Node 2] up on port 5002 (leader for view 0 is 0, behavior=HONEST)
 [Node 2] stopped
 ]]></system-out>
-    <system-err><![CDATA[[APL] Node 1 MAC invalid, dropping it
+    <system-err><![CDATA[[FL] packet parse went bad: socket isnt up
+[APL] Node 1 MAC invalid, dropping it
 ]]></system-err>
   </testcase>
-  <testcase name="timeoutViewChangeSurvivesLeaderCrash" classname="depchain.DepChainStage1Test" time="6.252">
+  <testcase name="timeoutViewChangeSurvivesLeaderCrash" classname="depchain.DepChainStage1Test" time="6.083">
     <system-out><![CDATA[[UdpTransport] listening on port 5001
 [FL] Node 1 up on port 5001
 [SL] Node 1 up
@@ -256,21 +257,21 @@
 [APL] Node 3 up w/ auth stuff
 [Node 3] up on port 5003 (leader for view 0 is 0, behavior=HONEST)
 [Client 201] up on port 6201
-[Client 201] sent req cbe1c207-543b-49b7-be2b-2ac55855b9fd to node 0
-[Client 201] sent req cbe1c207-543b-49b7-be2b-2ac55855b9fd to node 1
-[Client 201] sent req cbe1c207-543b-49b7-be2b-2ac55855b9fd to node 2
-[Client 201] sent req cbe1c207-543b-49b7-be2b-2ac55855b9fd to node 3
+[Client 201] sent req 019f2a6e-5c5a-4009-81ad-2b3c0fbdcfa9 to node 0
+[Client 201] sent req 019f2a6e-5c5a-4009-81ad-2b3c0fbdcfa9 to node 1
+[Client 201] sent req 019f2a6e-5c5a-4009-81ad-2b3c0fbdcfa9 to node 2
+[Client 201] sent req 019f2a6e-5c5a-4009-81ad-2b3c0fbdcfa9 to node 3
 [Node 1] now on view 1 (timeout)
 [Node 2] now on view 1 (timeout)
 [Node 3] now on view 1 (timeout)
 [Node 1] chain got: test-failover-1
 [Node 1] now on view 2 (block decided)
 [Client 201] got reply frm node 1 (view 1): committed:view=1
-[Node 3] chain got: test-failover-1
 [Node 2] chain got: test-failover-1
+[Node 3] chain got: test-failover-1
 [Node 3] now on view 2 (block decided)
 [Node 2] now on view 2 (block decided)
-[Client 201] got reply frm node 2 (view 1): committed:view=1
+[Client 201] got reply frm node 3 (view 1): committed:view=1
 [Client 201] stopped
 [Node 1] stopped
 [Node 2] stopped
@@ -281,36 +282,35 @@
 [Node 3] could not execute tx in block 1: Illegal base64 character 2d
 [FL] packet parse went bad: socket isnt up
 [FL] packet parse went bad: socket isnt up
-[FL] packet parse went bad: socket isnt up
 ]]></system-err>
   </testcase>
-  <testcase name="nodeStatePersistsAcrossRestart" classname="depchain.DepChainStage1Test" time="1.198">
-    <system-out><![CDATA[[Node 0] genesis loaded — ISTCoin at 0x60c7e9e7fd9aa3464c3997e13a69dd3e0da089e6
-[Node 0] genesis block persisted: 0xf3efc409b9bdd0d5de3f317f004b0a0aa49fd9db6929b51270db361b335000a8
+  <testcase name="nodeStatePersistsAcrossRestart" classname="depchain.DepChainStage1Test" time="1.471">
+    <system-out><![CDATA[[Node 0] genesis loaded — ISTCoin at 0xc3db3442a0c4e8d9c5d56c1686b54f9e50e0dcf0
+[Node 0] genesis block persisted: 0x86382cfd940e4684446198772054e21a7daf887f0f14651aa2f8a879666d0ca5
 [UdpTransport] listening on port 5000
 [FL] Node 0 up on port 5000
 [SL] Node 0 up
 [PL] Node 0 up
 [APL] Node 0 up w/ auth stuff
 [Node 0] up on port 5000 (leader for view 0 is 0, behavior=HONEST)
-[Node 1] genesis loaded — ISTCoin at 0x60c7e9e7fd9aa3464c3997e13a69dd3e0da089e6
-[Node 1] genesis block persisted: 0xf3efc409b9bdd0d5de3f317f004b0a0aa49fd9db6929b51270db361b335000a8
+[Node 1] genesis loaded — ISTCoin at 0xc3db3442a0c4e8d9c5d56c1686b54f9e50e0dcf0
+[Node 1] genesis block persisted: 0x86382cfd940e4684446198772054e21a7daf887f0f14651aa2f8a879666d0ca5
 [UdpTransport] listening on port 5001
 [FL] Node 1 up on port 5001
 [SL] Node 1 up
 [PL] Node 1 up
 [APL] Node 1 up w/ auth stuff
 [Node 1] up on port 5001 (leader for view 0 is 0, behavior=HONEST)
-[Node 2] genesis loaded — ISTCoin at 0x60c7e9e7fd9aa3464c3997e13a69dd3e0da089e6
-[Node 2] genesis block persisted: 0xf3efc409b9bdd0d5de3f317f004b0a0aa49fd9db6929b51270db361b335000a8
+[Node 2] genesis loaded — ISTCoin at 0xc3db3442a0c4e8d9c5d56c1686b54f9e50e0dcf0
+[Node 2] genesis block persisted: 0x86382cfd940e4684446198772054e21a7daf887f0f14651aa2f8a879666d0ca5
 [UdpTransport] listening on port 5002
 [FL] Node 2 up on port 5002
 [SL] Node 2 up
 [PL] Node 2 up
 [APL] Node 2 up w/ auth stuff
 [Node 2] up on port 5002 (leader for view 0 is 0, behavior=HONEST)
-[Node 3] genesis loaded — ISTCoin at 0x60c7e9e7fd9aa3464c3997e13a69dd3e0da089e6
-[Node 3] genesis block persisted: 0xf3efc409b9bdd0d5de3f317f004b0a0aa49fd9db6929b51270db361b335000a8
+[Node 3] genesis loaded — ISTCoin at 0xc3db3442a0c4e8d9c5d56c1686b54f9e50e0dcf0
+[Node 3] genesis block persisted: 0x86382cfd940e4684446198772054e21a7daf887f0f14651aa2f8a879666d0ca5
 [UdpTransport] listening on port 5003
 [FL] Node 3 up on port 5003
 [SL] Node 3 up
@@ -318,19 +318,19 @@
 [APL] Node 3 up w/ auth stuff
 [Node 3] up on port 5003 (leader for view 0 is 0, behavior=HONEST)
 [Client 205] up on port 6205
-[Client 205] sent req 204a8ba0-5ec7-4546-8c9f-8df979fe466b to node 0
-[Client 205] sent req 204a8ba0-5ec7-4546-8c9f-8df979fe466b to node 1
-[Client 205] sent req 204a8ba0-5ec7-4546-8c9f-8df979fe466b to node 2
-[Client 205] sent req 204a8ba0-5ec7-4546-8c9f-8df979fe466b to node 3
+[Client 205] sent req a0fbf0ba-6585-4255-b305-5c3c7d943de1 to node 0
+[Client 205] sent req a0fbf0ba-6585-4255-b305-5c3c7d943de1 to node 1
+[Client 205] sent req a0fbf0ba-6585-4255-b305-5c3c7d943de1 to node 2
+[Client 205] sent req a0fbf0ba-6585-4255-b305-5c3c7d943de1 to node 3
 [Node 0] chain got: test-persist-1
 [Client 205] got reply frm node 0 (view 0): committed:view=0
 [Node 0] now on view 1 (block decided)
+[Node 1] chain got: test-persist-1
 [Node 2] chain got: test-persist-1
 [Node 3] chain got: test-persist-1
-[Node 1] chain got: test-persist-1
-[Client 205] got reply frm node 1 (view 0): committed:view=0
-[Node 3] now on view 1 (block decided)
+[Client 205] got reply frm node 2 (view 0): committed:view=0
 [Node 2] now on view 1 (block decided)
+[Node 3] now on view 1 (block decided)
 [Node 1] now on view 1 (block decided)
 [Node 3] stopped
 [Node 3] EVM state restored from chain (2 blocks, last height=1)
@@ -340,42 +340,39 @@
 [PL] Node 3 up
 [APL] Node 3 up w/ auth stuff
 [Node 3] up on port 5003 (leader for view 1 is 1, behavior=HONEST)
-[Client 205] sent req 981d6e12-257c-4ed6-9498-d2b5c1ef6288 to node 0
-[Client 205] sent req 981d6e12-257c-4ed6-9498-d2b5c1ef6288 to node 1
-[Client 205] sent req 981d6e12-257c-4ed6-9498-d2b5c1ef6288 to node 2
-[Client 205] sent req 981d6e12-257c-4ed6-9498-d2b5c1ef6288 to node 3
+[Client 205] sent req 7ab5b257-2f01-42b3-ab8b-5fbd8878a4c8 to node 0
+[Client 205] sent req 7ab5b257-2f01-42b3-ab8b-5fbd8878a4c8 to node 1
+[Client 205] sent req 7ab5b257-2f01-42b3-ab8b-5fbd8878a4c8 to node 2
+[Client 205] sent req 7ab5b257-2f01-42b3-ab8b-5fbd8878a4c8 to node 3
 [Node 1] chain got: test-persist-2
 [Client 205] got reply frm node 1 (view 1): committed:view=1
 [Node 1] now on view 2 (block decided)
 [Node 0] chain got: test-persist-2
 [Node 2] chain got: test-persist-2
-[Node 3] chain got: test-persist-2
 [Client 205] got reply frm node 0 (view 1): committed:view=1
-[Client 205] stopped
-[Node 0] now on view 2 (block decided)
+[Node 3] chain got: test-persist-2
 [Node 2] now on view 2 (block decided)
+[Node 0] now on view 2 (block decided)
 [Node 3] now on view 2 (block decided)
+[Client 205] stopped
 [Node 0] stopped
 [Node 1] stopped
 [Node 2] stopped
 [Node 3] stopped
 ]]></system-out>
-    <system-err><![CDATA[[Node 0] could not execute tx in block 1: Illegal base64 character 2d
+    <system-err><![CDATA[[FL] packet parse went bad: socket isnt up
+[Node 0] could not execute tx in block 1: Illegal base64 character 2d
+[Node 1] could not execute tx in block 1: Illegal base64 character 2d
 [Node 2] could not execute tx in block 1: Illegal base64 character 2d
 [Node 3] could not execute tx in block 1: Illegal base64 character 2d
-[Node 1] could not execute tx in block 1: Illegal base64 character 2d
 [FL] packet parse went bad: socket isnt up
 [Node 1] could not execute tx in block 2: Illegal base64 character 2d
 [Node 0] could not execute tx in block 2: Illegal base64 character 2d
 [Node 2] could not execute tx in block 2: Illegal base64 character 2d
 [Node 3] could not execute tx in block 2: Illegal base64 character 2d
-[FL] packet parse went bad: socket isnt up
-[FL] packet parse went bad: socket isnt up
-[FL] packet parse went bad: socket isnt up
-[FL] packet parse went bad: socket isnt up
 ]]></system-err>
   </testcase>
-  <testcase name="faultInjectionDropDelayDuplicateCorruptStillCommits" classname="depchain.DepChainStage1Test" time="4.213">
+  <testcase name="faultInjectionDropDelayDuplicateCorruptStillCommits" classname="depchain.DepChainStage1Test" time="4.253">
     <system-out><![CDATA[[UdpTransport] listening on port 5000
 [FL] Node 0 up on port 5000
 [SL] Node 0 up
@@ -401,10 +398,10 @@
 [APL] Node 3 up w/ auth stuff
 [Node 3] up on port 5003 (leader for view 0 is 0, behavior=HONEST)
 [Client 202] up on port 6202
-[Client 202] sent req f7cfddb4-9c3e-4dec-ac98-3dd9b3cad5ad to node 0
-[Client 202] sent req f7cfddb4-9c3e-4dec-ac98-3dd9b3cad5ad to node 1
-[Client 202] sent req f7cfddb4-9c3e-4dec-ac98-3dd9b3cad5ad to node 2
-[Client 202] sent req f7cfddb4-9c3e-4dec-ac98-3dd9b3cad5ad to node 3
+[Client 202] sent req f5f66c2b-400d-4c1d-b136-0115206bcc13 to node 0
+[Client 202] sent req f5f66c2b-400d-4c1d-b136-0115206bcc13 to node 1
+[Client 202] sent req f5f66c2b-400d-4c1d-b136-0115206bcc13 to node 2
+[Client 202] sent req f5f66c2b-400d-4c1d-b136-0115206bcc13 to node 3
 [FL] fault thing dropped msg from 0 to 1 type=PREPARE
 [FL] fault thing dropped msg from 0 to 1 type=PREPARE
 [FL] fault thing dropped msg from 0 to 1 type=PREPARE
@@ -415,9 +412,9 @@
 [Node 0] chain got: test-faults-1
 [Node 0] now on view 1 (block decided)
 [Client 202] got reply frm node 0 (view 0): committed:view=0
+[Node 3] chain got: test-faults-1
 [Node 1] chain got: test-faults-1
 [Node 2] chain got: test-faults-1
-[Node 3] chain got: test-faults-1
 [Node 1] now on view 1 (block decided)
 [Node 2] now on view 1 (block decided)
 [Node 3] now on view 1 (block decided)
@@ -435,17 +432,16 @@
 [FL] packet parse went bad: Failed to deserialize message
 [FL] packet parse went bad: Failed to deserialize message
 [Node 0] could not execute tx in block 1: Illegal base64 character 2d
+[Node 3] could not execute tx in block 1: Illegal base64 character 2d
 [Node 1] could not execute tx in block 1: Illegal base64 character 2d
 [Node 2] could not execute tx in block 1: Illegal base64 character 2d
-[Node 3] could not execute tx in block 1: Illegal base64 character 2d
-[FL] packet parse went bad: socket isnt up
 [FL] packet parse went bad: socket isnt up
 [FL] packet parse went bad: socket isnt up
 ]]></system-err>
   </testcase>
-  <testcase name="invalidAckSignatureDoesNotStopRetransmission" classname="depchain.DepChainStage1Test" time="2.44">
-    <system-out><![CDATA[[Node 0] genesis loaded — ISTCoin at 0xfdb5ecb4de35adac8bece1d6542e333f905c4b2f
-[Node 0] genesis block persisted: 0xf136ae08faddf145b26cf2d0318fa323ee7d95a15b7a6d3d2261eafd86d42658
+  <testcase name="invalidAckSignatureDoesNotStopRetransmission" classname="depchain.DepChainStage1Test" time="2.291">
+    <system-out><![CDATA[[Node 0] genesis loaded — ISTCoin at 0x918efff00be17905d2e8573c33ce4ff313574c8f
+[Node 0] genesis block persisted: 0x711d64845b033e5be04eb6c11edf5a047190b857b38839a63f38c83c8b19ff34
 [UdpTransport] listening on port 5000
 [FL] Node 0 up on port 5000
 [SL] Node 0 up
@@ -458,7 +454,7 @@
 sig check blew up: Bad signature length: got 3 but was expecting 256
 ]]></system-err>
   </testcase>
-  <testcase name="consensusAppendsToAllNodes" classname="depchain.DepChainStage1Test" time="1.544">
+  <testcase name="consensusAppendsToAllNodes" classname="depchain.DepChainStage1Test" time="1.477">
     <system-out><![CDATA[[UdpTransport] listening on port 5000
 [FL] Node 0 up on port 5000
 [SL] Node 0 up
@@ -484,20 +480,20 @@ sig check blew up: Bad signature length: got 3 but was expecting 256
 [APL] Node 3 up w/ auth stuff
 [Node 3] up on port 5003 (leader for view 0 is 0, behavior=HONEST)
 [Client 200] up on port 6200
-[Client 200] sent req 1f6f404b-79fb-4256-960a-2eecafd49cb2 to node 0
-[Client 200] sent req 1f6f404b-79fb-4256-960a-2eecafd49cb2 to node 1
-[Client 200] sent req 1f6f404b-79fb-4256-960a-2eecafd49cb2 to node 2
-[Client 200] sent req 1f6f404b-79fb-4256-960a-2eecafd49cb2 to node 3
+[Client 200] sent req cc916808-324b-4e0c-bd76-c5c0ab8ecdcb to node 0
+[Client 200] sent req cc916808-324b-4e0c-bd76-c5c0ab8ecdcb to node 1
+[Client 200] sent req cc916808-324b-4e0c-bd76-c5c0ab8ecdcb to node 2
+[Client 200] sent req cc916808-324b-4e0c-bd76-c5c0ab8ecdcb to node 3
 [Node 0] chain got: test-consensus-1
 [Node 0] now on view 1 (block decided)
 [Client 200] got reply frm node 0 (view 0): committed:view=0
+[Node 1] chain got: test-consensus-1
 [Node 3] chain got: test-consensus-1
 [Node 2] chain got: test-consensus-1
-[Node 1] chain got: test-consensus-1
 [Node 2] now on view 1 (block decided)
 [Node 1] now on view 1 (block decided)
 [Node 3] now on view 1 (block decided)
-[Client 200] got reply frm node 1 (view 0): committed:view=0
+[Client 200] got reply frm node 2 (view 0): committed:view=0
 [Client 200] stopped
 [Node 0] stopped
 [Node 1] stopped
@@ -505,14 +501,16 @@ sig check blew up: Bad signature length: got 3 but was expecting 256
 [Node 3] stopped
 ]]></system-out>
     <system-err><![CDATA[[Node 0] could not execute tx in block 1: Illegal base64 character 2d
-[Node 2] could not execute tx in block 1: Illegal base64 character 2d
-[Node 3] could not execute tx in block 1: Illegal base64 character 2d
 [Node 1] could not execute tx in block 1: Illegal base64 character 2d
-[FL] packet parse went bad: socket isnt up
+[Node 3] could not execute tx in block 1: Illegal base64 character 2d
+[Node 2] could not execute tx in block 1: Illegal base64 character 2d
 [FL] packet parse went bad: socket isnt up
 [FL] packet parse went bad: socket isnt up
 [FL] packet parse went bad: socket isnt up
 ]]></system-err>
   </testcase>
-  <testcase name="tamperedQcSignatureIsRejected" classname="depchain.DepChainStage1Test" time="1.066"/>
+  <testcase name="tamperedQcSignatureIsRejected" classname="depchain.DepChainStage1Test" time="1.019">
+    <system-err><![CDATA[[FL] packet parse went bad: socket isnt up
+]]></system-err>
+  </testcase>
 </testsuite>

@@ -343,7 +343,8 @@ public class EvmService {
         }
 
         // Always increment sender nonce (even on failure) for replay protection.
-        nonces.put(sender, currentNonce + 1);
+        long newNonce = currentNonce + 1;
+        nonces.put(sender, newNonce);
 
         // Always deduct fee — no refund on abort (spec: "gas_used is not refunded").
         Wei fee = tx.gasFee(gasUsed);
@@ -368,7 +369,16 @@ public class EvmService {
         for (Address addr : knownAddresses) {
             Account acc = getAccount(addr);
             if (acc != null) {
-                snapshot.put(addr, acc);
+                // Usa o nonce atualizado do mapa nonces
+                long nonce = nonces.getOrDefault(addr, acc.nonce());
+                snapshot.put(addr, new Account(
+                    acc.type(),
+                    acc.address(),
+                    acc.balance(),
+                    nonce,
+                    acc.code(),
+                    acc.storage()
+                ));
             }
         }
         return snapshot;

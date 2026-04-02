@@ -12,11 +12,15 @@ import org.hyperledger.besu.evm.frame.MessageFrame;
 import org.hyperledger.besu.evm.internal.EvmConfiguration;
 import org.hyperledger.besu.evm.tracing.OperationTracer;
 
+import java.math.BigInteger;
 import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Thin wrapper around the Hyperledger Besu standalone EVM.
@@ -34,6 +38,13 @@ public class EvmService {
     final SimpleWorld world;
     private final Map<Address, Long> nonces = new HashMap<>();
 
+    /**
+     * Tracks every address that has ever been created in this world state, in
+     * insertion order. Used by {@link #snapshotWorldState()} to produce a
+     * deterministic, complete account listing for block persistence.
+     */
+    private final Set<Address> knownAddresses = new LinkedHashSet<>();
+
     public EvmService() {
         this.world = new SimpleWorld();
     }
@@ -46,6 +57,7 @@ public class EvmService {
     public void createAccount(Address address, Wei balance) {
         world.createAccount(address, 0, balance);
         nonces.put(address, 0L);
+        knownAddresses.add(address);
     }
 
     public Wei getBalance(Address address) {
@@ -255,6 +267,7 @@ public class EvmService {
                 } else {
                     recipientMut.incrementBalance(value);
                 }
+                knownAddresses.add(recipient);
                 success = true;
             }
         } else {
@@ -296,6 +309,9 @@ public class EvmService {
                 // For deployments, output carries the 20-byte contract address so callers
                 // can retrieve it via EvmResult.deployedAddress().
                 output  = success ? contractAddress : Bytes.EMPTY;
+                if (success) {
+                    knownAddresses.add(contractAddress);
+                }
 
             } else { // isContractCall()
                 Address contractAddress = tx.getTo().get();
@@ -334,6 +350,64 @@ public class EvmService {
         world.getAccount(sender).decrementBalance(fee);
 
         return new EvmResult(success, output, gasUsed, fee);
+    }
+
+    // -------------------------------------------------------------------------
+    // World-state snapshot / restore  (used for block persistence)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns an immutable snapshot of every account that has ever been created
+     * in this world state, keyed by address.
+     *
+     * <p>The map is ordered by account creation time (insertion order) so that
+     * the resulting JSON is deterministic across restarts.
+     */
+    public Map<Address, Account> snapshotWorldState() {
+        Map<Address, Account> snapshot = new LinkedHashMap<>();
+        for (Address addr : knownAddresses) {
+            Account acc = getAccount(addr);
+            if (acc != null) {
+                snapshot.put(addr, acc);
+            }
+        }
+        return snapshot;
+    }
+
+    /**
+     * Reconstructs the world state from a persisted block's {@code world_state} map.
+     *
+     * <p>All existing accounts are replaced; this should only be called on a
+     * freshly constructed {@link EvmService}.
+     *
+     * @param worldState map of {@code "0x..."} address strings to
+     *                   {@link PersistedBlock.AccountEntry} values
+     */
+    public void restoreWorldState(Map<String, PersistedBlock.AccountEntry> worldState) {
+        for (Map.Entry<String, PersistedBlock.AccountEntry> entry : worldState.entrySet()) {
+            Address address = Address.fromHexString(entry.getKey());
+            PersistedBlock.AccountEntry acc = entry.getValue();
+
+            Wei balance = Wei.of(new BigInteger(acc.balance));
+            world.createAccount(address, acc.nonce, balance);
+            nonces.put(address, acc.nonce);
+            knownAddresses.add(address);
+
+            if (acc.code != null && !acc.code.isEmpty()) {
+                ((SimpleAccount) world.getAccount(address))
+                        .setCode(Bytes.fromHexString(acc.code));
+            }
+
+            if (acc.storage != null) {
+                var mutableAccount = world.getAccount(address);
+                for (Map.Entry<String, String> slot : acc.storage.entrySet()) {
+                    mutableAccount.setStorageValue(
+                            UInt256.fromHexString(slot.getKey()),
+                            UInt256.fromHexString(slot.getValue())
+                    );
+                }
+            }
+        }
     }
 
     // -------------------------------------------------------------------------

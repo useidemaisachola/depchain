@@ -24,12 +24,20 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.security.PublicKey;
+import depchain.blockchain.BlockStore;
+import depchain.blockchain.EvmResult;
 import depchain.blockchain.EvmService;
+import depchain.blockchain.GenesisBlock;
 import depchain.blockchain.GenesisLoader;
+import depchain.blockchain.PersistedBlock;
 import depchain.blockchain.Transaction;
+import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.besu.datatypes.Address;
+import org.hyperledger.besu.datatypes.Wei;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.PriorityQueue;
 import java.util.Arrays;
 import java.util.Collections;
@@ -73,6 +81,10 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
     private EvmService evmService;
     /** Address of the ISTCoin ERC-20 contract deployed in the genesis block. */
     private Address istCoinAddress;
+    /** Persists committed blocks (including world state) to disk. */
+    private final BlockStore blockStore;
+    /** Hash of the last block written to the BlockStore; null before genesis is persisted. */
+    private String lastPersistedBlockHash = null;
 
     private final Queue<ClientRequest> pendingClientRequests;
     private final Set<String> pendingRequestIds;
@@ -146,6 +158,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         this.byzantineBehavior = byzantineBehavior;
         this.persistenceEnabled = persistenceEnabled;
         this.stateStore   = new NodeStateStore(nodeId, stateDirectory);
+        this.blockStore   = new BlockStore(stateDirectory + "/blocks");
         this.evmService   = new EvmService();
         this.istCoinAddress = null;
 
@@ -937,7 +950,24 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         highQc = commitQc;
         lockedQc = commitQc;
 
+        // Execute the transaction against the EVM world state.
+        Transaction tx = null;
+        EvmResult evmResult = null;
+        try {
+            byte[] txBytes = Base64.getDecoder().decode(block.getData());
+            tx = Transaction.deserialize(txBytes);
+            evmResult = evmService.executeTransaction(tx);
+        } catch (Exception e) {
+            System.err.println("[Node " + nodeId + "] could not execute tx in block "
+                    + block.getHeight() + ": " + e.getMessage());
+        }
+
         appendToBlockchain(block.getData());
+
+        // Persist the block with the resulting world state.
+        if (persistenceEnabled) {
+            persistBlockLocked(block, tx, evmResult);
+        }
 
         if (repliedRequestIds.add(block.getRequestId())) {
             sendClientReply(block, true, "commited on view " + currentView);
@@ -1360,14 +1390,44 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         try {
             Map<Integer, java.security.PublicKey> nodeKeys = keyManager.getAllPublicKeys();
             GenesisLoader.Result result = GenesisLoader.load(nodeKeys);
-            this.evmService    = result.evmService();
+            this.evmService     = result.evmService();
             this.istCoinAddress = result.istCoinAddress();
             System.out.println("[Node " + nodeId + "] genesis loaded — ISTCoin at "
                     + istCoinAddress);
+
+            if (persistenceEnabled) {
+                persistGenesisBlockLocked(result.block());
+            }
         } catch (Exception e) {
             System.err.println("[Node " + nodeId
                     + "] WARNING: genesis loading failed: " + e.getMessage()
                     + " — starting with empty EVM state");
+        }
+    }
+
+    /** Persists the genesis state (height 0, null previous hash) to the block store. */
+    private void persistGenesisBlockLocked(GenesisBlock genesisBlock) {
+        try {
+            List<PersistedBlock.TransactionEntry> txEntries = new ArrayList<>();
+            for (GenesisBlock.TransactionEntry gtx : genesisBlock.getTransactions()) {
+                txEntries.add(new PersistedBlock.TransactionEntry(
+                        gtx.from, gtx.to,
+                        gtx.input != null ? gtx.input : "",
+                        gtx.gasPrice, gtx.gasLimit,
+                        0L, "0", true
+                ));
+            }
+
+            Map<String, PersistedBlock.AccountEntry> worldState = buildWorldStateSnapshot();
+
+            PersistedBlock genesis = new PersistedBlock(null, 0, txEntries, worldState);
+            blockStore.save(genesis);
+            lastPersistedBlockHash = genesis.getBlockHash();
+            System.out.println("[Node " + nodeId + "] genesis block persisted: "
+                    + lastPersistedBlockHash);
+        } catch (Exception e) {
+            System.err.println("[Node " + nodeId
+                    + "] WARNING: failed to persist genesis block: " + e.getMessage());
         }
     }
 
@@ -1419,6 +1479,100 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         activeBlockHash = null;
         activeClientRequest = null;
         activeStep = ConsensusStep.IDLE;
+
+        if (persistenceEnabled) {
+            restoreEvmFromChainLocked();
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Block persistence helpers
+    // -------------------------------------------------------------------------
+
+    private void persistBlockLocked(Block block, Transaction tx, EvmResult evmResult) {
+        try {
+            List<PersistedBlock.TransactionEntry> txEntries = new ArrayList<>();
+            if (tx != null && evmResult != null) {
+                txEntries.add(new PersistedBlock.TransactionEntry(
+                        tx.getFrom().toHexString(),
+                        tx.getTo().map(Address::toHexString).orElse(null),
+                        tx.getData().isEmpty() ? "" : tx.getData().toHexString(),
+                        tx.getGasPrice(),
+                        tx.getGasLimit(),
+                        evmResult.gasUsed(),
+                        evmResult.fee().getAsBigInteger().toString(),
+                        evmResult.success()
+                ));
+            }
+
+            Map<String, PersistedBlock.AccountEntry> worldState = buildWorldStateSnapshot();
+
+            PersistedBlock persisted = new PersistedBlock(
+                    lastPersistedBlockHash,
+                    block.getHeight(),
+                    txEntries,
+                    worldState
+            );
+            blockStore.save(persisted);
+            lastPersistedBlockHash = persisted.getBlockHash();
+        } catch (Exception e) {
+            System.err.println("[Node " + nodeId + "] failed to persist block "
+                    + block.getHeight() + ": " + e.getMessage());
+        }
+    }
+
+    private Map<String, PersistedBlock.AccountEntry> buildWorldStateSnapshot() {
+        Map<String, PersistedBlock.AccountEntry> worldState = new LinkedHashMap<>();
+        for (Map.Entry<Address, depchain.blockchain.Account> entry
+                : evmService.snapshotWorldState().entrySet()) {
+            depchain.blockchain.Account acc = entry.getValue();
+            Map<String, String> storage = new LinkedHashMap<>();
+            acc.storage().forEach((k, v) ->
+                    storage.put(k.toHexString(), v.toHexString()));
+            worldState.put(entry.getKey().toHexString(), new PersistedBlock.AccountEntry(
+                    acc.balance().getAsBigInteger().toString(),
+                    acc.nonce(),
+                    acc.code().isEmpty() ? "" : acc.code().toHexString(),
+                    storage
+            ));
+        }
+        return worldState;
+    }
+
+    /**
+     * Restores the EVM world state from the persisted block chain on startup.
+     * Falls back to genesis if the chain is absent or fails integrity validation.
+     */
+    private void restoreEvmFromChainLocked() {
+        List<PersistedBlock> chain = blockStore.loadChain();
+        if (chain.isEmpty()) {
+            initializeFromGenesisLocked();
+            return;
+        }
+        if (!blockStore.validateChain(chain)) {
+            System.err.println("[Node " + nodeId
+                    + "] WARNING: block chain integrity check failed — re-initializing from genesis");
+            initializeFromGenesisLocked();
+            return;
+        }
+
+        PersistedBlock lastBlock = chain.get(chain.size() - 1);
+        this.evmService = new EvmService();
+        evmService.restoreWorldState(lastBlock.getWorldState());
+
+        // Re-derive ISTCoin address from node0's public key (deterministic).
+        try {
+            Map<Integer, java.security.PublicKey> nodeKeys = keyManager.getAllPublicKeys();
+            Address deployer = EvmService.deriveAddress(nodeKeys.get(0));
+            this.istCoinAddress = Address.contractAddress(deployer, 0);
+        } catch (Exception e) {
+            System.err.println("[Node " + nodeId
+                    + "] WARNING: could not restore istCoinAddress: " + e.getMessage());
+        }
+
+        lastPersistedBlockHash = lastBlock.getBlockHash();
+        System.out.println("[Node " + nodeId + "] EVM state restored from chain ("
+                + chain.size() + " blocks, last height=" + lastBlock.getHeight() + ")");
     }
 
     private void savePersistentStateLocked() {

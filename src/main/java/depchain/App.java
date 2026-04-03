@@ -1,5 +1,7 @@
 package depchain;
 
+import depchain.blockchain.EvmService;
+import depchain.blockchain.Transaction;
 import depchain.client.BlockchainClient;
 import depchain.config.NetworkConfig;
 import depchain.crypto.CryptoUtils;
@@ -8,6 +10,7 @@ import depchain.net.MessageType;
 import depchain.net.fault.NetworkFaultController;
 import depchain.node.ByzantineBehavior;
 import depchain.node.Node;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyPair;
@@ -18,6 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import org.apache.tuweni.bytes.Bytes;
+import org.hyperledger.besu.datatypes.Address;
+import org.hyperledger.besu.datatypes.Wei;
 
 public class App {
 
@@ -70,6 +76,18 @@ public class App {
                 case "demo_persist":
                     runPersistenceDemo();
                     break;
+                case "demo_stage2_transfer":
+                    runStage2DepCoinTransferDemo();
+                    break;
+                case "demo_stage2_erc20":
+                    runStage2Erc20TransferDemo();
+                    break;
+                case "demo_stage2_byzclient":
+                    runStage2ByzantineClientDemo();
+                    break;
+                case "demo_stage2_6clients":
+                    runStage2SixClientsDemo();
+                    break;
                 case "config":
                     NetworkConfig.printConfig();
                     break;
@@ -94,19 +112,28 @@ public class App {
             "  mvn exec:java -Dexec.args=\"node <id> [behavior]\" - start a node (HONEST|SILENT|EQUIVOCATE_LEADER|INVALID_VOTE_SIGNATURE)"
         );
         System.out.println(
-            "  mvn exec:java -Dexec.args=\"client <id>\"     - start a client (id: 100+)"
+            "  mvn exec:java -Dexec.args=\"client <id>\"     - start a static client (id: 0.." + (NetworkConfig.NUM_STATIC_CLIENTS - 1) + ")"
         );
         System.out.println(
-            "  mvn exec:java -Dexec.args=\"test\"            - run the basic all-in-one demo"
+            "  mvn exec:java -Dexec.args=\"demo_stage2_transfer\"   - Stage 2 demo: DepCoin transfer through consensus"
         );
         System.out.println(
-            "  mvn exec:java -Dexec.args=\"demo_faults\"     - run the fault demo"
+            "  mvn exec:java -Dexec.args=\"demo_stage2_erc20\"      - Stage 2 demo: ERC-20 transfer through consensus"
         );
         System.out.println(
-            "  mvn exec:java -Dexec.args=\"demo_byz\"        - run the weird leader demo"
+            "  mvn exec:java -Dexec.args=\"demo_stage2_byzclient\"  - Stage 2 demo: byzantine client spoof rejected"
         );
         System.out.println(
-            "  mvn exec:java -Dexec.args=\"demo_persist\"    - run the restart demo"
+            "  mvn exec:java -Dexec.args=\"demo_stage2_6clients\"    - Stage 2 demo: 6 static clients submit txs (requires genkeys)"
+        );
+        System.out.println(
+            "  mvn exec:java -Dexec.args=\"demo_faults\"     - Stage 1/infra demo: fault injection"
+        );
+        System.out.println(
+            "  mvn exec:java -Dexec.args=\"demo_byz\"        - Stage 1/infra demo: byzantine leader equivocation"
+        );
+        System.out.println(
+            "  mvn exec:java -Dexec.args=\"demo_persist\"    - Stage 1/infra demo: persistence/restart"
         );
         System.out.println(
             "  mvn exec:java -Dexec.args=\"config\"          - show net config"
@@ -231,12 +258,20 @@ public class App {
 
         System.out.println();
         System.out.println("client " + clientId + " is up. cmds:");
-        System.out.println(
-            "  append <data>        - send a req to append data"
-        );
-        System.out.println("  send <nodeId> <data> - send a req to one node");
+        System.out.println("  address                        - show this client's EVM address");
+        System.out.println("  transfer <to> <valueWei>       - DepCoin transfer (gasPrice=1, gasLimit=21000)");
+        System.out.println("  ist_transfer <to> <amount>     - ISTCoin transfer (amount in smallest units)");
+        System.out.println("  raw <base64Tx>                 - send a raw Base64(serialized Transaction)");
         System.out.println("  quit                 - stop the client");
         System.out.println();
+
+        long localNonce = 0L;
+        // Best effort: clients start at nonce 0 in genesis; if the process restarts,
+        // the user can still submit raw transactions with explicit nonces.
+        Address istCoin = tryDeriveIstCoinAddressFromNode0(NetworkConfig.KEYS_DIRECTORY);
+        if (istCoin != null) {
+            System.out.println("ISTCoin (derived) is at: " + istCoin);
+        }
 
         Scanner scanner = new Scanner(System.in);
         while (true) {
@@ -250,45 +285,74 @@ public class App {
 
             try {
                 switch (cmd) {
-                    case "append":
-                        if (parts.length < 2) {
-                            System.out.println("use: append <data>");
-                        } else {
-                            String data =
-                                parts.length > 2
-                                    ? parts[1] + " " + parts[2]
-                                    : parts[1];
-                            System.out.println("sending req (encrypted)...");
-                            boolean success = client.submitRequest(data);
-                            System.out.println(
-                                success
-                                    ? "req went thru"
-                                    : "req failed or timed out"
-                            );
-                        }
+                    case "address": {
+                        System.out.println("EVM address: " + client.getEvmAddress());
                         break;
-                    case "send":
+                    }
+                    case "transfer": {
                         if (parts.length < 3) {
-                            System.out.println("use: send <nodeId> <data>");
-                        } else {
-                            int nodeId = Integer.parseInt(parts[1]);
-                            String data = parts[2];
-                            System.out.println(
-                                "sending encrypted req to node " +
-                                    nodeId +
-                                    "..."
-                            );
-                            boolean success = client.submitRequestToNode(
-                                nodeId,
-                                data
-                            );
-                            System.out.println(
-                                success
-                                    ? "req went thru"
-                                    : "req failed or timed out"
-                            );
+                            System.out.println("use: transfer <toHex> <valueWei>");
+                            break;
                         }
+                        Address to = Address.fromHexString(parts[1]);
+                        Wei value = Wei.of(new BigInteger(parts[2]));
+                        Transaction tx = Transaction.create(
+                                client.getEvmAddress(),
+                                to,
+                                value,
+                                Bytes.EMPTY,
+                                1L,
+                                21_000L,
+                                localNonce
+                        );
+                        boolean ok = client.submitTransaction(tx);
+                        if (ok) {
+                            localNonce++;
+                        }
+                        System.out.println(ok ? "ok" : "failed");
                         break;
+                    }
+                    case "ist_transfer": {
+                        if (parts.length < 3) {
+                            System.out.println("use: ist_transfer <toHex> <amountSmallestUnit>");
+                            break;
+                        }
+                        if (istCoin == null) {
+                            System.out.println("ISTCoin address unknown (missing node0 key?)");
+                            break;
+                        }
+                        Address to = Address.fromHexString(parts[1]);
+                        long amount = Long.parseLong(parts[2]);
+                        Bytes calldata = Bytes.fromHexString(
+                                "a9059cbb" + addrArg(to) + uint256Arg(amount)
+                        );
+                        Transaction tx = Transaction.create(
+                                client.getEvmAddress(),
+                                istCoin,
+                                Wei.ZERO,
+                                calldata,
+                                1L,
+                                200_000L,
+                                localNonce
+                        );
+                        boolean ok = client.submitTransaction(tx);
+                        if (ok) {
+                            localNonce++;
+                        }
+                        System.out.println(ok ? "ok" : "failed");
+                        break;
+                    }
+                    case "raw": {
+                        if (parts.length < 2) {
+                            System.out.println("use: raw <base64Tx>");
+                            break;
+                        }
+                        String data = parts.length > 2 ? (parts[1] + " " + parts[2]) : parts[1];
+                        System.out.println("sending raw tx... (expects Base64(Transaction bytes))");
+                        boolean ok = client.submitRequest(data);
+                        System.out.println(ok ? "ok" : "failed");
+                        break;
+                    }
                     case "quit":
                     case "exit":
                         client.stop();
@@ -322,66 +386,7 @@ public class App {
     }
 
     private static void runDemoTest() throws Exception {
-        System.out.println(
-            "starting basic in-proc demo with " +
-                NetworkConfig.NUM_NODES +
-                " nodes..."
-        );
-        Path stateDir = Files.createTempDirectory("depchain-demo-basic-");
-
-        Map<Integer, KeyManager> keyManagers = KeyManager.generateInMemory(
-            NetworkConfig.NUM_NODES
-        );
-        List<Node> nodes = new ArrayList<>();
-        BlockchainClient client = null;
-
-        try {
-            for (int i = 0; i < NetworkConfig.NUM_NODES; i++) {
-                Node node = new Node(
-                    i,
-                    keyManagers.get(i),
-                    ByzantineBehavior.HONEST,
-                    stateDir.toString(),
-                    false
-                );
-                node.start();
-                nodes.add(node);
-            }
-
-            Thread.sleep(700);
-
-            client = new BlockchainClient(100, 6100);
-            Map<Integer, PublicKey> nodePublicKeys = new HashMap<>();
-            for (int i = 0; i < NetworkConfig.NUM_NODES; i++) {
-                nodePublicKeys.put(i, keyManagers.get(i).getPublicKey(i));
-            }
-            client.setNodePublicKeys(nodePublicKeys);
-            client.start();
-
-            boolean r1 = client.submitRequest("demo-tx-1");
-            boolean r2 = client.submitRequest("demo-tx-2");
-            System.out.println("req results kinda: " + r1 + ", " + r2);
-
-            Thread.sleep(2500);
-
-            for (Node node : nodes) {
-                System.out.println(
-                    "Node " +
-                        node.getNodeId() +
-                        " view=" +
-                        node.getCurrentView() +
-                        " chain=" +
-                        node.getBlockchain()
-                );
-            }
-        } finally {
-            if (client != null) {
-                client.stop();
-            }
-            for (Node node : nodes) {
-                node.stop();
-            }
-        }
+        System.out.println("Stage 1 demo is deprecated; use demo_stage2_transfer or demo_stage2_erc20.");
     }
 
     private static void runFaultInjectionDemo() throws Exception {
@@ -431,7 +436,10 @@ public class App {
                 nodes.add(node);
             }
 
-            client = new BlockchainClient(101, 6101);
+                client = new BlockchainClient(101, 6101, new KeyPair(
+                    keyManagers.get(0).getPublicKey(0),
+                    keyManagers.get(0).getPrivateKey()
+                ));
             Map<Integer, PublicKey> nodePublicKeys = new HashMap<>();
             for (int i = 0; i < NetworkConfig.NUM_NODES; i++) {
                 nodePublicKeys.put(i, keyManagers.get(i).getPublicKey(i));
@@ -439,7 +447,18 @@ public class App {
             client.setNodePublicKeys(nodePublicKeys);
             client.start();
 
-            boolean first = client.submitRequest("demo-persist-tx-1");
+                Address sender = client.getEvmAddress();
+                long nonce = nodes.get(0).getEvmService().getNonce(sender);
+                Transaction firstTx = Transaction.create(
+                    sender,
+                    freshAddressForDemo(),
+                    Wei.of(1_000L),
+                    Bytes.EMPTY,
+                    1L,
+                    21_000L,
+                    nonce
+                );
+                boolean first = client.submitTransaction(firstTx);
             System.out.println("first req commited: " + first);
 
             Node node3 = nodes.get(3);
@@ -459,7 +478,16 @@ public class App {
                 "node 3 came back, chain: " + restarted.getBlockchain()
             );
 
-            boolean second = client.submitRequest("demo-persist-tx-2");
+                Transaction secondTx = Transaction.create(
+                    sender,
+                    freshAddressForDemo(),
+                    Wei.of(2_000L),
+                    Bytes.EMPTY,
+                    1L,
+                    21_000L,
+                    nonce + 1
+                );
+                boolean second = client.submitTransaction(secondTx);
             System.out.println("second req commited: " + second);
 
             Thread.sleep(1500);
@@ -511,7 +539,10 @@ public class App {
 
             Thread.sleep(700);
 
-            client = new BlockchainClient(102, 6102);
+            client = new BlockchainClient(102, 6102, new KeyPair(
+                    keyManagers.get(0).getPublicKey(0),
+                    keyManagers.get(0).getPrivateKey()
+            ));
             Map<Integer, PublicKey> nodePublicKeys = new HashMap<>();
             for (int i = 0; i < NetworkConfig.NUM_NODES; i++) {
                 nodePublicKeys.put(i, keyManagers.get(i).getPublicKey(i));
@@ -519,6 +550,8 @@ public class App {
             client.setNodePublicKeys(nodePublicKeys);
             client.start();
 
+            // Backwards-compat: interpret requestData as a Base64(Transaction bytes).
+            // This keeps the Stage 1 fault demos working while using Stage 2 payloads.
             boolean ok = client.submitRequest(requestData);
             System.out.println("req commited: " + ok);
 
@@ -546,5 +579,281 @@ public class App {
                 node.stop();
             }
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Stage 2 demos
+    // -------------------------------------------------------------------------
+
+    private static void runStage2DepCoinTransferDemo() throws Exception {
+        System.out.println("starting Stage 2 DepCoin transfer demo...");
+        Path stateDir = Files.createTempDirectory("depchain-demo-stage2-transfer-");
+        Map<Integer, KeyManager> keyManagers = KeyManager.generateInMemory(NetworkConfig.NUM_NODES);
+        List<Node> nodes = new ArrayList<>();
+
+        Map<Integer, PublicKey> nodePublicKeys = new HashMap<>();
+        for (int i = 0; i < NetworkConfig.NUM_NODES; i++) {
+            nodePublicKeys.put(i, keyManagers.get(i).getPublicKey(i));
+        }
+
+        BlockchainClient client = null;
+        try {
+            for (int i = 0; i < NetworkConfig.NUM_NODES; i++) {
+                Node node = new Node(i, keyManagers.get(i), ByzantineBehavior.HONEST, stateDir.toString(), true);
+                node.start();
+                nodes.add(node);
+            }
+
+            Thread.sleep(700);
+
+            client = new BlockchainClient(0, 6000, new KeyPair(
+                    keyManagers.get(0).getPublicKey(0),
+                    keyManagers.get(0).getPrivateKey()
+            ));
+            client.setNodePublicKeys(nodePublicKeys);
+            client.start();
+
+            Address sender = client.getEvmAddress();
+            Address recipient = freshAddressForDemo();
+            long nonce = nodes.get(0).getEvmService().getNonce(sender);
+
+            System.out.println("sender=" + sender + " nonce=" + nonce);
+            System.out.println("recipient=" + recipient);
+
+            Transaction tx = Transaction.create(sender, recipient, Wei.of(10_000L), Bytes.EMPTY, 1L, 21_000L, nonce);
+            boolean ok = client.submitTransaction(tx);
+            System.out.println("committed=" + ok);
+
+            Thread.sleep(1500);
+            for (Node n : nodes) {
+                System.out.println(
+                        "Node " + n.getNodeId() +
+                        " senderBal=" + n.getEvmService().getBalance(sender) +
+                        " recipientBal=" + n.getEvmService().getBalance(recipient)
+                );
+            }
+        } finally {
+            if (client != null) client.stop();
+            for (Node n : nodes) n.stop();
+        }
+    }
+
+    private static void runStage2Erc20TransferDemo() throws Exception {
+        System.out.println("starting Stage 2 ERC-20 transfer demo...");
+        Path stateDir = Files.createTempDirectory("depchain-demo-stage2-erc20-");
+        Map<Integer, KeyManager> keyManagers = KeyManager.generateInMemory(NetworkConfig.NUM_NODES);
+        List<Node> nodes = new ArrayList<>();
+
+        Map<Integer, PublicKey> nodePublicKeys = new HashMap<>();
+        for (int i = 0; i < NetworkConfig.NUM_NODES; i++) {
+            nodePublicKeys.put(i, keyManagers.get(i).getPublicKey(i));
+        }
+
+        BlockchainClient client = null;
+        try {
+            for (int i = 0; i < NetworkConfig.NUM_NODES; i++) {
+                Node node = new Node(i, keyManagers.get(i), ByzantineBehavior.HONEST, stateDir.toString(), true);
+                node.start();
+                nodes.add(node);
+            }
+
+            Thread.sleep(700);
+
+            client = new BlockchainClient(0, 6000, new KeyPair(
+                    keyManagers.get(0).getPublicKey(0),
+                    keyManagers.get(0).getPrivateKey()
+            ));
+            client.setNodePublicKeys(nodePublicKeys);
+            client.start();
+
+            Address sender = client.getEvmAddress();
+            Address istCoin = Address.contractAddress(
+                    EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0)),
+                    0
+            );
+            Address recipient = freshAddressForDemo();
+            long nonce = nodes.get(0).getEvmService().getNonce(sender);
+
+            System.out.println("ISTCoin=" + istCoin);
+            System.out.println("sender=" + sender + " nonce=" + nonce);
+            System.out.println("recipient=" + recipient);
+
+            long amount = 100_00L; // 100.00 IST
+            Bytes calldata = Bytes.fromHexString("a9059cbb" + addrArg(recipient) + uint256Arg(amount));
+            Transaction tx = Transaction.create(sender, istCoin, Wei.ZERO, calldata, 1L, 200_000L, nonce);
+
+            boolean ok = client.submitTransaction(tx);
+            System.out.println("committed=" + ok);
+
+            Thread.sleep(1500);
+
+            for (Node n : nodes) {
+                BigInteger bal = istBalanceOf(n.getEvmService(), istCoin, recipient);
+                System.out.println("Node " + n.getNodeId() + " IST.balanceOf(recipient)=" + bal);
+            }
+        } finally {
+            if (client != null) client.stop();
+            for (Node n : nodes) n.stop();
+        }
+    }
+
+    private static void runStage2ByzantineClientDemo() throws Exception {
+        System.out.println("starting Stage 2 byzantine client demo...");
+        Path stateDir = Files.createTempDirectory("depchain-demo-stage2-byzclient-");
+        Map<Integer, KeyManager> keyManagers = KeyManager.generateInMemory(NetworkConfig.NUM_NODES);
+        List<Node> nodes = new ArrayList<>();
+
+        Map<Integer, PublicKey> nodePublicKeys = new HashMap<>();
+        for (int i = 0; i < NetworkConfig.NUM_NODES; i++) {
+            nodePublicKeys.put(i, keyManagers.get(i).getPublicKey(i));
+        }
+
+        BlockchainClient attacker = null;
+        try {
+            for (int i = 0; i < NetworkConfig.NUM_NODES; i++) {
+                Node node = new Node(i, keyManagers.get(i), ByzantineBehavior.HONEST, stateDir.toString(), true);
+                node.start();
+                nodes.add(node);
+            }
+            Thread.sleep(700);
+
+            attacker = new BlockchainClient(1, 6001); // fresh key, not genesis-funded
+            attacker.setNodePublicKeys(nodePublicKeys);
+            attacker.start();
+
+            Address victim = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
+            long nonce = nodes.get(0).getEvmService().getNonce(victim);
+            Transaction malicious = Transaction.create(
+                    victim,
+                    freshAddressForDemo(),
+                    Wei.of(1_000L),
+                    Bytes.EMPTY,
+                    1L,
+                    21_000L,
+                    nonce
+            );
+
+            boolean ok = attacker.submitTransaction(malicious);
+            System.out.println("spoof attempt committed=" + ok + " (expected false)");
+        } finally {
+            if (attacker != null) attacker.stop();
+            for (Node n : nodes) n.stop();
+        }
+    }
+
+    private static void runStage2SixClientsDemo() throws Exception {
+        System.out.println("starting Stage 2 6-clients demo...");
+        System.out.println("note: requires keys/ generated via: mvn exec:java '-Dexec.args=genkeys'");
+
+        Path stateDir = Files.createTempDirectory("depchain-demo-stage2-6clients-");
+
+        List<Node> nodes = new ArrayList<>();
+        Map<Integer, KeyManager> nodeKeyManagers = new HashMap<>();
+        Map<Integer, PublicKey> nodePublicKeys = new HashMap<>();
+
+        for (int i = 0; i < NetworkConfig.NUM_NODES; i++) {
+            KeyManager km = KeyManager.loadForNode(i, NetworkConfig.NUM_NODES, NetworkConfig.KEYS_DIRECTORY);
+            nodeKeyManagers.put(i, km);
+            nodePublicKeys.put(i, km.getPublicKey(i));
+        }
+
+        List<BlockchainClient> clients = new ArrayList<>();
+        try {
+            for (int i = 0; i < NetworkConfig.NUM_NODES; i++) {
+                Node node = new Node(i, nodeKeyManagers.get(i), ByzantineBehavior.HONEST, stateDir.toString(), true);
+                node.start();
+                nodes.add(node);
+            }
+
+            Thread.sleep(700);
+
+            // Start 6 static clients from keys/clientX.{key,pub}
+            for (int clientId = 0; clientId < NetworkConfig.NUM_STATIC_CLIENTS; clientId++) {
+                KeyPair kp = loadKeyPairFromFiles(NetworkConfig.KEYS_DIRECTORY + "/client" + clientId);
+                BlockchainClient c = new BlockchainClient(clientId, 6000 + clientId, kp);
+                c.setNodePublicKeys(nodePublicKeys);
+                c.start();
+                clients.add(c);
+            }
+
+            // Each client submits one DepCoin transfer to the next client's address.
+            // This exercises: signature validation, per-sender nonce, mempool constraints, consensus ordering.
+            Node reference = nodes.get(0);
+            for (int clientId = 0; clientId < NetworkConfig.NUM_STATIC_CLIENTS; clientId++) {
+                BlockchainClient senderClient = clients.get(clientId);
+                Address sender = senderClient.getEvmAddress();
+
+                Address recipient = clients.get((clientId + 1) % NetworkConfig.NUM_STATIC_CLIENTS).getEvmAddress();
+                long nonce = reference.getEvmService().getNonce(sender);
+
+                Transaction tx = Transaction.create(
+                        sender,
+                        recipient,
+                        Wei.of(1_000L),
+                        Bytes.EMPTY,
+                        1L,
+                        21_000L,
+                        nonce
+                );
+
+                boolean ok = senderClient.submitTransaction(tx);
+                System.out.println("client" + clientId + " sent transfer -> committed=" + ok);
+            }
+
+            Thread.sleep(2000);
+
+            // Print a compact summary from node 0.
+            System.out.println("--- balances (node0 view) ---");
+            for (int clientId = 0; clientId < NetworkConfig.NUM_STATIC_CLIENTS; clientId++) {
+                Address a = clients.get(clientId).getEvmAddress();
+                System.out.println("client" + clientId + " " + a + " balance=" + reference.getEvmService().getBalance(a));
+            }
+        } finally {
+            for (BlockchainClient c : clients) {
+                try { c.stop(); } catch (Exception ignored) {}
+            }
+            for (Node n : nodes) {
+                try { n.stop(); } catch (Exception ignored) {}
+            }
+        }
+    }
+
+    private static KeyPair loadKeyPairFromFiles(String basePath) throws Exception {
+        PrivateKey priv = CryptoUtils.loadPrivateKey(basePath + ".key");
+        PublicKey pub = CryptoUtils.loadPublicKey(basePath + ".pub");
+        return new KeyPair(pub, priv);
+    }
+
+    private static Address tryDeriveIstCoinAddressFromNode0(String keysDirectory) {
+        try {
+            PublicKey node0 = CryptoUtils.loadPublicKey(keysDirectory + "/node0.pub");
+            Address deployer = EvmService.deriveAddress(node0);
+            return Address.contractAddress(deployer, 0);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static Address freshAddressForDemo() {
+        // Use the same pattern as tests: last 2 bytes change.
+        byte[] bytes = new byte[20];
+        int s = (int) (System.nanoTime() & 0xFFFF);
+        bytes[18] = (byte) (s >> 8);
+        bytes[19] = (byte) s;
+        return Address.wrap(org.apache.tuweni.bytes.Bytes.wrap(bytes));
+    }
+
+    private static String addrArg(Address address) {
+        return "000000000000000000000000" + address.toUnprefixedHexString();
+    }
+
+    private static String uint256Arg(long value) {
+        return String.format("%064x", value);
+    }
+
+    private static BigInteger istBalanceOf(EvmService evm, Address contract, Address account) {
+        Bytes calldata = Bytes.fromHexString("70a08231" + addrArg(account));
+        Bytes result = evm.callContract(account, contract, calldata, 100_000L);
+        return result.isEmpty() ? BigInteger.ZERO : new BigInteger(1, result.toArray());
     }
 }

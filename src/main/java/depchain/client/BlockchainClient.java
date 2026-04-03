@@ -183,10 +183,10 @@ public class BlockchainClient {
     }
 
     private boolean waitForReply(String requestId) {
-        // Require f+1 matching replies for Byzantine safety.
-        // Count success and failure replies separately so that a transaction
-        // that fails EVM execution returns false quickly instead of timing out.
+        // Require f+1 *identical* replies for Byzantine safety.
+        // We key by (success flag + message) and wait for f+1 responders for the same key.
         int requiredReplies = NetworkConfig.MAX_FAULTS + 1;
+        Map<String, Set<Integer>> respondersByReplyKey = new HashMap<>();
         Set<Integer> successResponders = new HashSet<>();
         Set<Integer> failureResponders = new HashSet<>();
         long deadline = System.currentTimeMillis() + TIMEOUT_MS;
@@ -225,19 +225,23 @@ public class BlockchainClient {
                         "): " +
                         reply.getMessage()
                 );
+                String replyKey = (reply.isSuccess() ? "S|" : "F|") + String.valueOf(reply.getMessage());
+                Set<Integer> responders = respondersByReplyKey.computeIfAbsent(replyKey, ignored -> new HashSet<>());
+                responders.add(reply.getResponderNodeId());
+
                 if (reply.isSuccess()) {
-                    if (successResponders.add(reply.getResponderNodeId())
-                            && successResponders.size() >= requiredReplies) {
-                        return true;
-                    }
+                    successResponders.add(reply.getResponderNodeId());
                 } else {
-                    if (failureResponders.add(reply.getResponderNodeId())
-                            && failureResponders.size() >= requiredReplies) {
+                    failureResponders.add(reply.getResponderNodeId());
+                }
+
+                if (responders.size() >= requiredReplies) {
+                    if (!reply.isSuccess()) {
                         // Quorum agrees the tx failed (OOG / revert / bad input).
                         System.out.println("[Client " + clientId + "] req "
                                 + requestId + " failed: " + reply.getMessage());
-                        return false;
                     }
+                    return reply.isSuccess();
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

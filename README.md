@@ -1,62 +1,29 @@
-# DepChain Stage 1
-# FAZER O README STAGE 2
+# DepChain Stage 2
+
 Made by:
 - David Pinheiro (`ist117363`)
 - Mehakpreet Khosa (`ist1107242`)
 - Inês Cachola (`ist1106953`)
 
-DepChain is a Java 17 / Maven project that implements a permissioned blockchain-style replicated system with 4 nodes and a HotStuff-style consensus flow.
+DepChain is a Java 17 / Maven project that implements a permissioned replicated blockchain with:
+- 4 nodes, HotStuff-style consensus (Byzantine fault tolerant)
+- a transaction-based application layer (accounts, balances, nonces)
+- an embedded EVM service (Hyperledger Besu) that runs the provided ERC-20 contract (ISTCoin)
 
-This project is configured for:
-- `n = 4` nodes
-- `f = 1` Byzantine fault
-- quorum `= 2f + 1 = 3`
-- leader formula `leader = view % NUM_NODES`
-
-## What The Project Has
-
-- communication stack: `UDP -> FL -> SL -> PL -> APL`
-- HotStuff-style phases: `PREPARE -> PRE_COMMIT -> COMMIT -> DECIDE`
-- timeout-based view change with `NEW_VIEW`
-- node-to-node RSA signatures
-- client request signing
-- hybrid encryption for client-to-node requests
-- intrusive fault injection at the `FL` layer
-- Byzantine modes:
-  - `HONEST`
-  - `SILENT`
-  - `EQUIVOCATE_LEADER`
-  - `INVALID_VOTE_SIGNATURE`
-- optional persistent node state
+Default config:
+- `n = 4`, `f = 1`, quorum `2f + 1 = 3`
 
 ## Requirements
 
-- Java 17 or newer
-- Maven 3.x or newer
-- Any normal shell: PowerShell, bash, zsh, or similar
-
-The project is compiled with Java release `17`, so Java `17+` is fine, including newer current Java versions.
-
-Check your versions:
+- Java 17+
+- Maven 3.x+
 
 ```text
 java -version
 mvn -version
 ```
 
-## Project Layout
-
-- `src/main/java/depchain/App.java`: entry point and demo commands
-- `src/main/java/depchain/node/Node.java`: node logic and consensus flow
-- `src/main/java/depchain/client/BlockchainClient.java`: client library and interactive client
-- `src/main/java/depchain/net/*`: UDP and link layers
-- `src/main/java/depchain/consensus/*`: blocks, votes, payloads, quorum certificates
-- `src/main/java/depchain/storage/*`: persistent node state
-- `src/test/java/depchain/DepChainStage1Test.java`: automated tests
-- `keys/`: generated node key files
-- `state/`: persistent node state for manual runs
-
-## Build
+## Build & Tests
 
 Compile:
 
@@ -73,225 +40,167 @@ mvn clean test
 Run one specific test:
 
 ```text
-mvn -Dtest=DepChainStage1Test#consensusAppendsToAllNodes test
+mvn -Dtest=EvmServiceTest test
 ```
 
-## Shell Note
+## Shell note
 
-The `mvn exec:java` examples below use a quoted `-Dexec.args=...` argument format that works in both PowerShell and bash/zsh.
-
-Example:
-
-```text
-mvn exec:java '-Dexec.args=client 100'
-```
-
-In PowerShell, this avoids the argument-splitting problem.
-
-In bash/zsh on Linux or macOS, this also works, and this form works too:
-
-```text
-mvn exec:java -Dexec.args="client 100"
-```
-
-## Demo Commands
-
-Show network config:
+The `mvn exec:java` examples below use a quoted `-Dexec.args=...` format that works in both PowerShell and bash/zsh.
 
 ```text
 mvn exec:java '-Dexec.args=config'
 ```
 
-Run the basic in-process demo:
+## Stage 2 Transaction Model (high level)
+
+- Client requests carry exactly one signed transaction.
+- Accounts are EOAs with an EVM address deterministically derived from their public key.
+- Each transaction includes: `from`, `to`, `value`, `data` (EVM calldata), `gasPrice`, `gasLimit`, `nonce`.
+- Nodes validate signature + sender + nonce + balance and apply fees according to gas used.
+- The genesis file deploys the ISTCoin contract once at startup (see `src/main/resources/genesis.json`).
+
+### Why 6 static clients in genesis?
+
+`NUM_STATIC_CLIENTS = 6` is a Stage 2 requirement requested by staff.
+
+We keep 6 pre-known client identities in the genesis because it makes the system deterministic and easy to test/demo under a fixed set of keys:
+- 4 “main” clients (one per node/leader identity) to submit transactions in a controlled way across different views/leaders.
+- 2 extra clients to represent “external” participants / adversarial scenarios that should be rejected (spoofing, replay/wrong nonce, insufficient balance, etc.).
+
+In practice, not every demo needs to spawn all 6 clients at the same time — the requirement is that the genesis and the code support at least these 6 static client identities.
+
+### Replay protection (nonce)
+
+Replay protection is enforced by the sender nonce:
+- Nodes reject transactions with a stale nonce (already executed) and avoid having two pending transactions with the same `(sender, nonce)`.
+- The execution layer increments the sender nonce for every processed transaction (even if EVM execution fails), so the exact same signed transaction cannot be replayed after it is processed.
+
+## Demos
+
+### Stage 2 demos (recommended)
+
+Stage 2 demo: DepCoin transfer (consensus + accounts + fees):
 
 ```text
-mvn exec:java '-Dexec.args=test'
+mvn exec:java '-Dexec.args=demo_stage2_transfer'
 ```
 
-Run the fault demo:
+What it does:
+- Starts 4 nodes in-process.
+- Starts 1 client, sends 1 DepCoin transfer transaction, prints balances on each node.
+
+Stage 2 demo: ERC-20 transfer (consensus + EVM contract call):
+
+```text
+mvn exec:java '-Dexec.args=demo_stage2_erc20'
+```
+
+What it does:
+- Starts 4 nodes in-process.
+- Starts 1 client, sends an ISTCoin `transfer(to, amount)` call (EVM calldata), prints `balanceOf(to)` on each node.
+
+Stage 2 demo: byzantine client spoof attempt rejected:
+
+```text
+mvn exec:java '-Dexec.args=demo_stage2_byzclient'
+```
+
+What it does:
+- Starts 4 nodes in-process.
+- Starts 1 attacker client and tries to submit a tx whose `from` is another account.
+- Expected result: nodes reject as invalid transaction.
+
+Stage 2 demo: 6 static clients submit transactions (requires `genkeys`):
+
+```text
+mvn exec:java '-Dexec.args=genkeys'
+mvn exec:java '-Dexec.args=demo_stage2_6clients'
+```
+
+What it does:
+- Starts 4 nodes in-process using the key material in `keys/`.
+- Starts 6 clients (`client0..client5`) using `keys/clientX.{key,pub}`.
+- Each client submits 1 DepCoin transfer to the next client.
+
+### Infra demos (consensus / network)
+
+Fault injection demo:
 
 ```text
 mvn exec:java '-Dexec.args=demo_faults'
 ```
 
-Run the Byzantine leader demo:
+Byzantine leader equivocation demo:
 
 ```text
 mvn exec:java '-Dexec.args=demo_byz'
 ```
 
-Run the persistence / restart demo:
+Persistence / restart demo:
 
 ```text
 mvn exec:java '-Dexec.args=demo_persist'
 ```
 
-## Manual Run
+## Manual Run (nodes + interactive client)
 
-### 1. Generate node keys
+### 1) Generate keys
 
 ```text
 mvn exec:java '-Dexec.args=genkeys'
 ```
 
-This creates:
-- `keys/node0.key`, `keys/node0.pub`
-- `keys/node1.key`, `keys/node1.pub`
-- `keys/node2.key`, `keys/node2.pub`
-- `keys/node3.key`, `keys/node3.pub`
+This generates RSA keypairs for:
+- nodes: `keys/node0..node3` (`.key` + `.pub`)
+- static clients: `keys/client0..client5` (`.key` + `.pub`)
 
-### 2. Start the 4 nodes in 4 terminals
-
-Terminal 1:
+### 2) Start the 4 nodes (4 terminals)
 
 ```text
 mvn exec:java '-Dexec.args=node 0 HONEST'
-```
-
-Terminal 2:
-
-```text
 mvn exec:java '-Dexec.args=node 1 HONEST'
-```
-
-Terminal 3:
-
-```text
 mvn exec:java '-Dexec.args=node 2 HONEST'
-```
-
-Terminal 4:
-
-```text
 mvn exec:java '-Dexec.args=node 3 HONEST'
 ```
 
-Example of a Byzantine node:
+### 3) Start a static client
+
+Static clients are `0..(NUM_STATIC_CLIENTS-1)` (by default: `0..5`).
 
 ```text
-mvn exec:java '-Dexec.args=node 0 EQUIVOCATE_LEADER'
+mvn exec:java '-Dexec.args=client 0'
 ```
 
-### 3. Start a client in another terminal
-
-```text
-mvn exec:java '-Dexec.args=client 100'
-```
-
-### 4. Use the interactive client
+### 4) Interactive client commands
 
 Inside the client:
 
 ```text
-append hello
-append second-value
-send 0 direct-message
+address
+transfer 0x0000000000000000000000000000000000000001 1000
+ist_transfer 0x0000000000000000000000000000000000000001 100
 quit
 ```
 
-### 5. Useful node commands
+## Tests that demonstrate Stage 2 deliverables
 
-Inside a node terminal:
+The Stage 2 test suite lives under `src/test/java/depchain`.
 
-```text
-send <destId> <message>
-broadcast <message>
-blockchain
-quit
-```
+Per-file overview:
 
-## Network Configuration
+- `AccountModelTest`: account model invariants (EOA/contract), and deterministic EVM address derivation from public keys.
+- `BlockPersistenceTest`: block hashing/JSON, on-disk persistence via `BlockStore`, and EVM world-state snapshot/restore.
+- `ByzantineClientTest`: invalid/Byzantine client scenarios (spoofed `from`, replay/wrong nonce, insufficient balance, duplicate pending nonce).
+- `EndToEndTest`: end-to-end cluster execution (consensus + EVM) for both DepCoin transfers and ISTCoin ERC-20 calls.
+- `EvmServiceTest`: EVM service + ISTCoin deployment and ERC-20 behavior, including approval/frontrunning-related scenarios.
+- `GasFeeTest`: gas fee calculation/enforcement (including out-of-gas behavior) and nonce increment rules.
+- `GenesisLoaderTest`: loading `genesis.json` deterministically, funding genesis accounts, and deploying ISTCoin at genesis.
+- `TransactionExecutionTest`: integration path “client tx → consensus → EVM execution”, checking balances/nonces and sequential commits.
+- `TransactionOrderingTest`: pending transaction ordering by `gasPrice × gasLimit` (highest fee first) for proposal selection.
+- `TransactionTest`: transaction creation/type detection, signing/verification, serialization round-trip, fee helpers, and validation guards.
+- `WorldStateTest`: world-state CRUD, snapshot/rollback, and deterministic serialization.
 
-From `src/main/java/depchain/config/NetworkConfig.java`:
-
-- `NUM_NODES = 4`
-- `MAX_FAULTS = 1`
-- `QUORUM_SIZE = 3`
-- base port `5000`
-- node ports:
-  - node `0` -> `5000`
-  - node `1` -> `5001`
-  - node `2` -> `5002`
-  - node `3` -> `5003`
-- default host: `localhost`
-- key directory: `keys`
-- state directory: `state`
-
-The client port is `6000 + clientId`.
-Example:
-- client `100` listens on port `6100`
-
-## What Is Stored On The Blockchain
-
-In this project, the application data being committed is a simple string, for example:
-
-- `test-consensus-1`
-- `hello`
-- `second-value`
-
-Each node keeps its own local chain as a list of decided values.
-
-The internal `Block` object contains metadata such as:
-- parent hash
-- height
-- view
-- proposer id
-- request id
-- client id
-- client reply address
-- data string
-- timestamp
-
-## What Each Test Does
-
-All tests are in `src/test/java/depchain/DepChainStage1Test.java`.
-
-### `consensusAppendsToAllNodes`
-
-- starts 4 honest nodes
-- sends `test-consensus-1`
-- checks that all nodes append the same decided value
-
-### `timeoutViewChangeSurvivesLeaderCrash`
-
-- starts only nodes `1`, `2`, and `3`
-- the initial leader for view `0` is missing
-- checks that timeout and leader rotation still let the request commit
-
-### `invalidNodeSignatureIsRejected`
-
-- starts node `2`
-- sends a forged UDP message with an invalid signature
-- checks that the node drops it
-
-### `faultInjectionDropDelayDuplicateCorruptStillCommits`
-
-- injects `drop`, `delay`, `duplicate`, and `corrupt` faults
-- sends `test-faults-1`
-- checks that all nodes still converge
-- checks that the same request is not appended twice
-
-### `byzantineEquivocatingLeaderStillMakesProgress`
-
-- starts 4 nodes
-- node `0` behaves as `EQUIVOCATE_LEADER`
-- checks that the system still makes progress after view change
-
-### `invalidVoteSignatureByzantineNodeDoesNotBreakConsensus`
-
-- starts 4 nodes
-- node `3` behaves as `INVALID_VOTE_SIGNATURE`
-- checks that one bad voter does not stop the quorum from deciding
-
-### `nodeStatePersistsAcrossRestart`
-
-- starts 4 honest nodes with persistence enabled
-- commits `test-persist-1`
-- stops node `3`
-- restarts node `3`
-- checks that node `3` reloads the old chain
-- commits `test-persist-2`
-- checks that the cluster still converges after restart
+If you need to point to a single “run everything” command for submission, use `mvn clean test`.
 
 ## What The Main Layers Do
 
@@ -315,14 +224,8 @@ When enabled, a node stores:
 Manual node runs use the `state/` directory by default.
 Tests use temporary directories instead.
 
-## Current Scope
+## Scope
 
-This repository is the Stage 1 project.
-
-It covers:
-- consensus
-- communication layers
-- Byzantine tolerance experiments
-- persistence / restart recovery
-
-It does not yet include a full Stage 2 transaction execution layer.
+This repository includes both:
+- Stage 1 infrastructure: consensus, communication layers, fault/byzantine experiments, and persistence/restart recovery.
+- Stage 2 application layer: transaction validation/execution with nonces + fees, plus EVM execution (ISTCoin ERC-20) integrated with consensus.

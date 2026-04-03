@@ -16,33 +16,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Loads the genesis block from {@code /genesis.json} (classpath resource).
- *
- * <p>The genesis JSON uses symbolic account names ("node0", "node1", …) which
- * are resolved at runtime to the deterministic EVM addresses derived from the
- * corresponding RSA public keys via {@link EvmService#deriveAddress}.
- *
- * <p>Loading sequence:
- * <ol>
- *   <li>Parse the genesis template.</li>
- *   <li>Resolve symbolic names → actual {@link Address} instances.</li>
- *   <li>Create an {@link EvmService} and fund every genesis account.</li>
- *   <li>Load {@code /contracts/ISTCoin.bin} and execute the deployment
- *       transaction with the designated deployer account.</li>
- *   <li>Build and return a {@link GenesisBlock} with the final world state.</li>
- * </ol>
- */
+/* Loads the genesis block from {@code /genesis.json} (classpath resource).*/
 public class GenesisLoader {
 
     private static final String GENESIS_RESOURCE   = "/genesis.json";
     private static final String ISTCOIN_BIN_RESOURCE = "/contracts/ISTCoin.bin";
 
     private GenesisLoader() {}
-
-    // -------------------------------------------------------------------------
-    // Public API
-    // -------------------------------------------------------------------------
 
     /**
      * Loads and processes the genesis block using the supplied node public keys.
@@ -58,10 +38,7 @@ public class GenesisLoader {
         return load(nodePublicKeys, Collections.emptyMap());
     }
 
-    /**
-     * Loads and processes genesis using node keys plus extra symbolic participants
-     * (e.g., client0..clientN).
-     */
+ 
     public static Result load(
             Map<Integer, PublicKey> nodePublicKeys,
             Map<String, PublicKey> extraParticipantPublicKeys) {
@@ -111,10 +88,7 @@ public class GenesisLoader {
         return new Result(genesis, evm, istCoinAddress);
     }
 
-    // -------------------------------------------------------------------------
-    // Result record
-    // -------------------------------------------------------------------------
-
+  
     /**
      * The outcome of a successful genesis load.
      *
@@ -125,10 +99,7 @@ public class GenesisLoader {
      */
     public record Result(GenesisBlock block, EvmService evmService, Address istCoinAddress) {}
 
-    // -------------------------------------------------------------------------
-    // Private helpers
-    // -------------------------------------------------------------------------
-
+ 
     private static JsonObject readTemplate() {
         try (InputStream is = GenesisLoader.class.getResourceAsStream(GENESIS_RESOURCE)) {
             if (is == null) {
@@ -152,10 +123,8 @@ public class GenesisLoader {
         }
     }
 
-    /**
-     * Builds the symbolic-name → address map for all nodes that appear in the
-     * genesis template.
-     */
+    /*Builds the symbolic-name → address map for all nodes that appear in the
+     * genesis template.*/
     private static Map<String, Address> resolveAccounts(
             Map<Integer, PublicKey> nodePublicKeys,
             Map<String, PublicKey> extraParticipantPublicKeys) {
@@ -195,11 +164,7 @@ public class GenesisLoader {
     }
 
     /**
-     * Assembles the {@link GenesisBlock} from the post-deployment EVM state.
-     *
-     * <p>The world state in the returned block reflects the state AFTER the
-     * ISTCoin deployment transaction has been executed (as per the project spec).
-     */
+     * Assembles the {@link GenesisBlock} from the post-deployment EVM state.*/
     private static GenesisBlock buildGenesisBlock(
             Address deployer,
             Bytes   initcode,

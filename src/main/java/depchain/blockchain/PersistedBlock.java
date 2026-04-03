@@ -27,9 +27,6 @@ import java.util.Map;
  *   }
  * }
  * </pre>
- *
- * <p>The {@code block_hash} is the hex-encoded SHA-256 digest of the canonical
- * JSON of the block content (all fields except {@code block_hash} itself).
  */
 public class PersistedBlock {
 
@@ -57,9 +54,7 @@ public class PersistedBlock {
         this.blockHash         = computeHash();
     }
 
-    // -------------------------------------------------------------------------
-    // Accessors
-    // -------------------------------------------------------------------------
+  
 
     public String getBlockHash()                          { return blockHash; }
     public String getPreviousBlockHash()                  { return previousBlockHash; }
@@ -67,9 +62,7 @@ public class PersistedBlock {
     public List<TransactionEntry> getTransactions()       { return transactions; }
     public Map<String, AccountEntry> getWorldState()      { return worldState; }
 
-    // -------------------------------------------------------------------------
-    // Serialization
-    // -------------------------------------------------------------------------
+
 
     public String toJson() { return GSON.toJson(this); }
 
@@ -77,9 +70,6 @@ public class PersistedBlock {
         return GSON.fromJson(json, PersistedBlock.class);
     }
 
-    // -------------------------------------------------------------------------
-    // Hash
-    // -------------------------------------------------------------------------
 
     private String computeHash() {
         ContentForHash content = new ContentForHash(previousBlockHash, height, transactions, worldState);
@@ -94,10 +84,7 @@ public class PersistedBlock {
         return sb.toString();
     }
 
-    // -------------------------------------------------------------------------
-    // Nested types
-    // -------------------------------------------------------------------------
-
+  
     private static final class ContentForHash {
         @SerializedName("previous_block_hash") final String previousBlockHash;
         final int height;

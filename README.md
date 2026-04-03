@@ -51,6 +51,14 @@ The `mvn exec:java` examples below use a quoted `-Dexec.args=...` format that wo
 mvn exec:java '-Dexec.args=config'
 ```
 
+## Note on code comments
+
+This codebase has some inconsistency in comment density:
+- Most Stage 1 code is less commented (time constraints during Stage 1).
+- Most Stage 2 additions/changes are more commented, as we documented the new transaction model + EVM integration work.
+
+So, if you see some files with very few comments and others with many, that is expected and reflects a problem of time management in Stage 1 rather than missing functionality.
+
 ## Stage 2 Transaction Model (high level)
 
 - Client requests carry exactly one signed transaction.

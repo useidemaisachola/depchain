@@ -28,7 +28,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Byzantine client attack scenarios (Issue #16).
+ * Byzantine client attack scenarios.
  *
  * Each test starts all 4 nodes with genesis loaded so that node-derived addresses
  * have a funded DepCoin balance. Tests demonstrate that the system correctly rejects:

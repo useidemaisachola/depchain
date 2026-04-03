@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for the Besu EVM integration (Issue #2).
+ * Tests for the Besu EVM integration.
  *
  * Deploys the ISTCoin ERC-20 contract and verifies that:
  *  1. Deployment succeeds and a valid contract address is returned.

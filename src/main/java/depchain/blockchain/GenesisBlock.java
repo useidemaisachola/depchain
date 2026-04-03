@@ -37,7 +37,7 @@ public class GenesisBlock {
     private String blockHash;
 
     @SerializedName("previous_block_hash")
-    private final String previousBlockHash = null;   // always null for genesis
+    private final String previousBlockHash = null;
 
     private final List<TransactionEntry> transactions;
 
@@ -49,37 +49,23 @@ public class GenesisBlock {
         this.blockHash    = computeHash();
     }
 
-    // -------------------------------------------------------------------------
-    // Accessors
-    // -------------------------------------------------------------------------
 
     public String getBlockHash()         { return blockHash; }
     public String getPreviousBlockHash() { return previousBlockHash; }
     public List<TransactionEntry> getTransactions() { return transactions; }
     public Map<String, AccountEntry>    getState()        { return state; }
 
-    // -------------------------------------------------------------------------
-    // Serialization
-    // -------------------------------------------------------------------------
+ 
 
-    /** Serializes this genesis block to pretty-printed JSON. */
     public String toJson() {
         return GSON.toJson(this);
     }
 
-    /** Deserializes a genesis block from JSON produced by {@link #toJson()}. */
     public static GenesisBlock fromJson(String json) {
         return GSON.fromJson(json, GenesisBlock.class);
     }
 
-    // -------------------------------------------------------------------------
-    // Hash
-    // -------------------------------------------------------------------------
-
-    /**
-     * Computes the block hash as the hex-encoded SHA-256 digest of the
-     * canonical JSON of this block's content (excluding the hash field itself).
-     */
+  
     private String computeHash() {
         // Temporarily null out the hash so it is not included in the digest input.
         ContentForHash content = new ContentForHash(previousBlockHash, transactions, state);
@@ -94,11 +80,7 @@ public class GenesisBlock {
         return sb.toString();
     }
 
-    // -------------------------------------------------------------------------
-    // Nested types
-    // -------------------------------------------------------------------------
-
-    /** Minimal representation used as canonical hash input (no hash field). */
+ 
     private static final class ContentForHash {
         @SerializedName("previous_block_hash") final String previousBlockHash;
         final List<TransactionEntry>                         transactions;

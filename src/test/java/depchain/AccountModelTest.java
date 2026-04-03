@@ -22,7 +22,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for the EOA / Contract account model (Issue #3).
+ * Tests for the EOA / Contract account model.
  *
  * Covers:
  *  1. AccountType enum values

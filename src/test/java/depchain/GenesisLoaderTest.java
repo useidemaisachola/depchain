@@ -19,7 +19,7 @@ import depchain.config.NetworkConfig;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for genesis block loading (Issue #8).
+ * Tests for genesis block loading.
  *
  * Verifies that GenesisLoader:
  *  1. Reads genesis.json and resolves symbolic account names to EVM addresses.

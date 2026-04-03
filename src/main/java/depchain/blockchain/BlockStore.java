@@ -10,19 +10,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/**
- * Persists committed blocks to disk and loads/validates the chain on restart.
- *
- * <p>Each block is stored as a JSON file named {@code block_NNNNNN.json}
- * (zero-padded height) inside the configured directory. Example:
- * <pre>  state/blocks/block_000000.json   ← genesis
- *   state/blocks/block_000001.json   ← first consensus block
- *   ...</pre>
- *
- * <p>Chain integrity is verified by checking that every block's
- * {@code previous_block_hash} matches the preceding block's {@code block_hash},
- * and that every block's hash can be recomputed from its declared content.
- */
+/*Persists committed blocks to disk and loads/validates the chain on restart.*/
 public class BlockStore {
 
     private final Path directory;
@@ -31,16 +19,7 @@ public class BlockStore {
         this.directory = Paths.get(directory);
     }
 
-    // -------------------------------------------------------------------------
-    // Write
-    // -------------------------------------------------------------------------
 
-    /**
-     * Persists {@code block} to {@code block_NNNNNN.json}.
-     * Creates the directory if it does not yet exist.
-     *
-     * @throws RuntimeException on I/O error
-     */
     public void save(PersistedBlock block) {
         try {
             Files.createDirectories(directory);
@@ -51,16 +30,6 @@ public class BlockStore {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Read
-    // -------------------------------------------------------------------------
-
-    /**
-     * Loads all persisted blocks in ascending height order.
-     *
-     * @return ordered list (empty if the directory does not exist)
-     * @throws RuntimeException on I/O error
-     */
     public List<PersistedBlock> loadChain() {
         if (!Files.exists(directory)) {
             return new ArrayList<>();
@@ -82,23 +51,7 @@ public class BlockStore {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Validation
-    // -------------------------------------------------------------------------
-
-    /**
-     * Validates hash-chain integrity for {@code chain}.
-     *
-     * <p>Checks:
-     * <ol>
-     *   <li>First block has {@code height == 0}.</li>
-     *   <li>Heights are consecutive (no gaps).</li>
-     *   <li>Each block's {@code block_hash} matches the recomputed hash of its content.</li>
-     *   <li>Each block's {@code previous_block_hash} equals the preceding block's {@code block_hash}.</li>
-     * </ol>
-     *
-     * @return {@code true} if the chain is intact; {@code false} on any violation
-     */
+ 
     public boolean validateChain(List<PersistedBlock> chain) {
         if (chain.isEmpty()) {
             return true;
@@ -128,10 +81,6 @@ public class BlockStore {
         }
         return true;
     }
-
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
 
     /** Re-creates a block from its data fields (triggering hash recomputation) and returns the hash. */
     private static String recomputeHash(PersistedBlock block) {

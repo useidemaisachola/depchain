@@ -1,8 +1,6 @@
 package threshsig;
 
-/**
- * Threshold Signature Exception. Only thrown by Dealer.
- */
+/*Threshold Signature Exception. Only thrown by Dealer.*/
 public class ThresholdSigException extends RuntimeException {
   private static final long serialVersionUID = 2266413730951237508L;
 

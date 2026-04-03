@@ -18,7 +18,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for WorldState (Issue #4):
+ * Tests for WorldState:
  *  1. CRUD operations
  *  2. Snapshot / rollback
  *  3. Serialization (round-trip and determinism)

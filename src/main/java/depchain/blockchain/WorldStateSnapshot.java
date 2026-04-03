@@ -19,7 +19,6 @@ public final class WorldStateSnapshot implements Serializable {
         this.accounts = accounts;
     }
 
-    /** Returns a fresh deep copy of the snapshot's account map for rollback. */
     TreeMap<String, WorldState.Entry> accountsCopy() {
         TreeMap<String, WorldState.Entry> copy = new TreeMap<>();
         for (var me : accounts.entrySet()) {

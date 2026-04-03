@@ -31,14 +31,9 @@ public class WorldState implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /** Address (lowercase hex with 0x prefix) → account entry. Sorted for determinism. */
     private TreeMap<String, Entry> accounts = new TreeMap<>();
 
-    // -------------------------------------------------------------------------
-    // Internal serializable representation
-    // -------------------------------------------------------------------------
 
-    /** Serializable flat representation of a single account. */
     static final class Entry implements Serializable {
         private static final long serialVersionUID = 1L;
 
@@ -67,9 +62,6 @@ public class WorldState implements Serializable {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Conversion helpers
-    // -------------------------------------------------------------------------
 
     private static Entry toEntry(Account account) {
         Entry e = new Entry();
@@ -97,55 +89,35 @@ public class WorldState implements Serializable {
         return address.toHexString().toLowerCase();
     }
 
-    // -------------------------------------------------------------------------
-    // CRUD
-    // -------------------------------------------------------------------------
 
-    /**
-     * Returns the account at {@code address}, or {@code null} if none exists.
-     */
     public Account getAccount(Address address) {
         Entry e = accounts.get(key(address));
         return e == null ? null : fromEntry(key(address), e);
     }
 
-    /**
-     * Inserts or replaces the account. The account's address is used as the key.
-     */
     public void putAccount(Account account) {
         accounts.put(key(account.address()), toEntry(account));
     }
 
-    /**
-     * Convenience: create a fresh EOA with the given balance and nonce 0.
-     */
+
     public void createEoa(Address address, Wei balance) {
         putAccount(new Account(AccountType.EOA, address, balance, 0L,
                 Bytes.EMPTY, Collections.emptyMap()));
     }
 
-    /**
-     * Removes the account at {@code address}.
-     *
-     * @return {@code true} if the account existed
-     */
     public boolean removeAccount(Address address) {
         return accounts.remove(key(address)) != null;
     }
 
-    /** Returns {@code true} if an account exists at {@code address}. */
     public boolean hasAccount(Address address) {
         return accounts.containsKey(key(address));
     }
 
-    /** Returns the number of accounts in this world state. */
     public int size() {
         return accounts.size();
     }
 
-    /**
-     * Returns all account addresses in deterministic (lexicographic) order.
-     */
+
     public List<Address> addresses() {
         List<Address> result = new ArrayList<>(accounts.size());
         for (String hex : accounts.keySet()) {
@@ -154,10 +126,7 @@ public class WorldState implements Serializable {
         return Collections.unmodifiableList(result);
     }
 
-    // -------------------------------------------------------------------------
-    // Snapshot / Rollback
-    // -------------------------------------------------------------------------
-
+ 
     /**
      * Returns an immutable snapshot of the current state. Pass to
      * {@link #rollback(WorldStateSnapshot)} to revert a failed transaction.
@@ -185,16 +154,7 @@ public class WorldState implements Serializable {
         this.accounts = snapshot.accountsCopy();
     }
 
-    // -------------------------------------------------------------------------
-    // Serialization
-    // -------------------------------------------------------------------------
 
-    /**
-     * Serializes this world state to a byte array for block persistence.
-     *
-     * <p>The serialized form is deterministic: the same account set always
-     * produces the same bytes because accounts are stored in sorted order.
-     */
     public byte[] serialize() {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
              ObjectOutputStream oos = new ObjectOutputStream(bos)) {
@@ -218,9 +178,6 @@ public class WorldState implements Serializable {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Object overrides
-    // -------------------------------------------------------------------------
 
     @Override
     public String toString() {

@@ -7,15 +7,6 @@ class Poly {
 
   private int size;
 
-  /**
-   * Generates a polynomial, f(x) mod m such that f(0) = d<BR>
-   * All coefficients are chosen randomly from Z(m) (modulo m)
-   *
-   * @param d - The first coeffecient of the polynomial
-   * @param size - The size of the polynomial
-   * @param m - modulo of field coeffiecients are from
-   */
-
   public Poly(final BigInteger d, final int size, final BigInteger m) {
     final int bitLength = m.bitLength();
 

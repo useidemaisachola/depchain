@@ -28,7 +28,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * End-to-end test: DepCoin transfer + ERC-20 ISTCoin call (Issue #17).
+ * End-to-end test: DepCoin transfer + ERC-20 ISTCoin call.
  *
  * Verifies that a single client can atomically exercise both layers of the
  * DepChain system in sequence:

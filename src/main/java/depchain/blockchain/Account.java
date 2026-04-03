@@ -9,15 +9,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Immutable snapshot of a single account's state.
- *
- * <ul>
- *   <li>EOA — code is {@link Bytes#EMPTY}, storage is an empty map.</li>
- *   <li>CONTRACT — code holds the deployed runtime bytecode; storage holds
- *       the slot values written since the contract was deployed.</li>
- * </ul>
- */
 public record Account(
         AccountType type,
         Address address,

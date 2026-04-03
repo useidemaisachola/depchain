@@ -15,12 +15,9 @@ import java.util.Optional;
  * @param gasUsed  actual gas consumed by the EVM (≤ gasLimit)
  * @param fee      DepCoin fee deducted from the sender: {@code gasPrice × gasUsed}
  */
+
 public record EvmResult(boolean success, Bytes output, long gasUsed, Wei fee) {
 
-    /**
-     * For deployment transactions, extracts the deployed contract address from
-     * {@link #output}.  Returns empty for non-deployment results.
-     */
     public Optional<Address> deployedAddress() {
         if (output == null || output.size() != 20) return Optional.empty();
         return Optional.of(Address.wrap(output));

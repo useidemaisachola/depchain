@@ -20,16 +20,16 @@ import threshsig.ThresholdSignatures;
 public class KeyManager {
 
         /**
-         * Obtém a chave pública associada a um Address Ethereum (usado como 'from' em transações).
-         * Procura tanto em publicKeys (por nodeId) como em extraParticipantPublicKeys (por string).
-         * Retorna null se não encontrar.
+          * Retrieves the public key associated with an Ethereum Address (used as 'from' in transactions).
+          * Searches both in publicKeys (by nodeId) and in extraParticipantPublicKeys (by string).
+          * Returns null if not found.
          */
         public PublicKey getPublicKeyForAddress(org.hyperledger.besu.datatypes.Address address) {
-            // Tenta procurar pelo encoding hexadecimal do Address
+            // Attempts to look up using the hexadecimal encoding of the Address.
             String hex = address.toHexString();
             PublicKey pk = extraParticipantPublicKeys.get(hex);
             if (pk != null) return pk;
-            // Tenta procurar por nodeId se Address for de um node conhecido
+            // Attempts to look up by nodeId if the Address belongs to a known node.
             for (Map.Entry<Integer, PublicKey> entry : publicKeys.entrySet()) {
                 org.hyperledger.besu.datatypes.Address nodeAddr = depchain.blockchain.EvmService.deriveAddress(entry.getValue());
                 if (nodeAddr.equals(address)) {

@@ -25,7 +25,7 @@ import depchain.config.NetworkConfig;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for Issue #9: Block Persistence.
+ * Tests for Block Persistence.
  *
  * Verifies that:
  *  1. PersistedBlock computes a non-null "0x"-prefixed hash.

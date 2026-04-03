@@ -51,10 +51,7 @@ public final class Transaction implements Serializable {
     private final long    nonce;         // sender nonce for replay protection
     private final byte[]  signature;     // RSA signature, null if unsigned
 
-    // -------------------------------------------------------------------------
-    // Construction
-    // -------------------------------------------------------------------------
-
+ 
     private Transaction(String transactionId, String from, String to,
                         String value, String data, long gasPrice,
                         long gasLimit, long nonce, byte[] signature) {
@@ -106,10 +103,7 @@ public final class Transaction implements Serializable {
                 null);
     }
 
-    // -------------------------------------------------------------------------
-    // Typed accessors
-    // -------------------------------------------------------------------------
-
+ 
     public String    getTransactionId() { return transactionId; }
     public Address   getFrom()          { return Address.fromHexString(from); }
     public long      getGasPrice()      { return gasPrice; }
@@ -118,28 +112,20 @@ public final class Transaction implements Serializable {
     public byte[]    getSignature()     { return signature == null ? null : signature.clone(); }
     public boolean   isSigned()         { return signature != null; }
 
-    /** Returns the recipient address, or empty for contract deployment. */
+  
     public Optional<Address> getTo() {
         return to == null ? Optional.empty() : Optional.of(Address.fromHexString(to));
     }
 
-    /** Returns the DepCoin transfer value. */
     public Wei getValue() {
         return Wei.of(new BigInteger(value));
     }
 
-    /**
-     * Returns the transaction payload: ABI calldata for calls, initcode for
-     * deployments, or {@link Bytes#EMPTY} for plain transfers.
-     */
     public Bytes getData() {
         return data.isEmpty() ? Bytes.EMPTY : Bytes.fromHexString(data);
     }
 
-    // -------------------------------------------------------------------------
-    // Transaction type
-    // -------------------------------------------------------------------------
-
+ 
     /** {@code true} when this transaction deploys a new contract ({@code to} is null). */
     public boolean isDeployment() {
         return to == null;
@@ -158,10 +144,7 @@ public final class Transaction implements Serializable {
         return to != null && data.isEmpty();
     }
 
-    // -------------------------------------------------------------------------
-    // Gas
-    // -------------------------------------------------------------------------
-
+  
     /**
      * Computes the transaction fee charged to the sender.
      *
@@ -174,10 +157,7 @@ public final class Transaction implements Serializable {
         return Wei.of(gasPrice * Math.min(gasLimit, gasUsed));
     }
 
-    // -------------------------------------------------------------------------
-    // Signing
-    // -------------------------------------------------------------------------
-
+  
     /**
      * Returns the canonical byte representation that the sender must sign.
      *
@@ -243,11 +223,7 @@ public final class Transaction implements Serializable {
         return null;
     }
 
-    // -------------------------------------------------------------------------
-    // Serialization
-    // -------------------------------------------------------------------------
-
-    /** Serializes this transaction to a byte array for network transmission or block storage. */
+ 
     public byte[] serialize() {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
              ObjectOutputStream oos = new ObjectOutputStream(bos)) {
@@ -258,7 +234,6 @@ public final class Transaction implements Serializable {
         }
     }
 
-    /** Reconstructs a {@link Transaction} from bytes produced by {@link #serialize()}. */
     public static Transaction deserialize(byte[] bytes) {
         try (ObjectInputStream ois =
                      new ObjectInputStream(new ByteArrayInputStream(bytes))) {
@@ -268,10 +243,7 @@ public final class Transaction implements Serializable {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Object overrides
-    // -------------------------------------------------------------------------
-
+ 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

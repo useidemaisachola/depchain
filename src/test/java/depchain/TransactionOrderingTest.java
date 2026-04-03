@@ -16,7 +16,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for transaction fee ordering (Issue #7).
+ * Tests for transaction fee ordering.
  *
  * Verifies that pending transactions are ordered by gasPrice × gasLimit
  * (descending) so that higher-fee transactions are proposed first.

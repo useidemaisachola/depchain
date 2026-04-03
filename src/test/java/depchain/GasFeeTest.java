@@ -16,7 +16,7 @@ import java.nio.charset.StandardCharsets;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for gas fee calculation and enforcement (Issue #4).
+ * Tests for gas fee calculation and enforcement.
  *
  * Rules verified:
  *  1. fee = min(gasPrice × gasLimit, gasPrice × gasUsed)

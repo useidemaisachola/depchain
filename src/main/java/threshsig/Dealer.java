@@ -2,14 +2,6 @@ package threshsig;
 
 import java.math.BigInteger;
 
-/**
- * A Key Dealer for an RSA based (k,l) Threshold Signature Scheme<BR>
- *
- * Reference: "Practical Threshold Signatures",<br>
- * Victor Shoup (sho@zurich.ibm.com), IBM Research Paper RZ3121, 4/30/99<BR>
- *
- * @author Steve Weis <sweis@mit.edu>
- */
 public class Dealer {
 
   private int keysize;

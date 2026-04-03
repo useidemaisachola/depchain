@@ -1787,10 +1787,6 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Block persistence helpers
-    // -------------------------------------------------------------------------
-
     private static final class ExecutedTx {
         final Transaction tx;
         final EvmResult result;

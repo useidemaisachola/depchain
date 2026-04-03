@@ -14,7 +14,7 @@ import java.util.Arrays;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for Transaction (Issue #5):
+ * Tests for Transaction:
  *  1. Creation and field accessors
  *  2. Transaction type detection
  *  3. Signing and signature verification

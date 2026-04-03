@@ -777,7 +777,6 @@ public class App {
             }
 
             // Each client submits one DepCoin transfer to the next client's address.
-            // This exercises: signature validation, per-sender nonce, mempool constraints, consensus ordering.
             Node reference = nodes.get(0);
             for (int clientId = 0; clientId < NetworkConfig.NUM_STATIC_CLIENTS; clientId++) {
                 BlockchainClient senderClient = clients.get(clientId);

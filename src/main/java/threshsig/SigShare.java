@@ -3,19 +3,9 @@ package threshsig;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 
-/**
- * Signature Shares Class<BR>
- * Associates a signature share with an id & wraps a static verifier
- *
- * Reference: "Practical Threshold Signatures",<br>
- * Victor Shoup (sho@zurich.ibm.com), IBM Research Paper RZ3121, 4/30/99<BR>
- *
- * @author Steve Weis <sweis@mit.edu>
- */
 public class SigShare {
 
-  // Constants and variables
-  //............................................................................
+  
   private final static boolean CHECKVERIFIER = true;
 
   private int id;
@@ -24,8 +14,7 @@ public class SigShare {
 
   private Verifier sigVerifier;
 
-  // Constructors
-  //............................................................................
+  
   public SigShare(final int id, final BigInteger sig, final Verifier sigVerifier) {
     this.id = id;
     this.sig = sig;
@@ -37,41 +26,22 @@ public class SigShare {
     this.sig = new BigInteger(sig);
   }
 
-  // Public Methods
-  //............................................................................
-
-  /**
-   * Return this share's id. Needed for Lagrange interpolation
-   *
-   * @return the id of this key share
-   */
+ 
   public int getId() {
     return id;
   }
 
-  /**
-   * Return a BigInteger representation of this signature
-   *
-   * @return a BigInteger representation of this signature
-   */
+
   public BigInteger getSig() {
     return sig;
   }
 
-  /**
-   * Return this signature's verifier
-   *
-   * @return A verifier for this signaute
-   */
+ 
   public Verifier getSigVerifier() {
     return sigVerifier;
   }
 
-  /**
-   * Return a byte array representation of this signature
-   *
-   * @return a byte array representation of this signature
-   */
+ 
   public byte[] getBytes() {
     return sig.toByteArray();
   }
@@ -81,12 +51,10 @@ public class SigShare {
     return "Sig[" + id + "]: " + sig.toString();
   }
 
-  // Static methods
-  //............................................................................
+
   public static boolean verify(final byte[] data, final SigShare[] sigs, final int k, final int l,
       final BigInteger n, final BigInteger e) throws ThresholdSigException {
     // Sanity Check - make sure there are at least k unique sigs out of l
-    // possible
 
     final boolean[] haveSig = new boolean[l];
     for (int i = 0; i < k; i++) {
@@ -102,8 +70,6 @@ public class SigShare {
     final BigInteger x = (new BigInteger(data)).mod(n);
     final BigInteger delta = SigShare.factorial(l);
 
-    // Test the verifier of each signature to ensure there are
-    // no dummy sigs thrown in to corrupt the batch
     if (CHECKVERIFIER) {
       final BigInteger FOUR = BigInteger.valueOf(4l);
       final BigInteger TWO = BigInteger.valueOf(2l);
@@ -154,7 +120,6 @@ public class SigShare {
       w = w.multiply(sigs[i].getSig().modPow(SigShare.lambda(sigs[i].getId(), sigs, delta), n));
     }
 
-    // eprime = delta^2*4
     final BigInteger eprime = delta.multiply(delta).shiftLeft(2);
 
     w = w.mod(n);

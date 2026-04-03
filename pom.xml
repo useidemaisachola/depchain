@@ -56,14 +56,12 @@
             <version>2.4.2</version>
         </dependency>
 
-        <!-- Tuweni Units — for UInt256 storage slot keys/values -->
         <dependency>
             <groupId>io.tmio</groupId>
             <artifactId>tuweni-units</artifactId>
             <version>2.4.2</version>
         </dependency>
 
-        <!-- Gson — JSON serialization for genesis block and block persistence -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>

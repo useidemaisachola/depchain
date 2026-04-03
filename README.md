@@ -186,19 +186,23 @@ quit
 
 The Stage 2 test suite lives under `src/test/java/depchain`.
 
+We also kept the Stage 1 regression tests, but adapted them to the Stage 2 payload format (signed transactions) since the system no longer commits plain strings.
+
 Per-file overview:
 
-- `AccountModelTest`: account model invariants (EOA/contract), and deterministic EVM address derivation from public keys.
-- `BlockPersistenceTest`: block hashing/JSON, on-disk persistence via `BlockStore`, and EVM world-state snapshot/restore.
-- `ByzantineClientTest`: invalid/Byzantine client scenarios (spoofed `from`, replay/wrong nonce, insufficient balance, duplicate pending nonce).
-- `EndToEndTest`: end-to-end cluster execution (consensus + EVM) for both DepCoin transfers and ISTCoin ERC-20 calls.
-- `EvmServiceTest`: EVM service + ISTCoin deployment and ERC-20 behavior, including approval/frontrunning-related scenarios.
-- `GasFeeTest`: gas fee calculation/enforcement (including out-of-gas behavior) and nonce increment rules.
-- `GenesisLoaderTest`: loading `genesis.json` deterministically, funding genesis accounts, and deploying ISTCoin at genesis.
-- `TransactionExecutionTest`: integration path “client tx → consensus → EVM execution”, checking balances/nonces and sequential commits.
-- `TransactionOrderingTest`: pending transaction ordering by `gasPrice × gasLimit` (highest fee first) for proposal selection.
-- `TransactionTest`: transaction creation/type detection, signing/verification, serialization round-trip, fee helpers, and validation guards.
-- `WorldStateTest`: world-state CRUD, snapshot/rollback, and deterministic serialization.
+- `AccountModelTest`: validates account invariants (EOA vs contract), deterministic EVM address derivation from public keys, and basic balance/nonce rules.
+- `BlockGasLimitSelectionTest`: checks proposal selection respects the per-block gas cap and that an oversized transaction does not block other valid transactions from being proposed.
+- `BlockPersistenceTest`: validates block hashing/JSON round-trips, on-disk persistence via `BlockStore`, and EVM world-state snapshot/restore across restarts.
+- `ByzantineClientTest`: covers invalid/byzantine client inputs (spoofed `from`, replay/wrong nonce, insufficient balance, duplicate pending nonce) and confirms nodes reject them safely.
+- `EndToEndTest`: runs a full 4-node cluster and verifies end-to-end execution (consensus + application + EVM) for both DepCoin transfers and ISTCoin ERC-20 calls.
+- `EvmServiceTest`: validates the embedded EVM service (ISTCoin deploy + ERC-20 calls), including approval/allowance scenarios and ordering/frontrun-sensitive behaviors.
+- `GasFeeTest`: validates fee computation/enforcement (including out-of-gas), and confirms nonce/fee side effects match the spec.
+- `GenesisLoaderTest`: validates deterministic loading of `genesis.json`, genesis funding, and deploying ISTCoin at genesis.
+- `DepChainStage1Test`: Stage 1 infrastructure regression suite (consensus/view-change, fault scenarios, persistence, signatures) kept for grading and adapted to submit transactions (signed payloads) instead of strings.
+- `TransactionExecutionTest`: validates the “client tx → consensus → commit → EVM execution” pipeline, checking balances/nonces and sequential commits across nodes.
+- `TransactionOrderingTest`: validates pending transaction ordering for proposal selection by effective fee (`gasPrice × gasLimit`), highest-fee-first.
+- `TransactionTest`: validates transaction building/type detection, signing/verification, serialization round-trip, fee helpers, and validation guards.
+- `WorldStateTest`: validates world-state CRUD, snapshot/rollback behavior, and deterministic serialization.
 
 If you need to point to a single “run everything” command for submission, use `mvn clean test`.
 

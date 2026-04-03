@@ -34,6 +34,7 @@ import depchain.blockchain.Transaction;
 import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.besu.datatypes.Address;
 import org.hyperledger.besu.datatypes.Wei;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
@@ -377,6 +378,24 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             return;
         }
 
+        // Validate the transaction within the request
+        String validationError = validateTransactionInRequest(request);
+        if (validationError != null) {
+            System.err.println(
+                "[Node " +
+                    nodeId +
+                    "] transaction validation failed for client " +
+                    request.getClientId() +
+                    " (request " +
+                    request.getRequestId() +
+                    "): " +
+                    validationError
+            );
+            // Explicitly reply so clients don't time out on rejected requests.
+            sendClientReply(request, false, "rejected:" + validationError);
+            return;
+        }
+
         synchronized (lock) {
             if (decidedRequestIds.contains(request.getRequestId())) {
                 sendClientReply(request, true, "already-decided");
@@ -412,6 +431,56 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
 
             tryStartConsensusLocked();
         }
+    }
+
+    /** Attempts to deserialize a Base64-encoded {@link Transaction}; returns null if not a transaction. */
+    private static Transaction tryDeserializeTransaction(String base64Data) {
+        try {
+            byte[] bytes = Base64.getDecoder().decode(base64Data);
+            return Transaction.deserialize(bytes);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Validates that adding {@code newTx} would not cause the sender's DepCoin balance
+     * to go negative when considering all of their pending transactions combined.
+     * Must be called under {@code lock}.
+     */
+    private String validatePendingPoolFundsLocked(Transaction newTx) {
+        Address sender = newTx.getFrom();
+        Wei balance = evmService.getBalance(sender);
+
+        BigInteger reserved = BigInteger.ZERO;
+        // Include the in-flight request currently being decided.
+        if (activeClientRequest != null && !decidedRequestIds.contains(activeClientRequest.getRequestId())) {
+            Transaction activeTx = tryDeserializeTransaction(activeClientRequest.getData());
+            if (activeTx != null && sender.equals(activeTx.getFrom())) {
+                reserved = reserved.add(maxDepCoinCost(activeTx));
+            }
+        }
+        // Include all transactions still in the pending pool.
+        for (ClientRequest r : pendingClientRequests) {
+            Transaction pendingTx = tryDeserializeTransaction(r.getData());
+            if (pendingTx != null && sender.equals(pendingTx.getFrom())) {
+                reserved = reserved.add(maxDepCoinCost(pendingTx));
+            }
+        }
+
+        BigInteger newCost = maxDepCoinCost(newTx);
+        BigInteger total = reserved.add(newCost);
+        if (balance.getAsBigInteger().compareTo(total) < 0) {
+            return "insufficient balance for pending txs: have " + balance.getAsBigInteger()
+                    + ", pending=" + reserved + ", new=" + newCost + ", total=" + total;
+        }
+        return null;
+    }
+
+    /** Maximum DepCoin cost reserved by a transaction: value + gasPrice * gasLimit. */
+    private static BigInteger maxDepCoinCost(Transaction tx) {
+        BigInteger gas = BigInteger.valueOf(tx.getGasPrice()).multiply(BigInteger.valueOf(tx.getGasLimit()));
+        return gas.add(tx.getValue().getAsBigInteger());
     }
 
     private ClientRequest decodeClientRequest(int senderId, Message message) {
@@ -1484,7 +1553,9 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
     private void initializeFromGenesisLocked() {
         try {
             Map<Integer, java.security.PublicKey> nodeKeys = keyManager.getAllPublicKeys();
-            GenesisLoader.Result result = GenesisLoader.load(nodeKeys);
+            GenesisLoader.Result result = GenesisLoader.load(
+                    nodeKeys,
+                    keyManager.getExtraParticipantPublicKeys());
             this.evmService     = result.evmService();
             this.istCoinAddress = result.istCoinAddress();
             System.out.println("[Node " + nodeId + "] genesis loaded — ISTCoin at "

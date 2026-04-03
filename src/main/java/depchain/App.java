@@ -2,6 +2,7 @@ package depchain;
 
 import depchain.client.BlockchainClient;
 import depchain.config.NetworkConfig;
+import depchain.crypto.CryptoUtils;
 import depchain.crypto.KeyManager;
 import depchain.net.MessageType;
 import depchain.net.fault.NetworkFaultController;
@@ -9,6 +10,8 @@ import depchain.node.ByzantineBehavior;
 import depchain.node.Node;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.KeyPair;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -85,7 +88,7 @@ public class App {
         System.out.println();
         System.out.println("try one of these:");
         System.out.println(
-            "  mvn exec:java -Dexec.args=\"genkeys\"         - make keys for all nodes"
+            "  mvn exec:java -Dexec.args=\"genkeys\"         - make keys for nodes and static clients"
         );
         System.out.println(
             "  mvn exec:java -Dexec.args=\"node <id> [behavior]\" - start a node (HONEST|SILENT|EQUIVOCATE_LEADER|INVALID_VOTE_SIGNATURE)"
@@ -121,7 +124,7 @@ public class App {
             NetworkConfig.KEYS_DIRECTORY
         );
         System.out.println(
-            "keys went to: " + NetworkConfig.KEYS_DIRECTORY + "/"
+            "keys went to: " + NetworkConfig.KEYS_DIRECTORY + "/ (node* and client*)"
         );
     }
 
@@ -220,7 +223,8 @@ public class App {
         System.out.println("starting client " + clientId + "...");
 
         int clientPort = 6000 + clientId;
-        BlockchainClient client = new BlockchainClient(clientId, clientPort);
+        KeyPair clientKeys = loadStaticClientKeyPair(clientId);
+        BlockchainClient client = new BlockchainClient(clientId, clientPort, clientKeys);
 
         client.loadNodeKeys(NetworkConfig.KEYS_DIRECTORY);
         client.start();
@@ -298,6 +302,23 @@ public class App {
                 System.err.println("something broke a bit: " + e.getMessage());
             }
         }
+    }
+
+    private static KeyPair loadStaticClientKeyPair(int clientId) throws Exception {
+        String base = NetworkConfig.KEYS_DIRECTORY + "/client" + clientId;
+        String privPath = base + ".key";
+        String pubPath = base + ".pub";
+
+        if (!Files.exists(Path.of(privPath)) || !Files.exists(Path.of(pubPath))) {
+            throw new IllegalStateException(
+                "Missing static client keys for client " + clientId +
+                " (expected " + privPath + " and " + pubPath + "). Run 'genkeys' first."
+            );
+        }
+
+        PrivateKey privateKey = CryptoUtils.loadPrivateKey(privPath);
+        PublicKey publicKey = CryptoUtils.loadPublicKey(pubPath);
+        return new KeyPair(publicKey, privateKey);
     }
 
     private static void runDemoTest() throws Exception {

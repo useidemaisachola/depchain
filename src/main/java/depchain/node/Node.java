@@ -378,24 +378,6 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             return;
         }
 
-        // Validate the transaction within the request
-        String validationError = validateTransactionInRequest(request);
-        if (validationError != null) {
-            System.err.println(
-                "[Node " +
-                    nodeId +
-                    "] transaction validation failed for client " +
-                    request.getClientId() +
-                    " (request " +
-                    request.getRequestId() +
-                    "): " +
-                    validationError
-            );
-            // Explicitly reply so clients don't time out on rejected requests.
-            sendClientReply(request, false, "rejected:" + validationError);
-            return;
-        }
-
         synchronized (lock) {
             if (decidedRequestIds.contains(request.getRequestId())) {
                 sendClientReply(request, true, "already-decided");

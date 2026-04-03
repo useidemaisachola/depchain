@@ -4,7 +4,6 @@ import depchain.blockchain.BlockStore;
 import depchain.blockchain.EvmService;
 import depchain.blockchain.GenesisLoader;
 import depchain.blockchain.PersistedBlock;
-import depchain.crypto.KeyManager;
 import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.besu.datatypes.Address;
 import org.hyperledger.besu.datatypes.Wei;
@@ -21,6 +20,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import depchain.config.NetworkConfig;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -306,7 +306,7 @@ class BlockPersistenceTest {
     @Test
     void genesisBlock_persistedAtHeightZeroWithNullPreviousHash() throws Exception {
         Map<Integer, PublicKey> nodeKeys = generateNodeKeys(4);
-        GenesisLoader.Result result = GenesisLoader.load(nodeKeys);
+        GenesisLoader.Result result = GenesisLoader.load(nodeKeys, generateClientKeys());
 
         // Snapshot genesis state
         EvmService evm = result.evmService();
@@ -326,7 +326,7 @@ class BlockPersistenceTest {
     @Test
     void genesisBlock_chainValidationPasses() throws Exception {
         Map<Integer, PublicKey> nodeKeys = generateNodeKeys(4);
-        GenesisLoader.Result result = GenesisLoader.load(nodeKeys);
+        GenesisLoader.Result result = GenesisLoader.load(nodeKeys, generateClientKeys());
         EvmService evm = result.evmService();
 
         PersistedBlock genesis = new PersistedBlock(null, 0,
@@ -358,6 +358,16 @@ class BlockPersistenceTest {
             KeyPair kp = java.security.KeyPairGenerator.getInstance("RSA")
                     .generateKeyPair();
             keys.put(i, kp.getPublic());
+        }
+        return keys;
+    }
+
+    private static Map<String, PublicKey> generateClientKeys() throws Exception {
+        Map<String, PublicKey> keys = new HashMap<>();
+        for (int i = 0; i < NetworkConfig.NUM_STATIC_CLIENTS; i++) {
+            KeyPair kp = java.security.KeyPairGenerator.getInstance("RSA")
+                    .generateKeyPair();
+            keys.put("client" + i, kp.getPublic());
         }
         return keys;
     }

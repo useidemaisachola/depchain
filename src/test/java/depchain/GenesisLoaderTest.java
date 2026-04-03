@@ -3,7 +3,6 @@ package depchain;
 import depchain.blockchain.GenesisBlock;
 import depchain.blockchain.GenesisLoader;
 import depchain.crypto.CryptoUtils;
-import depchain.crypto.KeyManager;
 import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.besu.datatypes.Address;
 import org.hyperledger.besu.datatypes.Wei;
@@ -15,6 +14,7 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map;
+import depchain.config.NetworkConfig;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -37,6 +37,7 @@ class GenesisLoaderTest {
 
     private Map<Integer, PublicKey> nodePublicKeys;
     private Map<Integer, Address>   nodeAddresses;
+    private Map<String, PublicKey>  clientPublicKeys;
 
     @BeforeEach
     void setUp() {
@@ -48,6 +49,14 @@ class GenesisLoaderTest {
             nodePublicKeys.put(i, kp.getPublic());
             nodeAddresses.put(i, depchain.blockchain.EvmService.deriveAddress(kp.getPublic()));
         }
+
+        // Stage 2 requirement: static known clients. The genesis template funds
+        // client0..clientN, so tests must provide explicit keys (no fallback).
+        clientPublicKeys = new HashMap<>();
+        for (int i = 0; i < NetworkConfig.NUM_STATIC_CLIENTS; i++) {
+            KeyPair kp = CryptoUtils.generateKeyPair();
+            clientPublicKeys.put("client" + i, kp.getPublic());
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -56,7 +65,7 @@ class GenesisLoaderTest {
 
     @Test
     void load_succeeds() {
-        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys);
+        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys, clientPublicKeys);
         assertNotNull(result);
         assertNotNull(result.block());
         assertNotNull(result.evmService());
@@ -69,7 +78,7 @@ class GenesisLoaderTest {
 
     @Test
     void genesisBlock_hasNonNullHash() {
-        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys);
+        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys, clientPublicKeys);
         String hash = result.block().getBlockHash();
         assertNotNull(hash, "block_hash must not be null");
         assertTrue(hash.startsWith("0x"), "block_hash must be a hex string");
@@ -78,7 +87,7 @@ class GenesisLoaderTest {
 
     @Test
     void genesisBlock_previousHashIsNull() {
-        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys);
+        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys, clientPublicKeys);
         assertNull(result.block().getPreviousBlockHash(),
                 "previous_block_hash must be null for genesis");
     }
@@ -89,7 +98,7 @@ class GenesisLoaderTest {
 
     @Test
     void allGenesisAccountsFunded() {
-        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys);
+        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys, clientPublicKeys);
         for (int i = 0; i < NUM_NODES; i++) {
             Address addr    = nodeAddresses.get(i);
             Wei     balance = result.evmService().getBalance(addr);
@@ -103,7 +112,7 @@ class GenesisLoaderTest {
 
     @Test
     void nonDeployerBalancesUntouched() {
-        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys);
+        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys, clientPublicKeys);
         // node1, node2, node3 are not the deployer; their balances should be
         // exactly the initial amount configured in genesis.json.
         for (int i = 1; i < NUM_NODES; i++) {
@@ -115,7 +124,7 @@ class GenesisLoaderTest {
 
     @Test
     void deployerBalanceReducedByFee() {
-        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys);
+        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys, clientPublicKeys);
         // node0 is the deployer; its balance must be < initial (fee was charged).
         Wei deployerBalance = result.evmService().getBalance(nodeAddresses.get(0));
         assertTrue(deployerBalance.getAsBigInteger().compareTo(INITIAL_BALANCE) < 0,
@@ -128,7 +137,7 @@ class GenesisLoaderTest {
 
     @Test
     void istCoinContractDeployed() {
-        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys);
+        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys, clientPublicKeys);
         Address addr = result.istCoinAddress();
         Bytes code   = result.evmService().getContractCode(addr);
         assertFalse(code.isEmpty(), "ISTCoin must have non-empty runtime bytecode");
@@ -136,7 +145,7 @@ class GenesisLoaderTest {
 
     @Test
     void istCoinNonces_startAtZero_forNonDeployer() {
-        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys);
+        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys, clientPublicKeys);
         // Non-deployer nodes must have nonce 0.
         for (int i = 1; i < NUM_NODES; i++) {
             assertEquals(0L, result.evmService().getNonce(nodeAddresses.get(i)),
@@ -146,7 +155,7 @@ class GenesisLoaderTest {
 
     @Test
     void deployerNonce_incrementedAfterDeployment() {
-        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys);
+        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys, clientPublicKeys);
         // node0 sent exactly one transaction (the deployment), so nonce must be 1.
         assertEquals(1L, result.evmService().getNonce(nodeAddresses.get(0)),
                 "deployer nonce must be 1 after the genesis deployment transaction");
@@ -158,8 +167,8 @@ class GenesisLoaderTest {
 
     @Test
     void sameKeys_produceSameGenesisHash() {
-        GenesisLoader.Result r1 = GenesisLoader.load(nodePublicKeys);
-        GenesisLoader.Result r2 = GenesisLoader.load(nodePublicKeys);
+        GenesisLoader.Result r1 = GenesisLoader.load(nodePublicKeys, clientPublicKeys);
+        GenesisLoader.Result r2 = GenesisLoader.load(nodePublicKeys, clientPublicKeys);
         assertEquals(r1.block().getBlockHash(), r2.block().getBlockHash(),
                 "Genesis block hash must be deterministic for the same key set");
     }
@@ -170,7 +179,7 @@ class GenesisLoaderTest {
 
     @Test
     void genesisBlock_hasDeploymentTransaction() {
-        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys);
+        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys, clientPublicKeys);
         GenesisBlock block = result.block();
         assertEquals(1, block.getTransactions().size(),
                 "Genesis block must contain exactly one transaction (ISTCoin deployment)");
@@ -190,7 +199,7 @@ class GenesisLoaderTest {
 
     @Test
     void genesisBlock_jsonRoundTrip() {
-        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys);
+        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys, clientPublicKeys);
         GenesisBlock original = result.block();
 
         String json       = original.toJson();
@@ -208,7 +217,7 @@ class GenesisLoaderTest {
 
     @Test
     void genesisBlock_stateContainsAllNodeAccounts() {
-        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys);
+        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys, clientPublicKeys);
         Map<String, GenesisBlock.AccountEntry> state = result.block().getState();
         for (int i = 0; i < NUM_NODES; i++) {
             String hex = nodeAddresses.get(i).toHexString();
@@ -219,7 +228,7 @@ class GenesisLoaderTest {
 
     @Test
     void genesisBlock_stateContainsIstCoinContract() {
-        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys);
+        GenesisLoader.Result result = GenesisLoader.load(nodePublicKeys, clientPublicKeys);
         Map<String, GenesisBlock.AccountEntry> state = result.block().getState();
         String contractHex = result.istCoinAddress().toHexString();
         assertTrue(state.containsKey(contractHex),

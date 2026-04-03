@@ -11,13 +11,10 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
-import java.util.Arrays;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 /**
  * Loads the genesis block from {@code /genesis.json} (classpath resource).
@@ -40,7 +37,6 @@ public class GenesisLoader {
 
     private static final String GENESIS_RESOURCE   = "/genesis.json";
     private static final String ISTCOIN_BIN_RESOURCE = "/contracts/ISTCoin.bin";
-    private static final Pattern CLIENT_NAME_PATTERN = Pattern.compile("client\\d+");
 
     private GenesisLoader() {}
 
@@ -180,11 +176,6 @@ public class GenesisLoader {
             return Address.fromHexString(name);
         }
         Address addr = nameToAddress.get(name);
-        if (addr == null && name != null && CLIENT_NAME_PATTERN.matcher(name).matches()) {
-            byte[] hash = depchain.crypto.CryptoUtils.hash(name.getBytes(StandardCharsets.UTF_8));
-            byte[] last20 = Arrays.copyOfRange(hash, hash.length - 20, hash.length);
-            return Address.wrap(Bytes.wrap(last20));
-        }
         if (addr == null) {
             throw new IllegalArgumentException(
                     "Unknown genesis account name: '" + name + "'. " +

@@ -1,11 +1,15 @@
 package depchain.consensus;
 
+import depchain.client.ClientRequest;
 import depchain.crypto.CryptoUtils;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 public class Block implements Serializable {
@@ -16,11 +20,7 @@ public class Block implements Serializable {
     private final int height;
     private final int view;
     private final int proposerId;
-    private final String requestId;
-    private final int clientId;
-    private final String clientHost;
-    private final int clientPort;
-    private final String data;
+    private final List<ClientRequest> requests;
     private final long timestamp;
 
     private Block(String hash,
@@ -28,22 +28,15 @@ public class Block implements Serializable {
                   int height,
                   int view,
                   int proposerId,
-                  String requestId,
-                  int clientId,
-                  String clientHost,
-                  int clientPort,
-                  String data,
+                  List<ClientRequest> requests,
                   long timestamp) {
         this.hash = Objects.requireNonNull(hash, "hash");
         this.parentHash = Objects.requireNonNull(parentHash, "parentHash");
         this.height = height;
         this.view = view;
         this.proposerId = proposerId;
-        this.requestId = Objects.requireNonNull(requestId, "requestId");
-        this.clientId = clientId;
-        this.clientHost = Objects.requireNonNull(clientHost, "clientHost");
-        this.clientPort = clientPort;
-        this.data = Objects.requireNonNull(data, "data");
+        Objects.requireNonNull(requests, "requests");
+        this.requests = Collections.unmodifiableList(new ArrayList<>(requests));
         this.timestamp = timestamp;
     }
 
@@ -51,14 +44,10 @@ public class Block implements Serializable {
                                int height,
                                int view,
                                int proposerId,
-                               String requestId,
-                               int clientId,
-                               String clientHost,
-                               int clientPort,
-                               String data,
+                               List<ClientRequest> requests,
                                long timestamp) {
         String computedHash = computeHash(
-            parentHash, height, view, proposerId, requestId, clientId, clientHost, clientPort, data, timestamp
+            parentHash, height, view, proposerId, requests, timestamp
         );
         return new Block(
             computedHash,
@@ -66,11 +55,7 @@ public class Block implements Serializable {
             height,
             view,
             proposerId,
-            requestId,
-            clientId,
-            clientHost,
-            clientPort,
-            data,
+            requests,
             timestamp
         );
     }
@@ -79,11 +64,7 @@ public class Block implements Serializable {
                                       int height,
                                       int view,
                                       int proposerId,
-                                      String requestId,
-                                      int clientId,
-                                      String clientHost,
-                                      int clientPort,
-                                      String data,
+                                      List<ClientRequest> requests,
                                       long timestamp) {
         try (java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
              DataOutputStream dos = new DataOutputStream(bos)) {
@@ -91,13 +72,30 @@ public class Block implements Serializable {
             dos.writeInt(height);
             dos.writeInt(view);
             dos.writeInt(proposerId);
-            dos.writeUTF(requestId);
-            dos.writeInt(clientId);
-            dos.writeUTF(clientHost);
-            dos.writeInt(clientPort);
-            byte[] dataBytes = data.getBytes(StandardCharsets.UTF_8);
-            dos.writeInt(dataBytes.length);
-            dos.write(dataBytes);
+
+            Objects.requireNonNull(requests, "requests");
+            dos.writeInt(requests.size());
+            for (ClientRequest request : requests) {
+                dos.writeInt(request.getClientId());
+                dos.writeUTF(request.getRequestId());
+                byte[] dataBytes = request.getData().getBytes(StandardCharsets.UTF_8);
+                dos.writeInt(dataBytes.length);
+                dos.write(dataBytes);
+                dos.writeLong(request.getTimestamp());
+                dos.writeUTF(request.getReplyHost());
+                dos.writeInt(request.getReplyPort());
+                byte[] clientKey = request.getClientPublicKey();
+                dos.writeInt(clientKey.length);
+                dos.write(clientKey);
+                byte[] signature = request.getSignature();
+                if (signature == null) {
+                    dos.writeInt(-1);
+                } else {
+                    dos.writeInt(signature.length);
+                    dos.write(signature);
+                }
+            }
+
             dos.writeLong(timestamp);
             return CryptoUtils.bytesToHex(CryptoUtils.hash(bos.toByteArray()));
         } catch (IOException e) {
@@ -124,11 +122,7 @@ public class Block implements Serializable {
                 height,
                 view,
                 proposerId,
-                requestId,
-                clientId,
-                clientHost,
-                clientPort,
-                data,
+                requests,
                 timestamp
             )
         );
@@ -150,24 +144,8 @@ public class Block implements Serializable {
         return proposerId;
     }
 
-    public String getRequestId() {
-        return requestId;
-    }
-
-    public int getClientId() {
-        return clientId;
-    }
-
-    public String getClientHost() {
-        return clientHost;
-    }
-
-    public int getClientPort() {
-        return clientPort;
-    }
-
-    public String getData() {
-        return data;
+    public List<ClientRequest> getRequests() {
+        return requests;
     }
 
     public long getTimestamp() {

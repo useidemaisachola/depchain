@@ -10,6 +10,10 @@ public class NetworkConfig {
     // Stage 2 requirement: static known clients (minimum requested by staff).
     public static final int NUM_STATIC_CLIENTS = 6;
 
+    // Stage 2 requirement: variable per-block gas limit. Use a concrete default.
+    // This is the maximum cumulative sum of tx.gasLimit values in a proposed block.
+    public static final long BLOCK_GAS_LIMIT = 500_000L;
+
     public static final int MAX_FAULTS = 1;
 
     public static final int QUORUM_SIZE = 2 * MAX_FAULTS + 1;

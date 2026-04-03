@@ -42,17 +42,13 @@ class TransactionOrderingTest {
     }
 
     @Test
-    void extractFee_returnsZeroForNonTransactionData() {
-        // Plain-string data (stage-1 style) must not throw; fee defaults to 0.
-        ClientRequest req = plainRequest("hello world");
-        assertEquals(0L, Node.extractFee(req));
-    }
-
-    @Test
-    void extractFee_returnsZeroForEmptyData() {
-        ClientRequest req = plainRequest("");
-        assertEquals(0L, Node.extractFee(req));
-    }
+        void extractFee_returnsZeroForEmptyData() {
+                // Not expected in Stage 2 flows (transaction-only), but extractFee must be robust.
+                ClientRequest req = new ClientRequest(1, UUID.randomUUID().toString(), "",
+                                System.currentTimeMillis(), "localhost", 9999,
+                                new byte[32], new byte[64]);
+                assertEquals(0L, Node.extractFee(req));
+        }
 
     // -------------------------------------------------------------------------
     // Ordering
@@ -116,25 +112,6 @@ class TransactionOrderingTest {
     }
 
     @Test
-    void pendingQueueMixedTransactionAndPlainRequests() {
-        // Plain-string requests (fee=0) must come after any real transaction.
-        Transaction txHigh = Transaction.create(SENDER, RECEIVER, Wei.ZERO,
-                Bytes.EMPTY, 50L, 21_000L, 0); // fee = 1 050 000
-
-        ClientRequest plainReq = plainRequest("non-tx data");
-        ClientRequest txReq    = encodeAsRequest(txHigh);
-
-        PriorityQueue<ClientRequest> queue = new PriorityQueue<>(
-                Comparator.<ClientRequest>comparingLong(r -> Node.extractFee(r)).reversed());
-
-        queue.offer(plainReq); // added first (would win in FIFO)
-        queue.offer(txReq);    // added second
-
-        assertSame(txReq,    queue.poll(), "Transaction request must precede plain request");
-        assertSame(plainReq, queue.poll());
-    }
-
-    @Test
     void highGasLimitHighPriorityOverHighGasPrice() {
         // fee = gasPrice * gasLimit; product determines order, not either alone.
         Transaction txHighPrice = Transaction.create(SENDER, RECEIVER, Wei.ZERO,
@@ -162,12 +139,6 @@ class TransactionOrderingTest {
      */
     static ClientRequest encodeAsRequest(Transaction tx) {
         String data = Base64.getEncoder().encodeToString(tx.serialize());
-        return new ClientRequest(1, UUID.randomUUID().toString(), data,
-                System.currentTimeMillis(), "localhost", 9999,
-                new byte[32], new byte[64]);
-    }
-
-    private static ClientRequest plainRequest(String data) {
         return new ClientRequest(1, UUID.randomUUID().toString(), data,
                 System.currentTimeMillis(), "localhost", 9999,
                 new byte[32], new byte[64]);

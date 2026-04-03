@@ -31,24 +31,22 @@ import depchain.blockchain.GenesisBlock;
 import depchain.blockchain.GenesisLoader;
 import depchain.blockchain.PersistedBlock;
 import depchain.blockchain.Transaction;
-import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.besu.datatypes.Address;
 import org.hyperledger.besu.datatypes.Wei;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
-import java.util.PriorityQueue;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
@@ -60,6 +58,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
 
     private static final String GENESIS_HASH = "GENESIS";
     private static final long VIEW_TIMEOUT_MS = 5000;
+    private static final long DEFAULT_BLOCK_GAS_LIMIT = NetworkConfig.BLOCK_GAS_LIMIT;
 
     private enum ConsensusStep {
         IDLE,
@@ -87,13 +86,19 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
     /** Hash of the last block written to the BlockStore; null before genesis is persisted. */
     private String lastPersistedBlockHash = null;
 
-    private final Queue<ClientRequest> pendingClientRequests;
+    /** Max cumulative gasLimit allowed per consensus block. */
+    private final long blockGasLimit;
+
+    /** Pending pool grouped by sender address, ordered by nonce. */
+    private final Map<Address, NavigableMap<Long, ClientRequest>> pendingBySender;
+    /** Index to remove a pending request in O(1). */
+    private final Map<String, Address> pendingSenderByRequestId;
+    /** Index to remove a pending request in O(1). */
+    private final Map<String, Long> pendingNonceByRequestId;
     private final Set<String> pendingRequestIds;
     private final Set<String> decidedRequestIds;
     private final Set<String> repliedRequestIds;
     private final Map<Integer, byte[]> clientPublicKeys;
-    /** Tracks sender addresses that already have a transaction in the pending pool (double-spend guard). */
-    private final Set<Address> pendingSenders;
 
     private final Map<String, Block> blocksByHash;
     private final Set<String> committedBlockHashes;
@@ -110,7 +115,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
     private String lastCommittedHash;
     private int lastCommittedHeight;
     private String activeBlockHash;
-    private ClientRequest activeClientRequest;
+    private List<ClientRequest> activeClientRequests;
     private ConsensusStep activeStep;
     private QuorumCertificate highQc;
     private QuorumCertificate lockedQc;
@@ -153,6 +158,17 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         String stateDirectory,
         boolean persistenceEnabled
     ) {
+        this(nodeId, keyManager, byzantineBehavior, stateDirectory, persistenceEnabled, DEFAULT_BLOCK_GAS_LIMIT);
+    }
+
+    public Node(
+        int nodeId,
+        KeyManager keyManager,
+        ByzantineBehavior byzantineBehavior,
+        String stateDirectory,
+        boolean persistenceEnabled,
+        long blockGasLimit
+    ) {
         this.nodeId = nodeId;
         this.port = NetworkConfig.getNodePort(nodeId);
         this.keyManager = keyManager;
@@ -165,14 +181,15 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         this.evmService   = new EvmService();
         this.istCoinAddress = null;
 
-        this.pendingClientRequests = new PriorityQueue<>(
-            Comparator.comparingLong(Node::extractFee).reversed()
-        );
+        this.blockGasLimit = blockGasLimit;
+
+        this.pendingBySender = new HashMap<>();
+        this.pendingSenderByRequestId = new HashMap<>();
+        this.pendingNonceByRequestId = new HashMap<>();
         this.pendingRequestIds = new HashSet<>();
         this.decidedRequestIds = new HashSet<>();
         this.repliedRequestIds = new HashSet<>();
         this.clientPublicKeys = new ConcurrentHashMap<>();
-        this.pendingSenders = new HashSet<>();
 
         this.blocksByHash = new HashMap<>();
         this.committedBlockHashes = new HashSet<>();
@@ -192,7 +209,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         this.lastCommittedHash = GENESIS_HASH;
         this.lastCommittedHeight = 0;
         this.activeBlockHash = null;
-        this.activeClientRequest = null;
+        this.activeClientRequests = null;
         this.activeStep = ConsensusStep.IDLE;
         this.highQc = null;
         this.lockedQc = null;
@@ -384,19 +401,20 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
                 return;
             }
 
-            if (!validateTransactionRequest(request)) {
+            Transaction tx = tryDeserializeTransaction(request.getData());
+            if (tx == null) {
                 sendClientReply(request, false, "invalid-transaction");
                 return;
             }
 
-            if (pendingRequestIds.add(request.getRequestId())) {
-                pendingClientRequests.offer(request);
-                // Track sender for double-spend prevention.
-                try {
-                    byte[] txBytes = Base64.getDecoder().decode(request.getData());
-                    Transaction tx = Transaction.deserialize(txBytes);
-                    pendingSenders.add(tx.getFrom());
-                } catch (Exception ignored) { /* legacy request */ }
+            if (!validateTransactionRequest(request, tx)) {
+                sendClientReply(request, false, "invalid-transaction");
+                return;
+            }
+
+            if (!addToPendingPoolLocked(request, tx)) {
+                // Duplicate request id or conflicting nonce already pending.
+                return;
             }
 
             int leaderId = NetworkConfig.getLeader(currentView);
@@ -412,6 +430,46 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             }
 
             tryStartConsensusLocked();
+        }
+    }
+
+    /** Adds a validated transaction request to the pending pool (under {@code lock}). */
+    private boolean addToPendingPoolLocked(ClientRequest request, Transaction tx) {
+        String requestId = request.getRequestId();
+        if (!pendingRequestIds.add(requestId)) {
+            return false;
+        }
+        Address sender = tx.getFrom();
+        long nonce = tx.getNonce();
+
+        NavigableMap<Long, ClientRequest> byNonce = pendingBySender.computeIfAbsent(sender, ignored -> new TreeMap<>());
+        if (byNonce.containsKey(nonce)) {
+            pendingRequestIds.remove(requestId);
+            System.err.println("[Node " + nodeId + "] rejected tx: duplicate pending nonce from "
+                    + sender + " (nonce=" + nonce + ")");
+            return false;
+        }
+        byNonce.put(nonce, request);
+        pendingSenderByRequestId.put(requestId, sender);
+        pendingNonceByRequestId.put(requestId, nonce);
+        return true;
+    }
+
+    /** Removes a request from the pending pool if present (under {@code lock}). */
+    private void removeFromPendingPoolLocked(String requestId) {
+        Address sender = pendingSenderByRequestId.remove(requestId);
+        Long nonce = pendingNonceByRequestId.remove(requestId);
+        pendingRequestIds.remove(requestId);
+        if (sender == null || nonce == null) {
+            return;
+        }
+        NavigableMap<Long, ClientRequest> byNonce = pendingBySender.get(sender);
+        if (byNonce == null) {
+            return;
+        }
+        byNonce.remove(nonce);
+        if (byNonce.isEmpty()) {
+            pendingBySender.remove(sender);
         }
     }
 
@@ -436,17 +494,25 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
 
         BigInteger reserved = BigInteger.ZERO;
         // Include the in-flight request currently being decided.
-        if (activeClientRequest != null && !decidedRequestIds.contains(activeClientRequest.getRequestId())) {
-            Transaction activeTx = tryDeserializeTransaction(activeClientRequest.getData());
-            if (activeTx != null && sender.equals(activeTx.getFrom())) {
-                reserved = reserved.add(maxDepCoinCost(activeTx));
+        if (activeClientRequests != null) {
+            for (ClientRequest r : activeClientRequests) {
+                if (r == null || decidedRequestIds.contains(r.getRequestId())) {
+                    continue;
+                }
+                Transaction activeTx = tryDeserializeTransaction(r.getData());
+                if (activeTx != null && sender.equals(activeTx.getFrom())) {
+                    reserved = reserved.add(maxDepCoinCost(activeTx));
+                }
             }
         }
         // Include all transactions still in the pending pool.
-        for (ClientRequest r : pendingClientRequests) {
-            Transaction pendingTx = tryDeserializeTransaction(r.getData());
-            if (pendingTx != null && sender.equals(pendingTx.getFrom())) {
-                reserved = reserved.add(maxDepCoinCost(pendingTx));
+        NavigableMap<Long, ClientRequest> byNonce = pendingBySender.get(sender);
+        if (byNonce != null) {
+            for (ClientRequest r : byNonce.values()) {
+                Transaction pendingTx = tryDeserializeTransaction(r.getData());
+                if (pendingTx != null) {
+                    reserved = reserved.add(maxDepCoinCost(pendingTx));
+                }
             }
         }
 
@@ -526,66 +592,71 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
     }
 
     /**
-     * Pre-pool validation (#11, #14): checks that the transaction can plausibly execute
-     * before it is added to the pending queue.
-     *
-     * <ul>
-     *   <li>Sender must have enough balance to cover max fee + transfer value.</li>
-     *   <li>Sender must not already have a transaction in the pending pool (double-spend guard).</li>
-     *   <li>Transaction nonce must match the sender's current on-chain nonce.</li>
-     * </ul>
-     *
-     * Returns {@code true} for non-Transaction (legacy plain-string) requests so that
-     * Stage-1 compatibility is preserved.
+     * Pre-pool validation: checks that the request carries a well-formed signed
+     * {@link Transaction} that can plausibly execute before it is added to the
+     * pending queue.
      */
-    private boolean validateTransactionRequest(ClientRequest request) {
-        try {
-            byte[] txBytes = Base64.getDecoder().decode(request.getData());
-            Transaction tx = Transaction.deserialize(txBytes);
-            Address sender = tx.getFrom();
-            Wei maxFee = Wei.of(tx.getGasPrice() * tx.getGasLimit());
-            Wei required = maxFee.add(tx.getValue());
-
-            // Sender authorization (#13): tx.from must match the address derived
-            // from the key that signed this ClientRequest.
-            try {
-                PublicKey pubKey = CryptoUtils.decodePublicKey(request.getClientPublicKey());
-                Address derivedFrom = EvmService.deriveAddress(pubKey);
-                if (!sender.equals(derivedFrom)) {
-                    System.err.println("[Node " + nodeId + "] rejected tx: from mismatch, claimed="
-                            + sender + " derived=" + derivedFrom);
-                    return false;
-                }
-            } catch (Exception e) {
-                System.err.println("[Node " + nodeId + "] rejected tx: cannot decode client key");
-                return false;
-            }
-
-            // Balance pre-check: sender must cover worst-case fee + value.
-            if (evmService.getBalance(sender).compareTo(required) < 0) {
-                System.err.println("[Node " + nodeId + "] rejected tx: insufficient balance from " + sender);
-                return false;
-            }
-
-            // Nonce pre-check: reject obviously wrong nonces early.
-            long expectedNonce = evmService.getNonce(sender);
-            if (tx.getNonce() != expectedNonce) {
-                System.err.println("[Node " + nodeId + "] rejected tx: nonce mismatch from " + sender
-                        + " (expected=" + expectedNonce + ", got=" + tx.getNonce() + ")");
-                return false;
-            }
-
-            // Double-spend guard: only one pending tx per sender at a time.
-            if (pendingSenders.contains(sender)) {
-                System.err.println("[Node " + nodeId + "] rejected tx: sender " + sender + " already has a pending tx");
-                return false;
-            }
-
-            return true;
-        } catch (Exception ignored) {
-            // Not a Transaction – legacy plain-string request; allow it.
-            return true;
+    private boolean validateTransactionRequest(ClientRequest request, Transaction tx) {
+        String basicError = tx.validateBasicFields();
+        if (basicError != null) {
+            System.err.println("[Node " + nodeId + "] rejected tx: " + basicError);
+            return false;
         }
+
+        Address sender = tx.getFrom();
+        Wei maxFee = Wei.of(tx.getGasPrice() * tx.getGasLimit());
+        Wei required = maxFee.add(tx.getValue());
+
+        PublicKey pubKey;
+        try {
+            pubKey = CryptoUtils.decodePublicKey(request.getClientPublicKey());
+        } catch (Exception e) {
+            System.err.println("[Node " + nodeId + "] rejected tx: cannot decode client key");
+            return false;
+        }
+
+        // Sender authorization: tx.from must match the address derived from the key
+        // that signed this ClientRequest.
+        Address derivedFrom;
+        try {
+            derivedFrom = EvmService.deriveAddress(pubKey);
+        } catch (Exception e) {
+            System.err.println("[Node " + nodeId + "] rejected tx: cannot derive EVM address from client key");
+            return false;
+        }
+        if (!sender.equals(derivedFrom)) {
+            System.err.println("[Node " + nodeId + "] rejected tx: from mismatch, claimed="
+                    + sender + " derived=" + derivedFrom);
+            return false;
+        }
+
+        // Transaction signature verification: tx must be signed by the same key.
+        if (!tx.verifySignature(pubKey)) {
+            System.err.println("[Node " + nodeId + "] rejected tx: invalid transaction signature");
+            return false;
+        }
+
+        // Balance pre-check: sender must cover worst-case fee + value.
+        if (evmService.getBalance(sender).compareTo(required) < 0) {
+            System.err.println("[Node " + nodeId + "] rejected tx: insufficient balance from " + sender);
+            return false;
+        }
+
+        // Nonce pre-check: reject obviously wrong nonces early.
+        long expectedNonce = evmService.getNonce(sender);
+        if (tx.getNonce() < expectedNonce) {
+            System.err.println("[Node " + nodeId + "] rejected tx: stale nonce from " + sender
+                    + " (expected>=" + expectedNonce + ", got=" + tx.getNonce() + ")");
+            return false;
+        }
+
+        String fundsError = validatePendingPoolFundsLocked(tx);
+        if (fundsError != null) {
+            System.err.println("[Node " + nodeId + "] rejected tx: " + fundsError);
+            return false;
+        }
+
+        return true;
     }
 
     private void handlePrepare(int senderId, Message message) {
@@ -1059,62 +1130,63 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         if (block == null) {
             return;
         }
-        if (decidedRequestIds.contains(block.getRequestId())) {
-            committedBlockHashes.add(blockHash);
-            return;
-        }
-
         committedBlockHashes.add(blockHash);
-        decidedRequestIds.add(block.getRequestId());
-        pendingRequestIds.remove(block.getRequestId());
-        pendingClientRequests.removeIf(r ->
-            r.getRequestId().equals(block.getRequestId())
-        );
-        // Release the sender slot so they can submit the next transaction.
-        try {
-            byte[] txBytes = Base64.getDecoder().decode(block.getData());
-            Transaction committedTx = Transaction.deserialize(txBytes);
-            pendingSenders.remove(committedTx.getFrom());
-        } catch (Exception ignored) { /* legacy block data */ }
 
         lastCommittedHash = blockHash;
         lastCommittedHeight = block.getHeight();
         highQc = commitQc;
         lockedQc = commitQc;
 
-        // Execute the transaction against the EVM world state.
-        Transaction tx = null;
-        EvmResult evmResult = null;
-        try {
-            byte[] txBytes = Base64.getDecoder().decode(block.getData());
-            tx = Transaction.deserialize(txBytes);
-            evmResult = evmService.executeTransaction(tx);
-        } catch (Exception e) {
-            System.err.println("[Node " + nodeId + "] could not execute tx in block "
-                    + block.getHeight() + ": " + e.getMessage());
-        }
+        List<ExecutedTx> executed = new ArrayList<>();
 
-        appendToBlockchain(block.getData());
+        for (ClientRequest request : block.getRequests()) {
+            if (request == null) {
+                continue;
+            }
+            String requestId = request.getRequestId();
+
+            // Mark decided and drop from pending pool if present.
+            decidedRequestIds.add(requestId);
+            removeFromPendingPoolLocked(requestId);
+
+            Transaction tx = tryDeserializeTransaction(request.getData());
+            if (tx == null) {
+                if (repliedRequestIds.add(requestId)) {
+                    sendClientReply(request, false, "invalid-transaction-in-block");
+                }
+                continue;
+            }
+
+            EvmResult evmResult;
+            try {
+                evmResult = evmService.executeTransaction(tx);
+            } catch (Exception e) {
+                System.err.println("[Node " + nodeId + "] could not execute tx in block "
+                        + block.getHeight() + ": " + e.getMessage());
+                evmResult = null;
+            }
+            executed.add(new ExecutedTx(tx, evmResult));
+
+            appendToBlockchain(request.getData());
+
+            if (repliedRequestIds.add(requestId)) {
+                boolean success = evmResult != null && evmResult.success();
+                String replyMsg = evmResult != null
+                        ? "gasUsed=" + evmResult.gasUsed()
+                          + ",fee=" + evmResult.fee().getAsBigInteger()
+                          + ",success=" + evmResult.success()
+                        : "execution-error";
+                sendClientReply(request, success, replyMsg);
+            }
+        }
 
         // Persist the block with the resulting world state.
         if (persistenceEnabled) {
-            persistBlockLocked(block, tx, evmResult);
-        }
-
-        if (repliedRequestIds.add(block.getRequestId())) {
-            // If we executed a real transaction use its result; fall back to
-            // success=true for legacy plain-string requests (Stage 1 compat).
-            boolean txSuccess = evmResult == null || evmResult.success();
-            String replyMsg = evmResult != null
-                    ? "gasUsed=" + evmResult.gasUsed()
-                      + ",fee=" + evmResult.fee().getAsBigInteger()
-                      + ",success=" + evmResult.success()
-                    : "committed:view=" + currentView;
-            sendClientReply(block, txSuccess, replyMsg);
+            persistBlockLocked(block, executed);
         }
 
         activeBlockHash = null;
-        activeClientRequest = null;
+        activeClientRequests = null;
         activeStep = ConsensusStep.IDLE;
         savePersistentStateLocked();
 
@@ -1135,8 +1207,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
     /**
      * Extracts the fee (gasPrice × gasLimit) from a client request whose
      * {@code data} field is a Base64-encoded serialized {@link Transaction}.
-     * Returns {@code 0} for non-transaction requests (e.g. plain-string data
-     * from stage-1 tests) so they are treated as lowest priority.
+     * Returns {@code 0} if the payload is not a transaction.
      */
     public static long extractFee(ClientRequest req) {
         try {
@@ -1146,6 +1217,124 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         } catch (Exception e) {
             return 0L;
         }
+    }
+
+    private List<ClientRequest> selectRequestsForNextBlockLocked() {
+        // Nonce is the primary constraint per-sender: a sender's nonce sequence
+        // must be continuous (no gaps). Under a block gas cap, we also want the
+        // fee-based choice to consider that picking a low-fee head (e.g., A1)
+        // may unlock a high-fee next nonce (e.g., A2). We approximate this by
+        // scoring each sender by the total fee of the longest consecutive nonce
+        // prefix that fits in the *remaining* gas budget.
+
+        Map<Address, Long> baseNonce = new HashMap<>();
+        Map<Address, Long> selectedCount = new HashMap<>();
+        for (Address sender : pendingBySender.keySet()) {
+            baseNonce.put(sender, evmService.getNonce(sender));
+            selectedCount.put(sender, 0L);
+        }
+
+        long gasSoFar = 0L;
+        List<ClientRequest> selected = new ArrayList<>();
+
+        while (gasSoFar < blockGasLimit) {
+            long remainingGas = blockGasLimit - gasSoFar;
+
+            Address bestSender = null;
+            long bestBundleFee = -1L;
+            long bestHeadFee = -1L;
+            long bestHeadNonce = -1L;
+            ClientRequest bestHeadReq = null;
+            long bestHeadGas = 0L;
+
+            for (Address sender : new ArrayList<>(pendingBySender.keySet())) {
+                NavigableMap<Long, ClientRequest> byNonce = pendingBySender.get(sender);
+                if (byNonce == null || byNonce.isEmpty()) {
+                    continue;
+                }
+
+                long startNonce = baseNonce.getOrDefault(sender, evmService.getNonce(sender))
+                        + selectedCount.getOrDefault(sender, 0L);
+                ClientRequest headReq = byNonce.get(startNonce);
+                if (headReq == null) {
+                    continue;
+                }
+                Transaction headTx = tryDeserializeTransaction(headReq.getData());
+                if (headTx == null) {
+                    continue;
+                }
+
+                long headGas = headTx.getGasLimit();
+                if (headGas > remainingGas) {
+                    continue;
+                }
+
+                // Compute best consecutive prefix fee starting at startNonce.
+                long bundleFee = 0L;
+                long bundleGas = 0L;
+                long nonce = startNonce;
+                while (true) {
+                    ClientRequest req = byNonce.get(nonce);
+                    if (req == null) {
+                        break;
+                    }
+                    Transaction tx = tryDeserializeTransaction(req.getData());
+                    if (tx == null) {
+                        break;
+                    }
+                    long gas = tx.getGasLimit();
+                    if (bundleGas + gas > remainingGas) {
+                        break;
+                    }
+                    bundleGas += gas;
+                    bundleFee += tx.getGasPrice() * tx.getGasLimit();
+                    nonce++;
+                }
+
+                long headFee = headTx.getGasPrice() * headTx.getGasLimit();
+
+                boolean better = false;
+                if (bundleFee > bestBundleFee) {
+                    better = true;
+                } else if (bundleFee == bestBundleFee) {
+                    // Tie-break deterministically.
+                    if (headFee > bestHeadFee) {
+                        better = true;
+                    } else if (headFee == bestHeadFee) {
+                        String senderHex = sender.toHexString();
+                        String bestHex = bestSender != null ? bestSender.toHexString() : "";
+                        if (senderHex.compareTo(bestHex) < 0) {
+                            better = true;
+                        } else if (senderHex.equals(bestHex) && startNonce < bestHeadNonce) {
+                            better = true;
+                        }
+                    }
+                }
+
+                if (better) {
+                    bestSender = sender;
+                    bestBundleFee = bundleFee;
+                    bestHeadFee = headFee;
+                    bestHeadNonce = startNonce;
+                    bestHeadReq = headReq;
+                    bestHeadGas = headGas;
+                }
+            }
+
+            if (bestSender == null || bestHeadReq == null) {
+                break;
+            }
+
+            // Add the chosen head request to the block.
+            removeFromPendingPoolLocked(bestHeadReq.getRequestId());
+            selected.add(bestHeadReq);
+            gasSoFar += bestHeadGas;
+
+            long count = selectedCount.getOrDefault(bestSender, 0L) + 1L;
+            selectedCount.put(bestSender, count);
+        }
+
+        return selected;
     }
 
     private void tryStartConsensusLocked() {
@@ -1162,29 +1351,12 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             return;
         }
 
-        ClientRequest nextRequest = null;
-        while (!pendingClientRequests.isEmpty()) {
-            ClientRequest candidate = pendingClientRequests.poll();
-            if (candidate == null) {
-                break;
-            }
-            if (decidedRequestIds.contains(candidate.getRequestId())) {
-                pendingRequestIds.remove(candidate.getRequestId());
-                // Belt-and-suspenders: ensure pendingSenders is clean for this sender.
-                try {
-                    byte[] txBytes = Base64.getDecoder().decode(candidate.getData());
-                    Transaction skippedTx = Transaction.deserialize(txBytes);
-                    pendingSenders.remove(skippedTx.getFrom());
-                } catch (Exception ignored) {}
-                continue;
-            }
-            nextRequest = candidate;
-            break;
-        }
-        if (nextRequest == null) {
+        List<ClientRequest> batch = selectRequestsForNextBlockLocked();
+        if (batch.isEmpty()) {
             return;
         }
-        activeClientRequest = nextRequest;
+
+        activeClientRequests = batch;
 
         String parentHash = selectProposalParentHashLocked();
         int parentHeight = resolveBlockHeightLocked(parentHash);
@@ -1194,53 +1366,22 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             parentHeight + 1,
             currentView,
             nodeId,
-            nextRequest.getRequestId(),
-            nextRequest.getClientId(),
-            nextRequest.getReplyHost(),
-            nextRequest.getReplyPort(),
-            nextRequest.getData(),
-            nextRequest.getTimestamp()
+            batch,
+            System.currentTimeMillis()
         );
         blocksByHash.put(block.getHash(), block);
         activeBlockHash = block.getHash();
         activeStep = ConsensusStep.PREPARE;
 
-        if (byzantineBehavior == ByzantineBehavior.EQUIVOCATE_LEADER) {
-            for (int i = 0; i < NetworkConfig.NUM_NODES; i++) {
-                if (i == nodeId) {
-                    continue;
-                }
-                Block forkBlock = Block.create(
-                    parentHash,
-                    parentHeight + 1,
-                    currentView,
-                    nodeId,
-                    nextRequest.getRequestId(),
-                    nextRequest.getClientId(),
-                    nextRequest.getReplyHost(),
-                    nextRequest.getReplyPort(),
-                    nextRequest.getData() + "#fork-" + i,
-                    nextRequest.getTimestamp()
-                );
-                blocksByHash.put(forkBlock.getHash(), forkBlock);
-                PreparePayload forkPayload = new PreparePayload(
-                    currentView,
-                    forkBlock,
-                    highQc
-                );
-                apl.send(i, MessageType.PREPARE, forkPayload.serialize());
-            }
-        } else {
-            PreparePayload preparePayload = new PreparePayload(
-                currentView,
-                block,
-                highQc
-            );
-            broadcastToOtherNodesLocked(
-                MessageType.PREPARE,
-                preparePayload.serialize()
-            );
-        }
+        PreparePayload preparePayload = new PreparePayload(
+            currentView,
+            block,
+            highQc
+        );
+        broadcastToOtherNodesLocked(
+            MessageType.PREPARE,
+            preparePayload.serialize()
+        );
         scheduleViewTimeoutLocked();
 
         ConsensusVote selfVote = createVote(
@@ -1405,15 +1546,19 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         if (newView <= currentView) {
             return;
         }
-        if (
-            activeClientRequest != null &&
-            !decidedRequestIds.contains(activeClientRequest.getRequestId())
-        ) {
-            if (pendingRequestIds.add(activeClientRequest.getRequestId())) {
-                pendingClientRequests.offer(activeClientRequest);
+        if (activeClientRequests != null) {
+            for (ClientRequest r : activeClientRequests) {
+                if (r == null || decidedRequestIds.contains(r.getRequestId())) {
+                    continue;
+                }
+                Transaction tx = tryDeserializeTransaction(r.getData());
+                if (tx == null) {
+                    continue;
+                }
+                addToPendingPoolLocked(r, tx);
             }
         }
-        activeClientRequest = null;
+        activeClientRequests = null;
         currentView = newView;
         activeBlockHash = null;
         activeStep = ConsensusStep.IDLE;
@@ -1608,7 +1753,9 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         repliedRequestIds.clear();
         repliedRequestIds.addAll(state.getRepliedRequestIds());
 
-        pendingClientRequests.clear();
+        pendingBySender.clear();
+        pendingSenderByRequestId.clear();
+        pendingNonceByRequestId.clear();
         pendingRequestIds.clear();
         blocksByHash.clear();
         prepareVotes.clear();
@@ -1625,7 +1772,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         apl.restoreReplayWindows(state.getAplReplayWindows());
 
         activeBlockHash = null;
-        activeClientRequest = null;
+        activeClientRequests = null;
         activeStep = ConsensusStep.IDLE;
 
         if (persistenceEnabled) {
@@ -1637,20 +1784,37 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
     // Block persistence helpers
     // -------------------------------------------------------------------------
 
-    private void persistBlockLocked(Block block, Transaction tx, EvmResult evmResult) {
+    private static final class ExecutedTx {
+        final Transaction tx;
+        final EvmResult result;
+
+        ExecutedTx(Transaction tx, EvmResult result) {
+            this.tx = tx;
+            this.result = result;
+        }
+    }
+
+    private void persistBlockLocked(Block block, List<ExecutedTx> executedTxs) {
         try {
             List<PersistedBlock.TransactionEntry> txEntries = new ArrayList<>();
-            if (tx != null && evmResult != null) {
-                txEntries.add(new PersistedBlock.TransactionEntry(
-                        tx.getFrom().toHexString(),
-                        tx.getTo().map(Address::toHexString).orElse(null),
-                        tx.getData().isEmpty() ? "" : tx.getData().toHexString(),
-                        tx.getGasPrice(),
-                        tx.getGasLimit(),
-                        evmResult.gasUsed(),
-                        evmResult.fee().getAsBigInteger().toString(),
-                        evmResult.success()
-                ));
+            if (executedTxs != null) {
+                for (ExecutedTx e : executedTxs) {
+                    if (e == null || e.tx == null || e.result == null) {
+                        continue;
+                    }
+                    Transaction tx = e.tx;
+                    EvmResult evmResult = e.result;
+                    txEntries.add(new PersistedBlock.TransactionEntry(
+                            tx.getFrom().toHexString(),
+                            tx.getTo().map(Address::toHexString).orElse(null),
+                            tx.getData().isEmpty() ? "" : tx.getData().toHexString(),
+                            tx.getGasPrice(),
+                            tx.getGasLimit(),
+                            evmResult.gasUsed(),
+                            evmResult.fee().getAsBigInteger().toString(),
+                            evmResult.success()
+                    ));
+                }
             }
 
             Map<String, PersistedBlock.AccountEntry> worldState = buildWorldStateSnapshot();
@@ -1738,22 +1902,6 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             apl.snapshotReplayWindows()
         );
         stateStore.save(state);
-    }
-
-    private void sendClientReply(Block block, boolean success, String status) {
-        ClientReply reply = new ClientReply(
-            block.getRequestId(),
-            success,
-            status,
-            nodeId,
-            currentView
-        );
-        sendClientReply(
-            block.getClientHost(),
-            block.getClientPort(),
-            block.getClientId(),
-            reply
-        );
     }
 
     private void sendClientReply(

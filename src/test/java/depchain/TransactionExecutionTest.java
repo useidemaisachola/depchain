@@ -1,6 +1,5 @@
 package depchain;
 
-import depchain.blockchain.EvmService;
 import depchain.blockchain.Transaction;
 import depchain.client.BlockchainClient;
 import depchain.config.NetworkConfig;
@@ -40,7 +39,6 @@ import static org.junit.jupiter.api.Assertions.*;
  *  3. The sender's balance is reduced by value + fee after a successful transfer.
  *  4. A transaction with insufficient balance returns success=false quickly.
  *  5. Multiple sequential transactions are all committed and executed.
- *  6. Legacy plain-string requests (Stage-1 compat) still return success=true.
  */
 class TransactionExecutionTest {
 
@@ -165,15 +163,6 @@ class TransactionExecutionTest {
                     sender, freshAddress(), Wei.of(100), Bytes.EMPTY, 1L, 21_000L, nonce + i);
             assertTrue(client.submitTransaction(tx), "Transfer #" + i + " must commit");
         }
-    }
-
-    @Test
-    void legacyPlainStringRequest_stillReturnsTrue() throws Exception {
-        // Stage-1 compatibility: plain strings that cannot be decoded as
-        // Transactions must still succeed (no EVM execution, just consensus).
-        BlockchainClient client = createClient();
-        boolean ok = client.submitRequest("legacy-plain-string");
-        assertTrue(ok, "Legacy plain-string requests must still be accepted");
     }
 
     @Test

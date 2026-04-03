@@ -1,6 +1,6 @@
 # DepChain Stage 2
 
-Made by:
+Made by: Group 17
 - David Pinheiro (`ist117363`)
 - Mehakpreet Khosa (`ist1107242`)
 - Inês Cachola (`ist1106953`)

@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.KeyPair;
 import java.security.PublicKey;
 import java.security.KeyPair;
 import java.util.ArrayList;
@@ -83,15 +84,15 @@ class TransactionExecutionTest {
 
     @Test
     void successfulTransfer_returnsTrue() throws Exception {
+        BlockchainClient client = createClientWithKey(0);
         BlockchainClient client = createAuthorizedClient(0);
 
-        Address sender    = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
+        Address sender    = client.getEvmAddress();
         Address recipient = freshAddress();
         long nonce = nodesToStop.get(0).getEvmService().getNonce(sender);
 
         Transaction tx = Transaction.create(
-            sender, recipient, Wei.of(1000), Bytes.EMPTY, 1L, 21_000L, nonce);
-        tx = tx.sign(keyManagers.get(0).getPrivateKey());
+                sender, recipient, Wei.of(1000), Bytes.EMPTY, 1L, 21_000L, currentNonce(sender));
 
         boolean result = client.submitTransaction(tx);
 
@@ -100,16 +101,15 @@ class TransactionExecutionTest {
 
     @Test
     void successfulTransfer_recipientBalanceIncreased() throws Exception {
-        BlockchainClient client = createAuthorizedClient(0);
+        BlockchainClient client = createClientWithKey(0);
 
-        Address sender    = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
+        Address sender    = client.getEvmAddress();
         Address recipient = freshAddress();
         Wei transferValue = Wei.of(500_000);
         long nonce = nodesToStop.get(0).getEvmService().getNonce(sender);
 
         Transaction tx = Transaction.create(
-            sender, recipient, transferValue, Bytes.EMPTY, 1L, 21_000L, nonce);
-        tx = tx.sign(keyManagers.get(0).getPrivateKey());
+                sender, recipient, transferValue, Bytes.EMPTY, 1L, 21_000L, currentNonce(sender));
 
         boolean committed = client.submitTransaction(tx);
         assertTrue(committed, "Transfer must commit");
@@ -124,9 +124,9 @@ class TransactionExecutionTest {
 
     @Test
     void successfulTransfer_senderBalanceDecreased() throws Exception {
-        BlockchainClient client = createAuthorizedClient(0);
+        BlockchainClient client = createClientWithKey(0);
 
-        Address sender    = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
+        Address sender    = client.getEvmAddress();
         Wei     initial   = genesisBalanceOf(sender);
         Wei     value     = Wei.of(1_000);
         long    gasPrice  = 1L;
@@ -134,8 +134,7 @@ class TransactionExecutionTest {
         long    nonce     = nodesToStop.get(0).getEvmService().getNonce(sender);
 
         Transaction tx = Transaction.create(
-            sender, freshAddress(), value, Bytes.EMPTY, gasPrice, gasLimit, nonce);
-        tx = tx.sign(keyManagers.get(0).getPrivateKey());
+                sender, freshAddress(), value, Bytes.EMPTY, gasPrice, gasLimit, currentNonce(sender));
 
         assertTrue(client.submitTransaction(tx), "Transfer must commit");
 
@@ -165,20 +164,25 @@ class TransactionExecutionTest {
             broke, recipient, tooMuch, Bytes.EMPTY, 1L, 21_000L, nonce);
         tx = tx.sign(keyManagers.get(0).getPrivateKey());
 
-        boolean result = client.submitTransaction(tx);
+        boolean result = broke.submitTransaction(tx);
 
         assertFalse(result, "Transfer from address with no balance must return false");
     }
 
     @Test
     void multipleSequentialTransactions_allCommit() throws Exception {
+        BlockchainClient client = createClientWithKey(0);
+
+        Address sender = client.getEvmAddress();
         BlockchainClient client = createAuthorizedClient(0);
 
         Address sender = EvmService.deriveAddress(keyManagers.get(0).getPublicKey(0));
         long startNonce = nodesToStop.get(0).getEvmService().getNonce(sender);
 
+        long nonce = currentNonce(sender);
         for (int i = 0; i < 3; i++) {
             Transaction tx = Transaction.create(
+                    sender, freshAddress(), Wei.of(100), Bytes.EMPTY, 1L, 21_000L, nonce + i);
                 sender, freshAddress(), Wei.of(100), Bytes.EMPTY, 1L, 21_000L, startNonce + i);
             tx = tx.sign(keyManagers.get(0).getPrivateKey());
             assertTrue(client.submitTransaction(tx), "Transfer #" + i + " must commit");
@@ -302,6 +306,23 @@ class TransactionExecutionTest {
         return client;
     }
 
+    /** Creates a client that uses node {@code nodeId}'s RSA key pair, so its EVM address is funded by genesis. */
+    private BlockchainClient createClientWithKey(int nodeId) throws Exception {
+        int port = nextClientPort++;
+        KeyPair kp = new KeyPair(keyManagers.get(nodeId).getPublicKey(nodeId),
+                                 keyManagers.get(nodeId).getPrivateKey());
+        BlockchainClient client = new BlockchainClient(port, port, kp);
+        Map<Integer, PublicKey> publicKeys = new HashMap<>();
+        for (int i = 0; i < NetworkConfig.NUM_NODES; i++) {
+            publicKeys.put(i, keyManagers.get(i).getPublicKey(i));
+        }
+        client.setNodePublicKeys(publicKeys);
+        client.start();
+        clientsToStop.add(client);
+        return client;
+    }
+
+    /** Derives the current balance of {@code address} from any running node. */
     private static void sendRawRequestToAllNodes(BlockchainClient client, String data) throws Exception {
         Method buildSignedRequest = BlockchainClient.class.getDeclaredMethod("buildSignedRequest", String.class);
         buildSignedRequest.setAccessible(true);
@@ -317,6 +338,11 @@ class TransactionExecutionTest {
     /** Derives the genesis balance of {@code address} from any running node. */
     private Wei genesisBalanceOf(Address address) {
         return nodesToStop.get(0).getEvmService().getBalance(address);
+    }
+
+    /** Returns the current on-chain nonce for {@code address} (accounts for genesis txs). */
+    private long currentNonce(Address address) {
+        return nodesToStop.get(0).getEvmService().getNonce(address);
     }
 
     /** Creates a deterministic but unique 20-byte address for each invocation. */

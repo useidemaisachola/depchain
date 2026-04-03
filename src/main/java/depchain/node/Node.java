@@ -92,6 +92,8 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
     private final Set<String> decidedRequestIds;
     private final Set<String> repliedRequestIds;
     private final Map<Integer, byte[]> clientPublicKeys;
+    /** Tracks sender addresses that already have a transaction in the pending pool (double-spend guard). */
+    private final Set<Address> pendingSenders;
 
     private final Map<String, Block> blocksByHash;
     private final Set<String> committedBlockHashes;
@@ -170,6 +172,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         this.decidedRequestIds = new HashSet<>();
         this.repliedRequestIds = new HashSet<>();
         this.clientPublicKeys = new ConcurrentHashMap<>();
+        this.pendingSenders = new HashSet<>();
 
         this.blocksByHash = new HashMap<>();
         this.committedBlockHashes = new HashSet<>();
@@ -399,24 +402,19 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
                 return;
             }
 
-            // [Security] Prevent double-spend in pending transaction pool (#14):
-            // Ensure sender balance covers all pending transactions combined.
-            Transaction newTx = tryDeserializeTransaction(request.getData());
-            if (newTx != null) {
-                String pendingError = validatePendingPoolFundsLocked(newTx);
-                if (pendingError != null) {
-                    System.err.println(
-                        "[Node " + nodeId + "] pending-pool validation failed for client "
-                            + request.getClientId() + " (request " + request.getRequestId() + "): "
-                            + pendingError
-                    );
-                    sendClientReply(request, false, "rejected:" + pendingError);
-                    return;
-                }
+            if (!validateTransactionRequest(request)) {
+                sendClientReply(request, false, "invalid-transaction");
+                return;
             }
 
             if (pendingRequestIds.add(request.getRequestId())) {
                 pendingClientRequests.offer(request);
+                // Track sender for double-spend prevention.
+                try {
+                    byte[] txBytes = Base64.getDecoder().decode(request.getData());
+                    Transaction tx = Transaction.deserialize(txBytes);
+                    pendingSenders.add(tx.getFrom());
+                } catch (Exception ignored) { /* legacy request */ }
             }
 
             int leaderId = NetworkConfig.getLeader(currentView);
@@ -535,95 +533,77 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
                 signature,
                 publicKey
             );
-            if (valid) {
-                clientPublicKeys.putIfAbsent(
-                    request.getClientId(),
-                    publicKeyBytes
-                );
+            if (!valid) {
+                return false;
             }
-            return valid;
+            clientPublicKeys.putIfAbsent(request.getClientId(), publicKeyBytes);
+            return true;
         } catch (Exception e) {
             return false;
         }
     }
 
     /**
-     * Validates a transaction within a client request.
-     * Checks: nonce, balance, gas parameters.
-     * 
-        * Transaction sender authorization:
-        * - The enclosing ClientRequest signature is validated first (authenticates the client's public key)
-        * - The transaction must be signed by the same key
-        * - The derived EVM address of that key must match {@code tx.from}
-     * 
-     * Returns null if:
-     * - Request data is not a valid transaction (plain string request = OK)
-     * - Transaction is valid
-     * 
-     * Returns error message only if:
-     * - Data appears to be a transaction but fails validation
+     * Pre-pool validation (#11, #14): checks that the transaction can plausibly execute
+     * before it is added to the pending queue.
      *
-     * @return null if valid/skipped, or error message if transaction is invalid
+     * <ul>
+     *   <li>Sender must have enough balance to cover max fee + transfer value.</li>
+     *   <li>Sender must not already have a transaction in the pending pool (double-spend guard).</li>
+     *   <li>Transaction nonce must match the sender's current on-chain nonce.</li>
+     * </ul>
+     *
+     * Returns {@code true} for non-Transaction (legacy plain-string) requests so that
+     * Stage-1 compatibility is preserved.
      */
-    private String validateTransactionInRequest(ClientRequest request) {
-        // Try to extract transaction from Base64-encoded data
-        Transaction tx;
+    private boolean validateTransactionRequest(ClientRequest request) {
         try {
-            byte[] txBytes = java.util.Base64.getDecoder().decode(request.getData());
-            tx = Transaction.deserialize(txBytes);
-        } catch (Exception e) {
-            // Not a valid transaction encoding — likely a plain-string request from Stage 1
-            // These are allowed for backward compatibility
-            return null;
-        }
+            byte[] txBytes = Base64.getDecoder().decode(request.getData());
+            Transaction tx = Transaction.deserialize(txBytes);
+            Address sender = tx.getFrom();
+            Wei maxFee = Wei.of(tx.getGasPrice() * tx.getGasLimit());
+            Wei required = maxFee.add(tx.getValue());
 
-        // Validate basic fields (gasPrice > 0, gasLimit > 0, value format)
-        String basicError = tx.validateBasicFields();
-        if (basicError != null) {
-            return basicError;
-        }
+            // Sender authorization (#13): tx.from must match the address derived
+            // from the key that signed this ClientRequest.
+            try {
+                PublicKey pubKey = CryptoUtils.decodePublicKey(request.getClientPublicKey());
+                Address derivedFrom = EvmService.deriveAddress(pubKey);
+                if (!sender.equals(derivedFrom)) {
+                    System.err.println("[Node " + nodeId + "] rejected tx: from mismatch, claimed="
+                            + sender + " derived=" + derivedFrom);
+                    return false;
+                }
+            } catch (Exception e) {
+                System.err.println("[Node " + nodeId + "] rejected tx: cannot decode client key");
+                return false;
+            }
 
-        // Enforce sender authorization: tx.from must belong to the request's public key
-        byte[] senderPublicKeyBytes = request.getClientPublicKey();
-        if (senderPublicKeyBytes == null || senderPublicKeyBytes.length == 0) {
-            return "missing sender public key";
-        }
-        PublicKey senderKey;
-        try {
-            senderKey = CryptoUtils.decodePublicKey(senderPublicKeyBytes);
-        } catch (Exception e) {
-            return "invalid sender public key";
-        }
-        Address derived = EvmService.deriveAddress(senderKey);
-        if (!derived.equals(tx.getFrom())) {
-            return "unauthorized sender: tx.from does not match request public key";
-        }
-        if (!tx.isSigned()) {
-            return "missing transaction signature";
-        }
-        if (!tx.verifySignature(senderKey)) {
-            return "invalid transaction signature for sender " + tx.getFrom();
-        }
+            // Balance pre-check: sender must cover worst-case fee + value.
+            if (evmService.getBalance(sender).compareTo(required) < 0) {
+                System.err.println("[Node " + nodeId + "] rejected tx: insufficient balance from " + sender);
+                return false;
+            }
 
-        // Validate nonce: must match current account nonce (no replay allowed)
-        Address fromAddr = tx.getFrom();
-        long currentNonce = evmService.getNonce(fromAddr);
-        if (tx.getNonce() != currentNonce) {
-            return "invalid nonce: expected " + currentNonce + ", got " + tx.getNonce();
-        }
+            // Nonce pre-check: reject obviously wrong nonces early.
+            long expectedNonce = evmService.getNonce(sender);
+            if (tx.getNonce() != expectedNonce) {
+                System.err.println("[Node " + nodeId + "] rejected tx: nonce mismatch from " + sender
+                        + " (expected=" + expectedNonce + ", got=" + tx.getNonce() + ")");
+                return false;
+            }
 
-        // Validate balance: sender must have enough to cover gasPrice * gasLimit + value
-        Wei balance = evmService.getBalance(fromAddr);
-        BigInteger gasCost = BigInteger.valueOf(tx.getGasPrice())
-                .multiply(BigInteger.valueOf(tx.getGasLimit()));
-        BigInteger totalCost = gasCost.add(tx.getValue().getAsBigInteger());
-        if (balance.getAsBigInteger().compareTo(totalCost) < 0) {
-            return "insufficient balance: have " + balance.getAsBigInteger() +
-                   ", need " + totalCost + " (gasPrice=" + tx.getGasPrice() +
-                   " * gasLimit=" + tx.getGasLimit() + " + value=" + tx.getValue().getAsBigInteger() + ")";
-        }
+            // Double-spend guard: only one pending tx per sender at a time.
+            if (pendingSenders.contains(sender)) {
+                System.err.println("[Node " + nodeId + "] rejected tx: sender " + sender + " already has a pending tx");
+                return false;
+            }
 
-        return null; // Valid
+            return true;
+        } catch (Exception ignored) {
+            // Not a Transaction – legacy plain-string request; allow it.
+            return true;
+        }
     }
 
     private void handlePrepare(int senderId, Message message) {
@@ -1108,6 +1088,12 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         pendingClientRequests.removeIf(r ->
             r.getRequestId().equals(block.getRequestId())
         );
+        // Release the sender slot so they can submit the next transaction.
+        try {
+            byte[] txBytes = Base64.getDecoder().decode(block.getData());
+            Transaction committedTx = Transaction.deserialize(txBytes);
+            pendingSenders.remove(committedTx.getFrom());
+        } catch (Exception ignored) { /* legacy block data */ }
 
         lastCommittedHash = blockHash;
         lastCommittedHeight = block.getHeight();
@@ -1202,6 +1188,12 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             }
             if (decidedRequestIds.contains(candidate.getRequestId())) {
                 pendingRequestIds.remove(candidate.getRequestId());
+                // Belt-and-suspenders: ensure pendingSenders is clean for this sender.
+                try {
+                    byte[] txBytes = Base64.getDecoder().decode(candidate.getData());
+                    Transaction skippedTx = Transaction.deserialize(txBytes);
+                    pendingSenders.remove(skippedTx.getFrom());
+                } catch (Exception ignored) {}
                 continue;
             }
             nextRequest = candidate;

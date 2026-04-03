@@ -247,6 +247,12 @@ public class EvmService {
         }
 
         long  currentNonce = nonces.getOrDefault(sender, 0L);
+
+        // Nonce validation: reject stale or future nonces without charging a fee.
+        if (tx.getNonce() != currentNonce) {
+            return new EvmResult(false, Bytes.EMPTY, 0, Wei.ZERO);
+        }
+
         long  gasUsed;
         Bytes output  = Bytes.EMPTY;
         boolean success;

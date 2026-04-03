@@ -91,6 +91,8 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
     private final Set<String> decidedRequestIds;
     private final Set<String> repliedRequestIds;
     private final Map<Integer, byte[]> clientPublicKeys;
+    /** Tracks sender addresses that already have a transaction in the pending pool (double-spend guard). */
+    private final Set<Address> pendingSenders;
 
     private final Map<String, Block> blocksByHash;
     private final Set<String> committedBlockHashes;
@@ -169,6 +171,7 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         this.decidedRequestIds = new HashSet<>();
         this.repliedRequestIds = new HashSet<>();
         this.clientPublicKeys = new ConcurrentHashMap<>();
+        this.pendingSenders = new HashSet<>();
 
         this.blocksByHash = new HashMap<>();
         this.committedBlockHashes = new HashSet<>();
@@ -380,8 +383,19 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
                 return;
             }
 
+            if (!validateTransactionRequest(request)) {
+                sendClientReply(request, false, "invalid-transaction");
+                return;
+            }
+
             if (pendingRequestIds.add(request.getRequestId())) {
                 pendingClientRequests.offer(request);
+                // Track sender for double-spend prevention.
+                try {
+                    byte[] txBytes = Base64.getDecoder().decode(request.getData());
+                    Transaction tx = Transaction.deserialize(txBytes);
+                    pendingSenders.add(tx.getFrom());
+                } catch (Exception ignored) { /* legacy request */ }
             }
 
             int leaderId = NetworkConfig.getLeader(currentView);
@@ -450,15 +464,76 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
                 signature,
                 publicKey
             );
-            if (valid) {
-                clientPublicKeys.putIfAbsent(
-                    request.getClientId(),
-                    publicKeyBytes
-                );
+            if (!valid) {
+                return false;
             }
-            return valid;
+            clientPublicKeys.putIfAbsent(request.getClientId(), publicKeyBytes);
+            return true;
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    /**
+     * Pre-pool validation (#11, #14): checks that the transaction can plausibly execute
+     * before it is added to the pending queue.
+     *
+     * <ul>
+     *   <li>Sender must have enough balance to cover max fee + transfer value.</li>
+     *   <li>Sender must not already have a transaction in the pending pool (double-spend guard).</li>
+     *   <li>Transaction nonce must match the sender's current on-chain nonce.</li>
+     * </ul>
+     *
+     * Returns {@code true} for non-Transaction (legacy plain-string) requests so that
+     * Stage-1 compatibility is preserved.
+     */
+    private boolean validateTransactionRequest(ClientRequest request) {
+        try {
+            byte[] txBytes = Base64.getDecoder().decode(request.getData());
+            Transaction tx = Transaction.deserialize(txBytes);
+            Address sender = tx.getFrom();
+            Wei maxFee = Wei.of(tx.getGasPrice() * tx.getGasLimit());
+            Wei required = maxFee.add(tx.getValue());
+
+            // Sender authorization (#13): tx.from must match the address derived
+            // from the key that signed this ClientRequest.
+            try {
+                PublicKey pubKey = CryptoUtils.decodePublicKey(request.getClientPublicKey());
+                Address derivedFrom = EvmService.deriveAddress(pubKey);
+                if (!sender.equals(derivedFrom)) {
+                    System.err.println("[Node " + nodeId + "] rejected tx: from mismatch, claimed="
+                            + sender + " derived=" + derivedFrom);
+                    return false;
+                }
+            } catch (Exception e) {
+                System.err.println("[Node " + nodeId + "] rejected tx: cannot decode client key");
+                return false;
+            }
+
+            // Balance pre-check: sender must cover worst-case fee + value.
+            if (evmService.getBalance(sender).compareTo(required) < 0) {
+                System.err.println("[Node " + nodeId + "] rejected tx: insufficient balance from " + sender);
+                return false;
+            }
+
+            // Nonce pre-check: reject obviously wrong nonces early.
+            long expectedNonce = evmService.getNonce(sender);
+            if (tx.getNonce() != expectedNonce) {
+                System.err.println("[Node " + nodeId + "] rejected tx: nonce mismatch from " + sender
+                        + " (expected=" + expectedNonce + ", got=" + tx.getNonce() + ")");
+                return false;
+            }
+
+            // Double-spend guard: only one pending tx per sender at a time.
+            if (pendingSenders.contains(sender)) {
+                System.err.println("[Node " + nodeId + "] rejected tx: sender " + sender + " already has a pending tx");
+                return false;
+            }
+
+            return true;
+        } catch (Exception ignored) {
+            // Not a Transaction – legacy plain-string request; allow it.
+            return true;
         }
     }
 
@@ -944,6 +1019,12 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
         pendingClientRequests.removeIf(r ->
             r.getRequestId().equals(block.getRequestId())
         );
+        // Release the sender slot so they can submit the next transaction.
+        try {
+            byte[] txBytes = Base64.getDecoder().decode(block.getData());
+            Transaction committedTx = Transaction.deserialize(txBytes);
+            pendingSenders.remove(committedTx.getFrom());
+        } catch (Exception ignored) { /* legacy block data */ }
 
         lastCommittedHash = blockHash;
         lastCommittedHeight = block.getHeight();
@@ -1038,6 +1119,12 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
             }
             if (decidedRequestIds.contains(candidate.getRequestId())) {
                 pendingRequestIds.remove(candidate.getRequestId());
+                // Belt-and-suspenders: ensure pendingSenders is clean for this sender.
+                try {
+                    byte[] txBytes = Base64.getDecoder().decode(candidate.getData());
+                    Transaction skippedTx = Transaction.deserialize(txBytes);
+                    pendingSenders.remove(skippedTx.getFrom());
+                } catch (Exception ignored) {}
                 continue;
             }
             nextRequest = candidate;

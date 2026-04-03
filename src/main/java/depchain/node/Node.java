@@ -1171,11 +1171,18 @@ public class Node implements AuthenticatedPerfectLinks.Listener, AutoCloseable {
 
             if (repliedRequestIds.add(requestId)) {
                 boolean success = evmResult != null && evmResult.success();
-                String replyMsg = evmResult != null
-                        ? "gasUsed=" + evmResult.gasUsed()
-                          + ",fee=" + evmResult.fee().getAsBigInteger()
-                          + ",success=" + evmResult.success()
-                        : "execution-error";
+                String replyMsg;
+                if (evmResult == null) {
+                    replyMsg = "execution-error";
+                } else {
+                    replyMsg = "gasUsed=" + evmResult.gasUsed()
+                            + ",fee=" + evmResult.fee().getAsBigInteger()
+                            + ",success=" + evmResult.success();
+
+                    if (evmResult.output() != null && !evmResult.output().isEmpty()) {
+                        replyMsg += ",output=" + evmResult.output().toHexString();
+                    }
+                }
                 sendClientReply(request, success, replyMsg);
             }
         }

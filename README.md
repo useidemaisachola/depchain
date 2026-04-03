@@ -215,18 +215,30 @@ If you need to point to a single “run everything” command for submission, us
 
 ## Persistence
 
-Persistence is optional.
+Persistence is implemented behind a `persistenceEnabled` flag inside the `Node`.
 
-When enabled, a node stores:
-- current view
-- last committed hash
-- last committed height
-- local blockchain values
-- decided request IDs
-- replied request IDs
+In this repository’s current entrypoints (CLI + demos), nodes are started with persistence enabled by default.
 
-Manual node runs use the `state/` directory by default.
-Tests use temporary directories instead.
+With persistence ON (default), each node writes **two kinds of data** under a chosen `stateDirectory`:
+
+- **Node control-plane state** (Java-serialized): `state/node<id>.state`
+	- current view
+	- last committed hash + height
+	- the node’s committed payload log (`blockchain` list)
+	- decided/replied request IDs (so the node does not re-decide / re-reply after restart)
+	- APL replay-protection state (last message id + replay windows)
+
+- **Block + EVM world-state snapshots** (JSON): `state/blocks/block_000000.json`, `block_000001.json`, ...
+	- each persisted block includes the executed tx summary plus a snapshot of the EVM world state
+	- on restart, the node loads the chain, validates hash-chain integrity, and restores the EVM world state from the last persisted block
+	- if the chain is missing/invalid, the node falls back to loading genesis
+
+With persistence OFF (supported by the `Node` constructor), the node keeps everything in memory and a restart starts “fresh” (it will load genesis again and rebuild state as new blocks are decided).
+
+Defaults in this repository:
+- Manual node runs (`mvn exec:java '-Dexec.args=node ...'`) use `state/` as the default state directory.
+- The `demo_persist` demo uses a temporary directory (so it does not pollute `state/`).
+- Tests use temporary directories as well.
 
 ## Scope
 
